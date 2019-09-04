@@ -1,4 +1,6 @@
+
 class Synthesizer
+
   def initialize
     @states = []
     @inputs = []
@@ -16,7 +18,7 @@ class Synthesizer
   def interp(p, input)
     p.map { |expr|
       if expr.is_a? Array
-        interp(expr)
+        interp(expr, input)
       end
     }
     return nil if p.size == 0
@@ -26,39 +28,24 @@ class Synthesizer
       return true
     when :false
       return false
-    when :where, :exists?
-      cls = p[1]
-      args = p[2..]
-      return cls.send(p[0], *args)
-    when :arg
-      # [:arg, input_id]
-      return input[p[1]]
     else
       raise NotImplementedError
     end
   end
 
-  def run
-    @choices.each { |choice|
-      program = []
-      case choice
-      when :true
-        program = [:true]
-      when :false
-        program = [:false]
-      when :where
-      when :exists?
-      else
-        raise NotImplementedError
-      end
-
-      checked = true
-      @inputs.zip(@outputs).each { |i, o|
-        result = interp(program, i)
-        checked = checked && (result == o)
+  def generate
+    Enumerator.new do |enum|
+      fragments = [:true, :false]
+      fragments.each { |f|
+        enum.yield [f]
       }
-      return program if checked
+    end
+  end
+
+  def run
+    generate.each { |prog|
+      outputs = @inputs.map { |i| interp(prog, i)}
+      return prog if outputs == @outputs
     }
-    raise "Failed to find program"
   end
 end
