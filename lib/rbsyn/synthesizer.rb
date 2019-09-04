@@ -1,5 +1,7 @@
+require 'unparser'
 
 class Synthesizer
+  include AST
 
   def initialize
     @states = []
@@ -15,36 +17,27 @@ class Synthesizer
     @outputs << output
   end
 
-  def interp(p, input)
-    p.map { |expr|
-      if expr.is_a? Array
-        interp(expr, input)
-      end
-    }
-    return nil if p.size == 0
-
-    case p[0]
-    when :true
-      return true
-    when :false
-      return false
-    else
-      raise NotImplementedError
-    end
+  def fn_args
+    min_args = @inputs.map(&:length).min
+    max_args = @inputs.map(&:length).max
+    raise NotImplementedError if min_args != max_args
+    args = Array.new(min_args) { |i| s(:arg, "arg#{i}".to_sym)}
+    return s(:args, *args)
   end
 
   def generate
     Enumerator.new do |enum|
-      fragments = [:true, :false]
+      fragments = [s(:true), s(:false)]
       fragments.each { |f|
-        enum.yield [f]
+        enum.yield s(:def, :fn, fn_args, f)
       }
     end
   end
 
   def run
     generate.each { |prog|
-      outputs = @inputs.map { |i| interp(prog, i)}
+      fn = eval(Unparser.unparse(prog))
+      outputs = @inputs.map { |i| fn(*i) }
       return prog if outputs == @outputs
     }
   end

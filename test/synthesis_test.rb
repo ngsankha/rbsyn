@@ -7,8 +7,11 @@ describe "Synthesizer" do
   end
 
   it "can synthesize a trivial false program" do
-    @syn.add_example(['BruceWayne'], false)
-    prog = @syn.run
-    assert_equal prog, [:false]
+    input = ['BruceWayne']
+    @syn.add_example(input, false)
+    prog = Unparser.unparse(@syn.run)
+    puts prog
+    fn = eval(prog)
+    assert_equal fn(*input), false
   end
 end
