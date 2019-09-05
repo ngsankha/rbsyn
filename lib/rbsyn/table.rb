@@ -5,6 +5,10 @@ class Table
     @@tables
   end
 
+  def self.load(db)
+    @@tables = db
+  end
+
   def self.reset
     @@tables = {}
   end
@@ -36,5 +40,11 @@ class Table
       @@tables[self.class] = [self]
     end
     self
+  end
+
+  def self.fields
+    (self.instance_methods -
+      Object.instance_methods -
+      [:save]).reject { |i| i.to_s[-1] == '=' }
   end
 end
