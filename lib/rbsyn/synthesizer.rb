@@ -46,8 +46,10 @@ class Synthesizer
             enum.yield s(:const, nil, c.to_s.to_sym)
           }
         when :send
-          possible_args = fn_args # our environment is just function args at the moment
-          possible_args.each { |arg| enum.yield s(:send, nil, arg) }
+          # This is only required to call functions from the current
+          # environment, fn_args is not the right thing to call here
+          # possible_args = fn_args # our environment is just function args at the moment
+          # possible_args.each { |arg| enum.yield s(:send, nil, arg) }
 
           generate(depth + 1, [:const]).each { |recv|
             class_meths = Table.methods - Class.methods - [:db, :load, :reset, :fields]
