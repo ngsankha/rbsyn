@@ -1,5 +1,3 @@
-require 'unparser'
-
 MAX_DEPTH = 5
 
 class Synthesizer

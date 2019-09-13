@@ -27,4 +27,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "parser"
   spec.add_dependency "unparser"
+  spec.add_dependency "rdl"
 end

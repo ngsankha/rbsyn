@@ -3,6 +3,7 @@ PATH
   specs:
     rbsyn (0.1.0)
       parser
+      rdl
       unparser
 
 GEM
@@ -26,13 +27,19 @@ GEM
     minitest (5.11.3)
     minitest-hooks (1.5.0)
       minitest (> 5.3)
-    parser (2.6.4.0)
+    parser (2.6.4.1)
       ast (~> 2.4.0)
     procto (0.0.3)
     pry (0.12.2)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
+    racc (1.4.15)
     rake (10.5.0)
+    rdl (2.2.0)
+      parser (~> 2.3, >= 2.3.1.4)
+      sql-parser (~> 0.0.2)
+    sql-parser (0.0.2)
+      racc
     thread_safe (0.3.6)
     unparser (0.4.5)
       abstract_type (~> 0.0.7)
