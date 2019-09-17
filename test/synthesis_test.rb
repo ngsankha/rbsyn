@@ -12,7 +12,7 @@ describe "Synthesizer" do
     @syn.add_example(input, output)
 
     prog = Unparser.unparse(@syn.run)
-    puts prog
+    puts "\n#{prog}"
     fn = eval(prog)
 
     assert_equal fn(*input), output
@@ -27,7 +27,7 @@ describe "Synthesizer" do
     @syn.add_example(input, output)
 
     prog = Unparser.unparse(@syn.run)
-    puts prog
+    puts "\n#{prog}"
     fn = eval(prog)
 
     assert_equal fn(*input), output
