@@ -20,6 +20,9 @@ class Synthesizer
   end
 
   def run
+    tenv = TypeEnvironment.new
+    @envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
+    puts tenv
     generate(0).each { |prog|
       begin
         outputs = @states.zip(@envs).map { |state, env|
@@ -36,7 +39,7 @@ class Synthesizer
   private
 
   def env_from_args(input)
-    env = Environment.new
+    env = ValEnvironment.new
     input.each_with_index { |v, i|
       env["arg#{i}".to_sym] = v
     }
