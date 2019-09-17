@@ -4,6 +4,7 @@ class TypeBinding
 
   def initialize(name, value)
     @name = name
+    @value = value
     case value
     when Numeric, String
       @type = RDL::Globals.parser.scan_str("#T #{value.inspect}")
@@ -13,7 +14,7 @@ class TypeBinding
   end
 end
 
-class Environment
+class Environment < Hash
   def initialize
     @var_map = {}
   end
@@ -30,5 +31,13 @@ class Environment
     @var_map.select { |k, v|
       v.type <= type
     }
+  end
+
+  def bindings
+    @var_map.keys
+  end
+
+  def size
+    @var_map.size
   end
 end

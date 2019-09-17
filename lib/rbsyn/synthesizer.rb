@@ -5,27 +5,42 @@ class Synthesizer
 
   def initialize
     @states = []
-    @inputs = []
+    @envs = []
     @outputs = []
   end
 
   def add_example(input, output)
+    Table.reset
+    yield if block_given?
     # Marshal.load(Marshal.dump(o)) is an ugly way to clone objects
     @states << Marshal.load(Marshal.dump(Table.db))
-    @inputs << input
+    @envs << env_from_args(input)
     @outputs << output
+    Table.reset
   end
 
-  def fn_args
-    min_args = @inputs.map(&:length).min
-    max_args = @inputs.map(&:length).max
-    raise NotImplementedError if min_args != max_args
-    Array.new(min_args) { |i| "arg#{i}".to_sym }
+  def run
+    generate(0).each { |prog|
+      begin
+        outputs = @states.zip(@envs).map { |state, env|
+          eval_ast(prog, state, env) rescue next
+        }
+        return prog if outputs == @outputs
+      rescue Exception => e
+        next
+      end
+    }
+    raise "no candidates found"
   end
 
-  def fn_args_as_sexpr
-    args = fn_args.map { |i| s(:arg, i) }
-    s(:args, *args)
+  private
+
+  def env_from_args(input)
+    env = Environment.new
+    input.each_with_index { |v, i|
+      env["arg#{i}".to_sym] = v
+    }
+    env
   end
 
   def generate(depth, fragments=nil)
@@ -44,11 +59,6 @@ class Synthesizer
             enum.yield s(:const, nil, c.to_s.to_sym)
           }
         when :send
-          # This is only required to call functions from the current
-          # environment, fn_args is not the right thing to call here
-          # possible_args = fn_args # our environment is just function args at the moment
-          # possible_args.each { |arg| enum.yield s(:send, nil, arg) }
-
           generate(depth + 1, [:const]).each { |recv|
             class_meths = Table.methods - Class.methods - [:db, :load, :reset, :fields]
             class_meths.each { |mth|
@@ -70,31 +80,14 @@ class Synthesizer
             enum.yield s(:hash, child)
           }
         when :lvar
-          vars = fn_args
-          vars.each { |var|
-            enum.yield s(:lvar, var)
+          vars = Set.new(@envs.map(&:bindings).flatten)
+          vars.each { |k, v|
+            enum.yield s(:lvar, k)
           }
         else
           raise NotImplementedError
         end
       }
     end
-  end
-
-  def run
-    generate(0).each { |prog|
-      begin
-        func = s(:def, :fn, fn_args_as_sexpr, prog)
-        fn = eval(Unparser.unparse(func))
-        outputs = @states.zip(@inputs).map { |state, input|
-          Table.load(state)
-          fn(*input) rescue next
-        }
-        return func if outputs == @outputs
-      rescue Exception => e
-        next
-      end
-    }
-    raise "no candidates found"
   end
 end
