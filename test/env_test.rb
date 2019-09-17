@@ -51,7 +51,7 @@ describe "Environment" do
       assert_equal tenv.size, 2
       assert tenv[:a].type.is_a? RDL::Type::PreciseStringType
       assert tenv[:b].type.is_a? RDL::Type::UnionType
-      assert_equal tenv[:b].type.types.map(&:val), [2, 3]
+      assert_equal Set.new(tenv[:b].type.types.map(&:val)), Set[2, 3]
     end
   end
 end

@@ -22,7 +22,6 @@ class Synthesizer
   def run
     tenv = TypeEnvironment.new
     @envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
-    puts tenv
     generate(0).each { |prog|
       begin
         outputs = @states.zip(@envs).map { |state, env|
