@@ -1,19 +1,20 @@
 require "test_helper"
+require "minitest/benchmark"
 
-describe "Synthesizer" do
+describe "Synthesizer Benchmark" do
   before(:all) do
     Table.reset
     @syn = Synthesizer.new
   end
 
-  it "can synthesize a trivial false program" do
+  bench_performance_constant "can synthesize a trivial false program" do
     @syn.add_example(['BruceWayne'], false)
 
     prog = Unparser.unparse(@syn.run)
-    puts "\n#{prog}"
+    assert_equal prog, "false"
   end
 
-  it "can synthesize a User exists program" do
+  bench_performance_constant "can synthesize a User exists program" do
     @syn.add_example(['bruce1'], false)
 
     @syn.add_example(['bruce1'], true) {
@@ -21,6 +22,6 @@ describe "Synthesizer" do
     }
 
     prog = Unparser.unparse(@syn.run)
-    puts "\n#{prog}"
+    assert_equal prog, "User.exists?(username: arg0)"
   end
 end
