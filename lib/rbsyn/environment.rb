@@ -6,7 +6,7 @@ class ValBinding
     @name = name
     @value = value
     case value
-    when Numeric, String
+    when Numeric, String, TrueClass, FalseClass
       @type = RDL::Globals.parser.scan_str("#T #{value.inspect}")
     else
       raise RuntimeError, "Expected value to be a string or number"
@@ -43,6 +43,12 @@ class Environment
   def bindings_with_type(type)
     @var_map.select { |k, v|
       v.type <= type
+    }
+  end
+
+  def bindings_with_supertype(type)
+    @var_map.select { |k, v|
+      type <= v.type
     }
   end
 

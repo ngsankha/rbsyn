@@ -24,4 +24,11 @@ describe "Synthesizer Benchmark" do
     prog = Unparser.unparse(@syn.run)
     assert_equal prog, "User.exists?(username: arg0)"
   end
+
+  bench_performance_constant "can synthesize top-level lvar programs" do
+    @syn.add_example(['foo'], 'foo')
+
+    prog = Unparser.unparse(@syn.run)
+    assert_equal prog, "arg0"
+  end
 end

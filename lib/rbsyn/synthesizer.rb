@@ -24,8 +24,17 @@ class Synthesizer
     @envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
     tenv = load_components(tenv)
 
-    # TODO: change the %bool type below to be a parameter
-    generate(0, RDL::Globals.types[:bool], tenv).each { |prog|
+    toutenv = TypeEnvironment.new
+    @outenv = @outputs.map { |o|
+      env = ValEnvironment.new
+      env[:out] = o
+      env.to_type_env
+    }.each { |t| toutenv = toutenv.merge(t) }
+
+    tout = toutenv[:out].type
+    initial_components = guess_initial_components(tout)
+
+    generate(0, tout, tenv, initial_components).each { |prog|
       begin
         outputs = @states.zip(@envs).map { |state, env|
           eval_ast(prog, state, env) rescue next
@@ -77,12 +86,21 @@ class Synthesizer
     }
   end
 
-  def generate(depth, type, tenv, fragments=nil, extra={})
+  def guess_initial_components(tout)
+    always = [:send, :lvar]
+
+    if tout <= RDL::Globals.types[:bool]
+      [:true, :false, *always]
+    else
+      always
+    end
+  end
+
+  def generate(depth, type, tenv, components, extra={})
     return [] unless depth <= MAX_DEPTH
-    fragments ||= [:true, :false, :send]
 
     Enumerator.new do |enum|
-      fragments.each { |f|
+      components.each { |f|
         case f
         when :true, :false
           ty = RDL::Globals.types[:bool]
@@ -137,9 +155,15 @@ class Synthesizer
             }
           }
         when :lvar
-          # TODO: handle top level lvar
-          raise RuntimeError unless extra.key? :value
-          enum.yield s(:lvar, extra[:value])
+          if extra.key? :value
+            enum.yield s(:lvar, extra[:value])
+          else
+            # functions return values will be subtype of the return type in function sig
+            choices = tenv.bindings_with_supertype(type)
+            choices.each { |var, binding|
+              enum.yield s(:lvar, var)
+            }
+          end
         else
           raise NotImplementedError
         end
