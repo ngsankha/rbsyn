@@ -22,7 +22,10 @@ class Synthesizer
   def run
     tenv = TypeEnvironment.new
     @envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
-    generate(0).each { |prog|
+    tenv = load_components(tenv)
+
+    # TODO: change the %bool type below to be a parameter
+    generate(0, RDL::Globals.types[:bool], tenv).each { |prog|
       begin
         outputs = @states.zip(@envs).map { |state, env|
           eval_ast(prog, state, env) rescue next
@@ -32,7 +35,7 @@ class Synthesizer
         next
       end
     }
-    raise "no candidates found"
+    raise RuntimeError, "No candidates found"
   end
 
   private
@@ -45,29 +48,78 @@ class Synthesizer
     env
   end
 
-  def generate(depth, fragments=nil)
+  def load_components(env)
+    raise RuntimeError unless env.is_a? TypeEnvironment
+    # TODO: think of better ways to load components than hard coded list
+    env[:User] = RDL::Type::SingletonType.new(User)
+    env[:UserEmail] = RDL::Type::SingletonType.new(UserEmail)
+    env
+  end
+
+  def cls_mths_with_type_defns(cls)
+    cls = RDL::Util.to_class(cls.to_s)
+    parents = cls.ancestors
+    parents = parents[0...parents.index(Object)]
+    Hash[*parents.map { |parent|
+      klass = RDL::Util.add_singleton_marker(parent.to_s)
+      RDL::Globals.info.info[klass]
+    }.reject(&:nil?).collect { |h| h.to_a }.flatten]
+  end
+
+  def compute_targs(trec, tmeth)
+    # TODO: we use only the first definition, ignoring overloaded method definitions
+    type = tmeth[0]
+    targs = type.args
+    targs.map { |targ|
+      bind = Class.new.class_eval { binding }
+      bind.local_variable_set(:trec, trec)
+      targ.compute(bind)
+    }
+  end
+
+  def generate(depth, type, tenv, fragments=nil)
     return [] unless depth <= MAX_DEPTH
-    fragments ||= [:true, :false, :const, :send, :pair, :hash, :lvar]
+    fragments ||= [:true, :false, :send, :lvar]
 
     Enumerator.new do |enum|
       fragments.each { |f|
         case f
         when :true, :false
+          ty = RDL::Globals.types[:bool]
+          raise RuntimeError unless type <= ty
           enum.yield s(f)
         when :const
-          consts = Set.new
-          @states.each { |state| consts.merge(state.keys) }
-          consts.each { |c|
-            enum.yield s(:const, nil, c.to_s.to_sym)
+          ty = RDL::Type::NominalType.new(Class)
+          raise RuntimeError unless type <= ty
+          consts = tenv.bindings_with_type(ty).select { |k, v| v.type <= type }
+          consts.each { |k, v|
+            enum.yield s(:const, nil, k)
           }
         when :send
-          generate(depth + 1, [:const]).each { |recv|
-            class_meths = Table.methods - Class.methods - [:db, :load, :reset, :fields]
-            class_meths.each { |mth|
-              generate(depth + 1, [:hash]).each { |arg|
-                enum.yield s(:send, recv, mth, arg)
-              }
+          # TODO: support method calls on static objects only for now
+          generate(depth + 1, RDL::Type::NominalType.new(Class), tenv, [:const]).each { |recv|
+            # List only methods with type definitions
+            # TODO: Handle all objects and not just static methods on classes
+            recv_cls = recv.children[1]
+            class_meths = cls_mths_with_type_defns(recv_cls)
+            class_meths.each { |mth, info|
+              targs = compute_targs(tenv[recv_cls].type, info[:type])
+              # TODO: we only handle the first argument now
+              targ = targs[0]
+              case targ
+              when RDL::Type::FiniteHashType
+                generate(depth + 1, targ, tenv, [:hash]).each { |arg|
+                  enum.yield s(:send, recv, mth, arg)
+                }
+              else
+                raise RuntimeError, "Don't know how to handle #{targs}"
+              end
             }
+          }
+        when :hash
+          raise RuntimeError unless type.is_a? RDL::Type::FiniteHashType
+          generate(depth + 1, [:pair]).each { |child|
+            enum.yield s(:hash, child)
           }
         when :pair
           possible_fields = Table.db.keys.map { |k| k.fields }.flatten
@@ -76,10 +128,6 @@ class Synthesizer
             generate(depth + 1, [:lvar]).each { |rhs|
               enum.yield s(:pair, lhs, rhs)
             }
-          }
-        when :hash
-          generate(depth + 1, [:pair]).each { |child|
-            enum.yield s(:hash, child)
           }
         when :lvar
           vars = Set.new(@envs.map(&:bindings).flatten)

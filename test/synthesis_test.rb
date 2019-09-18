@@ -20,7 +20,8 @@ describe "Synthesizer" do
       User.new(name: 'Bruce Wayne', username: 'bruce1', email: 'bruce1@wayne.com', password: 'coolcool').save
     }
 
-    prog = Unparser.unparse(@syn.run)
+    # prog = Unparser.unparse(@syn.run)
+    prog = @syn.run
     puts "\n#{prog}"
   end
 end
