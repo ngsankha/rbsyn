@@ -77,9 +77,9 @@ class Synthesizer
     }
   end
 
-  def generate(depth, type, tenv, fragments=nil)
+  def generate(depth, type, tenv, fragments=nil, extra={})
     return [] unless depth <= MAX_DEPTH
-    fragments ||= [:true, :false, :send, :lvar]
+    fragments ||= [:true, :false, :send]
 
     Enumerator.new do |enum|
       fragments.each { |f|
@@ -118,22 +118,28 @@ class Synthesizer
           }
         when :hash
           raise RuntimeError unless type.is_a? RDL::Type::FiniteHashType
-          generate(depth + 1, [:pair]).each { |child|
-            enum.yield s(:hash, child)
+          # TODO: generate hashes with multiple keys
+          # TODO: some hashes can have mandatory keys too
+          type.elts.each { |k, t|
+            raise RuntimeError unless t.is_a? RDL::Type::OptionalType
+            t = t.type
+            generate(depth + 1, t, tenv, [:pair], { key: k }).each { |pair|
+              enum.yield s(:hash, pair)
+            }
           }
         when :pair
-          possible_fields = Table.db.keys.map { |k| k.fields }.flatten
-          possible_fields.each { |field|
-            lhs = s(:sym, field)
-            generate(depth + 1, [:lvar]).each { |rhs|
+          raise RuntimeError unless extra.key? :key
+          lhs = s(:sym, extra[:key])
+          choices = tenv.bindings_with_type(type)
+          choices.each { |var, binding|
+            generate(depth + 1, type, tenv, [:lvar], { value: var }).each { |rhs|
               enum.yield s(:pair, lhs, rhs)
             }
           }
         when :lvar
-          vars = Set.new(@envs.map(&:bindings).flatten)
-          vars.each { |k, v|
-            enum.yield s(:lvar, k)
-          }
+          # TODO: handle top level lvar
+          raise RuntimeError unless extra.key? :value
+          enum.yield s(:lvar, extra[:value])
         else
           raise NotImplementedError
         end
