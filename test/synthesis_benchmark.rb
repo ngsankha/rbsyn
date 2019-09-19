@@ -3,7 +3,7 @@ require "minitest/benchmark"
 
 describe "Synthesizer Benchmark" do
   before(:all) do
-    Table.reset
+    DBUtils.reset
     @syn = Synthesizer.new
   end
 
@@ -18,7 +18,8 @@ describe "Synthesizer Benchmark" do
     @syn.add_example(['bruce1'], false)
 
     @syn.add_example(['bruce1'], true) {
-      User.new(name: 'Bruce Wayne', username: 'bruce1', email: 'bruce1@wayne.com', password: 'coolcool').save
+      u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
+      u.emails.create(email: 'bruce1@wayne.com')
     }
 
     prog = Unparser.unparse(@syn.run)

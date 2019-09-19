@@ -9,14 +9,13 @@ class Synthesizer
     @outputs = []
   end
 
-  def add_example(input, output)
-    Table.reset
+  def add_example(input, output, &blk)
+    DBUtils.reset
     yield if block_given?
-    # Marshal.load(Marshal.dump(o)) is an ugly way to clone objects
-    @states << Marshal.load(Marshal.dump(Table.db))
+    @states << blk
     @envs << env_from_args(input)
     @outputs << output
-    Table.reset
+    DBUtils.reset
   end
 
   def run
@@ -37,7 +36,7 @@ class Synthesizer
     generate(0, tout, tenv, initial_components).each { |prog|
       begin
         outputs = @states.zip(@envs).map { |state, env|
-          eval_ast(prog, state, env) rescue next
+          eval_ast(prog, env) { state.call unless state.nil? } rescue next
         }
         return prog if outputs == @outputs
       rescue Exception => e

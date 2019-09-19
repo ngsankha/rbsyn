@@ -2,8 +2,7 @@ require "test_helper"
 
 describe "Models" do
   before(:all) do
-    User.delete_all
-    UserEmail.delete_all
+    DBUtils.reset
   end
 
   it "basic operations" do

@@ -3,8 +3,9 @@ module AST
     Parser::AST::Node.new(type, children)
   end
 
-  def eval_ast(ast, state, env)
-    Table.load(state)
+  def eval_ast(ast, env, &state)
+    DBUtils.reset
+    state.call unless state.nil?
     klass = Class.new
     bind = klass.class_eval { binding }
     env.bindings.each { |b|
