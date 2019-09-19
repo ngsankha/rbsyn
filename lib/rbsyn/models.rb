@@ -1,47 +1,29 @@
-class UserEmail < Table
-  @@id = 0
-  @@schema = {
-    id: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(Integer)),
-    email: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(String))
-  }
+ActiveRecord::Base.establish_connection(
+  adapter: 'sqlite3',
+  database: ':memory:'
+)
 
-  attr_accessor :id, :email
-
-  def self.schema
-    @@schema
+ActiveRecord::Schema.define do
+  create_table :users, force: true do |t|
+    t.string :name
+    t.string :username
+    t.string :username_lower
+    t.string :password
   end
-
-  def initialize(email:)
-    @id = @@id
-    @@id += 1
-    @email = email
+  create_table :user_emails, force: true do |t|
+    t.string :email
+    t.references :user
   end
 end
 
-class User < Table
-  @@id = 0
-  @@schema = {
-    id: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(Integer)),
-    username: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(String)),
-    username_lower: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(String)),
-    password: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(String)),
-    name: RDL::Type::OptionalType.new(RDL::Type::NominalType.new(String)),
-    email: RDL::Type::OptionalType.new(RDL::Type::GenericType.new(RDL::Type::NominalType.new(Array), RDL::Type::NominalType.new(UserEmail)))
-  }
+class ApplicationRecord < ActiveRecord::Base
+  self.abstract_class = true
+end
 
-  attr_accessor :id, :username, :username_lower, :password, :name, :email
+class User < ApplicationRecord
+  has_many :emails, class_name: "UserEmail"
+end
 
-  def self.schema
-    @@schema
-  end
-
-  def initialize(name:, username:, email:, password:)
-    @id = @@id
-    @@id += 1
-    @name = name
-    @username = username
-    @username_lower = username.downcase
-    @email = [UserEmail.new(email: email).save]
-    @password = password
-  end
+class UserEmail < ApplicationRecord
+  belongs_to :user
 end

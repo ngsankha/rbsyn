@@ -29,4 +29,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "parser"
   spec.add_dependency "unparser"
   spec.add_dependency "rdl"
+  spec.add_dependency "sqlite3"
+  spec.add_dependency "activerecord"
 end
