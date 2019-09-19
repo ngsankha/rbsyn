@@ -1,18 +1,18 @@
-MAX_DEPTH = 5
-
 class Synthesizer
   include AST
 
-  def initialize
-    @states = []
+  def initialize(max_depth: 5, components: [])
+    @test_setup = []
     @envs = []
     @outputs = []
+    @max_depth = max_depth
+    @components = components
   end
 
   def add_example(input, output, &blk)
     DBUtils.reset
     yield if block_given?
-    @states << blk
+    @test_setup << blk
     @envs << env_from_args(input)
     @outputs << output
     DBUtils.reset
@@ -35,8 +35,8 @@ class Synthesizer
 
     generate(0, tout, tenv, initial_components).each { |prog|
       begin
-        outputs = @states.zip(@envs).map { |state, env|
-          eval_ast(prog, env) { state.call unless state.nil? } rescue next
+        outputs = @test_setup.zip(@envs).map { |setup, env|
+          eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
         }
         return prog if outputs == @outputs
       rescue Exception => e
@@ -58,9 +58,9 @@ class Synthesizer
 
   def load_components(env)
     raise RuntimeError unless env.is_a? TypeEnvironment
-    # TODO: think of better ways to load components than hard coded list
-    env[:User] = RDL::Type::SingletonType.new(User)
-    env[:UserEmail] = RDL::Type::SingletonType.new(UserEmail)
+    @components.each { |c|
+      env[c.to_s.to_sym] = RDL::Type::SingletonType.new(c)
+    }
     env
   end
 
@@ -88,15 +88,12 @@ class Synthesizer
   def guess_initial_components(tout)
     always = [:send, :lvar]
 
-    if tout <= RDL::Globals.types[:bool]
-      [:true, :false, *always]
-    else
-      always
-    end
+    return [:true, :false, *always] if tout <= RDL::Globals.types[:bool]
+    return always
   end
 
   def generate(depth, type, tenv, components, extra={})
-    return [] unless depth <= MAX_DEPTH
+    return [] unless depth <= @max_depth
 
     Enumerator.new do |enum|
       components.each { |f|

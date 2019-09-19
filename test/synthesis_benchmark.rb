@@ -4,7 +4,7 @@ require "minitest/benchmark"
 describe "Synthesizer Benchmark" do
   before(:all) do
     DBUtils.reset
-    @syn = Synthesizer.new
+    @syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
   end
 
   bench_performance_constant "can synthesize a trivial false program" do

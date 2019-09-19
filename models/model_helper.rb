@@ -1,8 +1,3 @@
-ActiveRecord::Base.establish_connection(
-  adapter: 'sqlite3',
-  database: ':memory:'
-)
-
 ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
     t.string :name
@@ -20,10 +15,5 @@ class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 end
 
-class User < ApplicationRecord
-  has_many :emails, class_name: "UserEmail"
-end
-
-class UserEmail < ApplicationRecord
-  belongs_to :user
-end
+require_relative "user"
+require_relative "user_email"
