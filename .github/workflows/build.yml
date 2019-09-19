@@ -1,4 +1,4 @@
-name: Ruby
+name: Rbsyn Build
 
 on: [push]
 
