@@ -53,7 +53,8 @@ class DBTypes
           ## just one table joined to base table
           joined_name = joined_to.klass.to_s.singularize.to_sym
           joined_type = RDL::Type::OptionalType.new(RDL::Type::FiniteHashType.new(table_name_to_schema_hash(joined_name), nil))
-          schema = schema.merge({ joined_name.to_s.pluralize.underscore.to_sym => joined_type })
+          field_name = param.params[0].klass.reflect_on_all_associations.find { |a| joined_name.to_s == a.class_name }.name
+          schema = schema.merge({ field_name.to_sym => joined_type })
         when RDL::Type::UnionType
           raise RuntimeError, "TODO: handle union type"
         else
