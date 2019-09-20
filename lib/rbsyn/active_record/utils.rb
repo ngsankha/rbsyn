@@ -41,7 +41,7 @@ module Rbsyn::ActiveRecord
         schema = schema.transform_keys { |k| k.to_sym }
         assoc = {}
         model.reflect_on_all_associations.each { |a|
-          kl_type = RDL::Type::SingletonType.new(a.name)
+          kl_type = RDL::Type::SingletonType.new(RDL::Util.to_class(a.class_name))
           aname = a.macro
           if assoc[aname]
             assoc[aname] = RDL::Type::UnionType.new(assoc[aname], kl_type)

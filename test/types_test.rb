@@ -1,15 +1,33 @@
 require "test_helper"
 
 describe "TableTypes" do
-
-  class Useless
-    def foo
-      User.exists?(username: "bar")
+  it "type checks table methods" do
+    class Foo
+      def bar1
+        User.exists?(username: "bar")
+      end
     end
+    RDL.type Foo, :bar1, "() -> %bool", wrap: false, typecheck: :later1
+    RDL.do_typecheck :later1
   end
 
-  it "type checks table methods" do
-    RDL.type Useless, :foo, "() -> %bool", wrap: false, typecheck: :later
-    RDL.do_typecheck :later
+  it "type checks joins" do
+    class Foo
+      def bar2
+        User.joins(:user_emails)
+      end
+    end
+    RDL.type Foo, :bar2, "() -> ActiveRecord_Relation<JoinTable<User, UserEmail>>", wrap: false, typecheck: :later2
+    RDL.do_typecheck :later2
+  end
+
+  it "type checks joins followed by exists" do
+    class Foo
+      def bar3
+        User.joins(:user_emails).exists?(username: "bar", user_emails: { email: "bar@foo.com" })
+      end
+    end
+    RDL.type Foo, :bar3, "() -> %bool", wrap: false, typecheck: :later3
+    RDL.do_typecheck :later3
   end
 end

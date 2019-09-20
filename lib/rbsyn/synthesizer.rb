@@ -125,8 +125,10 @@ class Synthesizer
                 generate(depth + 1, targ, tenv, [:hash]).each { |arg|
                   enum.yield s(:send, recv, mth, arg)
                 }
+              when RDL::Type::SingletonType
+                enum.yield s(:send, recv, mth, targ.val)
               else
-                raise RuntimeError, "Don't know how to handle #{targs}"
+                raise RuntimeError, "Don't know how to handle #{targ}"
               end
             }
           }
