@@ -141,10 +141,10 @@ class Synthesizer
   end
 
   def syn_send(component, tenv, tout, variance)
-    consts = syn_const(:const, tenv, RDL::Type::NominalType.new(Class), COVARIANT)
+    raise RuntimeError, "function calls can only be contravariant" if variance == COVARIANT
     guesses = []
 
-    consts.map { |recv|
+    syn_const(:const, tenv, RDL::Type::NominalType.new(Class), COVARIANT).map { |recv|
       recv_type = recv.type
       recv_cls = recv.expr.children[1]
       class_meths = cls_mths_with_type_defns(recv_cls)
@@ -155,12 +155,15 @@ class Synthesizer
         case targ
         when RDL::Type::FiniteHashType
           guesses.concat syn_hash(:hash, tenv, targ, COVARIANT).map { |h|
-            TypedAST.new(compute_tout(recv_type, info[:type], targs), s(:send, recv.expr, mth, h.expr))
-          }
+            tret = compute_tout(recv_type, info[:type], targs)
+            next unless tret <= tout
+            TypedAST.new(tret, s(:send, recv.expr, mth, h.expr))
+          }.reject { |e| e.nil? }
         when RDL::Type::SingletonType
           case targ.val
           when Symbol
-            guesses << TypedAST.new(compute_tout(recv_type, info[:type], targs), s(:send, recv.expr, mth, s(:sym, targ.val)))
+            tret = compute_tout(recv_type, info[:type], targs)
+            guesses << TypedAST.new(tret, s(:send, recv.expr, mth, s(:sym, targ.val))) if tret <= tout
           else
             raise RuntimeError, "Don't know how to emit singletons apart from symbol"
           end
