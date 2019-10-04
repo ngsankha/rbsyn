@@ -1,3 +1,15 @@
+COVARIANT = :+
+CONTRAVARIANT = :-
+
+class TypedAST
+  attr_reader :type, :expr
+
+  def initialize(type, expr)
+    @type = type
+    @expr = expr
+  end
+end
+
 class Synthesizer
   include AST
 
@@ -33,7 +45,8 @@ class Synthesizer
     tout = toutenv[:out].type
     initial_components = guess_initial_components(tout)
 
-    generate(0, tout, tenv, initial_components).each { |prog|
+    generate(0, tenv, initial_components, tout).each { |prog|
+      prog = prog.expr
       begin
         outputs = @test_setup.zip(@envs).map { |setup, env|
           eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
@@ -79,10 +92,30 @@ class Synthesizer
     type = tmeth[0]
     targs = type.args
     targs.map { |targ|
+      case targ
+      when RDL::Type::ComputedType
+        bind = Class.new.class_eval { binding }
+        bind.local_variable_set(:trec, trec)
+        targ.compute(bind)
+      else
+        raise RuntimeError, "unhandled type #{targ}"
+      end
+    }
+  end
+
+  def compute_tout(trec, tmeth, targs)
+    # TODO: we use only the first definition, ignoring overloaded method definitions
+    type = tmeth[0]
+    tret = type.ret
+    case tret
+    when RDL::Type::ComputedType
       bind = Class.new.class_eval { binding }
       bind.local_variable_set(:trec, trec)
-      targ.compute(bind)
-    }
+      bind.local_variable_set(:targs, targs)
+      tret.compute(bind)
+    else
+      tret
+    end
   end
 
   def guess_initial_components(tout)
@@ -92,80 +125,101 @@ class Synthesizer
     return always
   end
 
-  def generate(depth, type, tenv, components, extra={})
-    return [] unless depth <= @max_depth
+  def syn_bool(component, tenv, tout, variance)
+    type = RDL::Globals.types[:bool]
+    raise RuntimeError, "type mismatch for boolean" unless tout <= type
+    return [TypedAST.new(RDL::Globals.types[component], s(component))]
+  end
 
-    Enumerator.new do |enum|
-      components.each { |f|
-        case f
-        when :true, :false
-          ty = RDL::Globals.types[:bool]
-          raise RuntimeError unless type <= ty
-          enum.yield s(f)
-        when :const
-          ty = RDL::Type::NominalType.new(Class)
-          raise RuntimeError unless type <= ty
-          consts = tenv.bindings_with_type(ty).select { |k, v| v.type <= type }
-          consts.each { |k, v|
-            enum.yield s(:const, nil, k)
+  def syn_const(component, tenv, tout, variance)
+    type = RDL::Type::NominalType.new(Class)
+    raise RuntimeError, "type mismatch for const" unless tout <= type
+    consts = tenv.bindings_with_type(type).select { |k, v| v.type <= tout }
+    return consts.map { |k, v|
+      TypedAST.new(RDL::Type::SingletonType.new(RDL::Util.to_class(k)), s(:const, nil, k))
+    }
+  end
+
+  def syn_send(component, tenv, tout, variance)
+    consts = syn_const(:const, tenv, RDL::Type::NominalType.new(Class), COVARIANT)
+    guesses = []
+
+    consts.map { |recv|
+      recv_type = recv.type
+      recv_cls = recv.expr.children[1]
+      class_meths = cls_mths_with_type_defns(recv_cls)
+      class_meths.each { |mth, info|
+        targs = compute_targs(recv_type, info[:type])
+        # TODO: we only handle the first argument now
+        targ = targs[0]
+        case targ
+        when RDL::Type::FiniteHashType
+          guesses.concat syn_hash(:hash, tenv, targ, COVARIANT).map { |h|
+            TypedAST.new(compute_tout(recv_type, info[:type], targs), s(:send, recv.expr, mth, h.expr))
           }
-        when :send
-          # TODO: support method calls on static objects only for now
-          generate(depth + 1, RDL::Type::NominalType.new(Class), tenv, [:const]).each { |recv|
-            # List only methods with type definitions
-            # TODO: Handle all objects and not just static methods on classes
-            recv_cls = recv.children[1]
-            class_meths = cls_mths_with_type_defns(recv_cls)
-            class_meths.each { |mth, info|
-              targs = compute_targs(tenv[recv_cls].type, info[:type])
-              # TODO: we only handle the first argument now
-              targ = targs[0]
-              case targ
-              when RDL::Type::FiniteHashType
-                generate(depth + 1, targ, tenv, [:hash]).each { |arg|
-                  enum.yield s(:send, recv, mth, arg)
-                }
-              when RDL::Type::SingletonType
-                enum.yield s(:send, recv, mth, targ.val)
-              else
-                raise RuntimeError, "Don't know how to handle #{targ}"
-              end
-            }
-          }
-        when :hash
-          raise RuntimeError unless type.is_a? RDL::Type::FiniteHashType
-          # TODO: generate hashes with multiple keys
-          # TODO: some hashes can have mandatory keys too
-          type.elts.each { |k, t|
-            raise RuntimeError unless t.is_a? RDL::Type::OptionalType
-            t = t.type
-            generate(depth + 1, t, tenv, [:pair], { key: k }).each { |pair|
-              enum.yield s(:hash, pair)
-            }
-          }
-        when :pair
-          raise RuntimeError unless extra.key? :key
-          lhs = s(:sym, extra[:key])
-          choices = tenv.bindings_with_type(type)
-          choices.each { |var, binding|
-            generate(depth + 1, type, tenv, [:lvar], { value: var }).each { |rhs|
-              enum.yield s(:pair, lhs, rhs)
-            }
-          }
-        when :lvar
-          if extra.key? :value
-            enum.yield s(:lvar, extra[:value])
+        when RDL::Type::SingletonType
+          case targ.val
+          when Symbol
+            guesses << TypedAST.new(compute_tout(recv_type, info[:type], targs), s(:send, recv.expr, mth, s(:sym, targ.val)))
           else
-            # functions return values will be subtype of the return type in function sig
-            choices = tenv.bindings_with_supertype(type)
-            choices.each { |var, binding|
-              enum.yield s(:lvar, var)
-            }
+            raise RuntimeError, "Don't know how to emit singletons apart from symbol"
           end
         else
-          raise NotImplementedError
+          raise RuntimeError, "Don't know how to handle #{targ}"
         end
       }
+    }
+    return guesses
+  end
+
+  def syn_hash(component, tenv, tout, variance)
+    raise RuntimeError unless tout.is_a? RDL::Type::FiniteHashType
+
+    guesses = []
+    # TODO: generate hashes with multiple keys
+    # TODO: some hashes can have mandatory keys too
+    tout.elts.each { |k, t|
+      raise RuntimeError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType
+      t = t.type
+      guesses.concat syn_lvar(:lvar, tenv, t, COVARIANT).map { |v|
+        TypedAST.new(RDL::Type::FiniteHashType.new({k: v.type}, nil), s(:hash, s(:pair, s(:sym, k), v.expr)))
+      }
+    }
+
+    return guesses
+  end
+
+  def syn_lvar(component, tenv, tout, variance)
+    if variance == CONTRAVARIANT
+      vars = tenv.bindings_with_supertype(tout)
+    elsif variance == COVARIANT
+      vars = tenv.bindings_with_type(tout)
     end
+    return vars.map { |var, binding|
+      TypedAST.new(RDL::Type::NominalType.new(binding.type), s(:lvar, var))
+    }
+  end
+
+  def generate(depth, tenv, components, tout)
+    # TODO: pass flags for covariant vs contravariant
+    # TODO: better way to handle errors when max depth is reached?
+    return [] unless depth <= @max_depth
+
+    components.map { |component|
+      case component
+      when :true, :false
+        syn_bool(component, tenv, tout, CONTRAVARIANT)
+      when :const
+        syn_const(component, tenv, tout, CONTRAVARIANT)
+      when :send
+        syn_send(component, tenv, tout, CONTRAVARIANT)
+      when :hash
+        syn_hash(component, tenv, tout, CONTRAVARIANT)
+      when :lvar
+        syn_lvar(component, tenv, tout, CONTRAVARIANT)
+      else
+        raise RuntimeError, "unknown ast node"
+      end
+    }.flatten
   end
 end
