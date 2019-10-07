@@ -60,8 +60,10 @@ class DBTypes
         else
           raise "unexpected type #{trec}"
         end
+      when RDL::Type::NominalType
+        schema = table_name_to_schema_hash(param.name.to_sym)
       else
-        raise RuntimeError, "unknown"
+        raise RuntimeError, "unknown: #{param.inspect}"
       end
     else
       raise RuntimeError
@@ -70,7 +72,12 @@ class DBTypes
   end
 
   def self.array_schema(trec)
-    RDL::Type::GenericType.new(RDL::Type::NominalType.new(Array), trec)
+    case trec
+    when RDL::Type::SingletonType
+      RDL::Type::GenericType.new(RDL::Type::NominalType.new(ActiveRecord_Relation), RDL::Type::NominalType.new(trec.val))
+    else
+      raise RuntimeError, "unexpected type"
+    end
   end
 
   def self.joins_input_type(trec)
