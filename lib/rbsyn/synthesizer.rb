@@ -46,16 +46,18 @@ class Synthesizer
     tout = toutenv[:out].type
     initial_components = guess_initial_components(tout)
 
-    generate(0, tenv, initial_components, tout).each { |prog|
-      prog = prog.expr
-      begin
-        outputs = @test_setup.zip(@envs).map { |setup, env|
-          eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
-        }
-        return prog if outputs == @outputs
-      rescue Exception => e
-        next
-      end
+    @max_depth.times { |depth|
+      generate(depth + 1, tenv, initial_components, tout).each { |prog|
+        prog = prog.expr
+        begin
+          outputs = @test_setup.zip(@envs).map { |setup, env|
+            eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
+          }
+          return prog if outputs == @outputs
+        rescue Exception => e
+          next
+        end
+      }
     }
     raise RuntimeError, "No candidates found"
   end
@@ -78,46 +80,6 @@ class Synthesizer
     env
   end
 
-  def cls_mths_with_type_defns(cls)
-    cls = RDL::Util.to_class(cls.to_s)
-    parents = cls.ancestors
-    Hash[*parents.map { |parent|
-      klass = RDL::Util.add_singleton_marker(parent.to_s)
-      RDL::Globals.info.info[klass]
-    }.reject(&:nil?).collect { |h| h.to_a }.flatten]
-  end
-
-  def compute_targs(trec, tmeth)
-    # TODO: we use only the first definition, ignoring overloaded method definitions
-    type = tmeth[0]
-    targs = type.args
-    targs.map { |targ|
-      case targ
-      when RDL::Type::ComputedType
-        bind = Class.new.class_eval { binding }
-        bind.local_variable_set(:trec, trec)
-        targ.compute(bind)
-      else
-        raise RuntimeError, "unhandled type #{targ}"
-      end
-    }
-  end
-
-  def compute_tout(trec, tmeth, targs)
-    # TODO: we use only the first definition, ignoring overloaded method definitions
-    type = tmeth[0]
-    tret = type.ret
-    case tret
-    when RDL::Type::ComputedType
-      bind = Class.new.class_eval { binding }
-      bind.local_variable_set(:trec, trec)
-      bind.local_variable_set(:targs, targs)
-      tret.compute(bind)
-    else
-      tret
-    end
-  end
-
   def guess_initial_components(tout)
     always = [:send, :lvar]
 
@@ -126,11 +88,15 @@ class Synthesizer
   end
 
   def generate(depth, tenv, components, tout)
-    # TODO: better way to handle errors when max depth is reached?
-    return [] unless depth <= @max_depth
+    r = Reachability.new(tenv)
+    paths = r.paths_to_type(tout, depth)
 
     components.map { |component|
-      syn(component, tenv, tout, CONTRAVARIANT)[0]
+      # syn returns 2 values. The first one is the set of concrete programs,
+      # and the second one is the set of programs with holes.
+      # The second one is always empty at the moment as we don't actually make
+      # use of holes at the moment
+      syn(component, tenv, tout, CONTRAVARIANT, { reach_set: paths })[0]
     }.flatten
   end
 end

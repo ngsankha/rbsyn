@@ -1,11 +1,13 @@
 module SynHelper
-  def syn_bool(component, tenv, tout, variance)
+  include TypeOperations
+
+  def syn_bool(component, tenv, tout, variance, extra={})
     type = RDL::Globals.types[:bool]
     raise RuntimeError, "type mismatch for boolean" unless tout <= type
     return [TypedAST.new(RDL::Globals.types[component], s(component))], []
   end
 
-  def syn_const(component, tenv, tout, variance)
+  def syn_const(component, tenv, tout, variance, extra={})
     type = RDL::Type::NominalType.new(Class)
     raise RuntimeError, "type mismatch for const" unless tout <= type
     consts = tenv.bindings_with_type(type).select { |k, v| v.type <= tout }
@@ -14,18 +16,26 @@ module SynHelper
     }, []
   end
 
-  def syn_send(component, tenv, tout, variance)
+  def syn_send(component, tenv, tout, variance, extra={})
     raise RuntimeError, "function calls can only be contravariant" if variance == COVARIANT
     guesses = []
 
-    consts = syn(:const, tenv, RDL::Type::NominalType.new(Class), COVARIANT)
-    raise RuntimeError, "unexpected holes" unless consts[1].size == 0
-    consts[0].map { |recv|
-      recv_type = recv.type
-      recv_cls = recv.expr.children[1]
-      class_meths = cls_mths_with_type_defns(recv_cls)
-      class_meths.each { |mth, info|
-        targs = compute_targs(recv_type, info[:type])
+    reach_set = extra[:reach_set]
+    raise RuntimeError, "reach set is nil" if reach_set.nil?
+
+    reach_set.each { |path|
+      path = path.path
+      trecv = path[0]
+      mth = path[1]
+      next if trecv.is_a? RDL::Type::PreciseStringType
+      raise RuntimeError, "expected first element to be singleton" unless trecv.is_a? RDL::Type::SingletonType
+      consts = syn(:const, tenv, trecv, COVARIANT)
+      raise RuntimeError, "unexpected holes" unless consts[1].size == 0
+      consts[0].each { |const|
+        mthds = methods_of(trecv)
+        info = mthds[mth]
+        tmeth = info[:type]
+        targs = compute_targs(trecv, tmeth)
         # TODO: we only handle the first argument now
         targ = targs[0]
         case targ
@@ -33,30 +43,20 @@ module SynHelper
           hashes = syn(:hash, tenv, targ, COVARIANT)
           raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
           guesses.concat hashes[0].map { |h|
-            tret = compute_tout(recv_type, info[:type], targs)
-            next unless tret <= tout
-            TypedAST.new(tret, s(:send, recv.expr, mth, h.expr))
-          }.reject { |e| e.nil? }
-        when RDL::Type::SingletonType
-          case targ.val
-          when Symbol
-            tret = compute_tout(recv_type, info[:type], targs)
-            guesses << TypedAST.new(tret, s(:send, recv.expr, mth, s(:sym, targ.val))) if tret <= tout
-          else
-            raise RuntimeError, "Don't know how to emit singletons apart from symbol"
-          end
+            # TODO: more type checking here for chains longer than 1
+            tret = compute_tout(trecv, tmeth, targs)
+            TypedAST.new(tret, s(:send, const.expr, mth, h.expr))
+          }
         else
           raise RuntimeError, "Don't know how to handle #{targ}"
         end
       }
     }
 
-    # Compute hole expr
-    hole_expr = s(:hole, HoleInfo.new(tout))
-    return guesses, [hole_expr]
+    return guesses, []
   end
 
-  def syn_hash(component, tenv, tout, variance)
+  def syn_hash(component, tenv, tout, variance, extra={})
     raise RuntimeError unless tout.is_a? RDL::Type::FiniteHashType
 
     guesses = []
@@ -75,7 +75,7 @@ module SynHelper
     return guesses, []
   end
 
-  def syn_lvar(component, tenv, tout, variance)
+  def syn_lvar(component, tenv, tout, variance, extra={})
     vars = case variance
     when CONTRAVARIANT
       tenv.bindings_with_supertype(tout)
@@ -88,14 +88,14 @@ module SynHelper
     }, []
   end
 
-  def syn(component, tenv, tout, variance)
+  def syn(component, tenv, tout, variance, extra={})
     # TODO: better way to handle errors when max depth is reached?
     case component
     when :true, :false
       syn_bool component, tenv, tout, variance
     when :const, :send, :hash, :lvar
       handler = "syn_#{component}".to_sym
-      send handler, component, tenv, tout, variance
+      send handler, component, tenv, tout, variance, extra
     else
       raise RuntimeError, "unknown ast node"
     end
