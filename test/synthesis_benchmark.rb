@@ -34,7 +34,7 @@ describe "Synthesizer Benchmark" do
   end
 
   bench_performance_constant "synthesize method chains" do
-    skip
+    # skip
     @syn.add_example(['bruce1'], true)
 
     @syn.add_example(['bruce1'], false) {

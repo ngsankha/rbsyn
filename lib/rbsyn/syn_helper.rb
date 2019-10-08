@@ -24,33 +24,73 @@ module SynHelper
     raise RuntimeError, "reach set is nil" if reach_set.nil?
 
     reach_set.each { |path|
-      path = path.path
-      trecv = path[0]
-      mth = path[1]
-      next if trecv.is_a? RDL::Type::PreciseStringType
-      raise RuntimeError, "expected first element to be singleton" unless trecv.is_a? RDL::Type::SingletonType
-      consts = syn(:const, tenv, trecv, COVARIANT)
-      raise RuntimeError, "unexpected holes" unless consts[1].size == 0
-      consts[0].each { |const|
-        mthds = methods_of(trecv)
-        info = mthds[mth]
-        tmeth = info[:type]
-        targs = compute_targs(trecv, tmeth)
-        # TODO: we only handle the first argument now
-        targ = targs[0]
-        case targ
-        when RDL::Type::FiniteHashType
-          hashes = syn(:hash, tenv, targ, COVARIANT)
-          raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
-          guesses.concat hashes[0].map { |h|
-            # TODO: more type checking here for chains longer than 1
-            tret = compute_tout(trecv, tmeth, targs)
-            TypedAST.new(tret, s(:send, const.expr, mth, h.expr))
-          }
-        else
-          raise RuntimeError, "Don't know how to handle #{targ}"
+      tokens = path.path.to_enum
+      exprs = []
+      loop {
+        begin
+          trecv = tokens.next
+          mth = tokens.next
+          if exprs.empty?
+            break if trecv.is_a? RDL::Type::PreciseStringType
+            raise RuntimeError, "expected first element to be singleton" unless trecv.is_a? RDL::Type::SingletonType
+            consts = syn(:const, tenv, trecv, COVARIANT)
+            raise RuntimeError, "unexpected holes" unless consts[1].size == 0
+            consts[0].each { |const|
+              mthds = methods_of(trecv)
+              info = mthds[mth]
+              tmeth = info[:type]
+              targs = compute_targs(trecv, tmeth)
+              # TODO: we only handle the first argument now
+              targ = targs[0]
+              case targ
+              when RDL::Type::FiniteHashType
+                hashes = syn(:hash, tenv, targ, COVARIANT)
+                raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
+                exprs.concat hashes[0].map { |h|
+                  # TODO: more type checking here for chains longer than 1
+                  tret = compute_tout(trecv, tmeth, targs)
+                  TypedAST.new(tret, s(:send, const.expr, mth, h.expr))
+                }
+              when RDL::Type::SingletonType
+                raise RuntimeError, "cannot handle anything other than symbol" unless targ.val.is_a? Symbol
+                tret = compute_tout(trecv, tmeth, targs)
+                exprs << TypedAST.new(tret, s(:send, const.expr, mth, s(:sym, targ.val)))
+              else
+                raise RuntimeError, "Don't know how to handle #{targ.inspect}"
+              end
+            }
+          else
+            mthds = methods_of(trecv)
+            info = mthds[mth]
+            tmeth = info[:type]
+            targs = compute_targs(trecv, tmeth)
+            targ = targs[0]
+            new_exprs = []
+            case targ
+            when nil
+              exprs.each { |expr|
+                tret = compute_tout(trecv, tmeth, nil)
+                new_exprs << TypedAST.new(tret, s(:send, expr.expr, mth))
+              }
+            when RDL::Type::FiniteHashType
+              hashes = syn(:hash, tenv, targ, COVARIANT)
+              raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
+              hashes[0].each { |h|
+                exprs.each { |expr|
+                  tret = compute_tout(trecv, tmeth, targs)
+                  new_exprs << TypedAST.new(tret, s(:send, expr.expr, mth, h.expr))
+                }
+              }
+            else
+              raise RuntimeError, "Don't know how to handle #{targ.inspect}"
+            end
+            exprs = new_exprs
+          end
+        rescue StopIteration => err
+          break
         end
       }
+      guesses.concat(exprs)
     }
 
     return guesses, []
