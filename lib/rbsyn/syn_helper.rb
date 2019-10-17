@@ -4,7 +4,7 @@ module SynHelper
   def syn_bool(component, tenv, tout, variance, extra={})
     type = RDL::Globals.types[:bool]
     raise RuntimeError, "type mismatch for boolean" unless tout <= type
-    return [TypedAST.new(RDL::Globals.types[component], s(component))], []
+    return [TypedAST.new(RDL::Globals.types[:bool], s(component))], []
   end
 
   def syn_const(component, tenv, tout, variance, extra={})

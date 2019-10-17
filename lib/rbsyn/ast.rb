@@ -1,3 +1,20 @@
+class TypedAST
+  attr_reader :type, :expr
+
+  def initialize(type, expr)
+    @type = type
+    @expr = expr
+  end
+
+  def to_s
+    "#{Unparser.unparse(@expr)} : #{@type}"
+  end
+
+  def ==(other)
+    @expr == other.expr
+  end
+end
+
 module AST
   def s(type, *children)
     Parser::AST::Node.new(type, children)

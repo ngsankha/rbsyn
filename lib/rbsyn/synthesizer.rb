@@ -1,19 +1,6 @@
 COVARIANT = :+
 CONTRAVARIANT = :-
 
-class TypedAST
-  attr_reader :type, :expr
-
-  def initialize(type, expr)
-    @type = type
-    @expr = expr
-  end
-
-  def to_s
-    "#{Unparser.unparse(@expr)} : #{@type}"
-  end
-end
-
 class Synthesizer
   include AST
   include SynHelper
@@ -52,9 +39,13 @@ class Synthesizer
     return prog_pcs[0][0].prog if prog_pcs.size == 1
 
     prog_pcs.reduce { |merged_prog, prog_pc|
+      results = []
       merged_prog.each { |mp|
         prog_pc.each { |pp|
-          merged = mp + pc
+          # results << (mp + pp).prune_branches
+          t = (mp + pp)
+          t.prune_branches
+          puts t
         }
       }
     }
