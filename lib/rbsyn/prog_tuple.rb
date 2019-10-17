@@ -20,6 +20,38 @@ class ProgTuple
     merge_impl(self, other)
   end
 
+  def to_ast
+    if @prog.is_a? Array
+      raise RuntimeError, "expected >1 subtrees" unless @prog.size > 1
+      fragments = @prog.map(&:to_ast)
+      branches = @prog.map { |program| program.branch.expr }
+      true_body = nil
+      merged = nil
+      fragments.zip(branches).each { |fragment, branch|
+        if branch == s(:true)
+          if true_body.nil?
+            true_body = fragment
+          else
+            raise RuntimeError, "expected only 1 true branch"
+          end
+        else
+          if merged.nil?
+            merged = s(:if, branch, fragment)
+          else
+            merged = s(:if, branch, fragment, merged)
+          end
+        end
+      }
+      unless true_body.nil?
+        raise RuntimeError, "expected if" unless merged.type == :if
+        merged = s(:if, *merged.children, true_body)
+      end
+      merged
+    else
+      @prog.expr
+    end
+  end
+
   def prune_branches
     strategies = BranchPruneStrategy.descendants
     if @prog.is_a? Array

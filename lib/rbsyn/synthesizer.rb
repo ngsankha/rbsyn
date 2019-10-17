@@ -23,7 +23,7 @@ class Synthesizer
   end
 
   def run
-    prog_pcs = @envs.zip(@outputs, @test_setup).map { |env, output, setup|
+    progconds = @envs.zip(@outputs, @test_setup).map { |env, output, setup|
       progs = synthesize(@max_depth, [env], [output], [setup])
       branches = synthesize(@max_depth, [env], [true], [setup], [:true, :false])
       tuples = []
@@ -35,19 +35,30 @@ class Synthesizer
       tuples
     }
 
-    # if there is only one test there is nothing to merge, we return the first synthesized program
-    return prog_pcs[0][0].prog if prog_pcs.size == 1
+    # if there is only one generated, there is nothing to merge, we return the first synthesized program
+    return progconds[0][0].prog.expr if progconds.size == 1
 
-    prog_pcs.reduce { |merged_prog, prog_pc|
+    completed = progconds.reduce { |merged_prog, progcond|
       results = []
       merged_prog.each { |mp|
-        prog_pc.each { |pp|
-          # results << (mp + pp).prune_branches
+        progcond.each { |pp|
           t = (mp + pp)
           t.prune_branches
-          puts t
+          results << t
         }
       }
+      # TODO: eliminate incorrect programs by testing?
+      results = BranchCountElimination.eliminate(results)
+      OrCountElimination.eliminate(results)
     }
+
+    completed.each { |progcond|
+      ast = progcond.to_ast
+      test_outputs = @test_setup.zip(@envs).map { |setup, env|
+        eval_ast(ast, env) { setup.call unless setup.nil? } rescue next
+      }
+      return ast if test_outputs == @outputs
+    }
+    raise RuntimeError, "No candidates found"
   end
 end
