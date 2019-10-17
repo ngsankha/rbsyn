@@ -27,6 +27,10 @@ class CallChain
   def last
     @path.last
   end
+
+  def to_s
+    @path.join(' -> ')
+  end
 end
 
 class Reachability
@@ -47,6 +51,7 @@ class Reachability
         trecv = path.last
         mthds = methods_of(trecv)
         mthds.each { |mthd, info|
+          next if mthd == :__getobj__
           tmeth = info[:type]
           targs = compute_targs(trecv, tmeth)
           next unless constructable? targs, path.tenv

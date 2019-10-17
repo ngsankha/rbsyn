@@ -8,6 +8,10 @@ class TypedAST
     @type = type
     @expr = expr
   end
+
+  def to_s
+    "#{Unparser.unparse(@expr)} : #{@type}"
+  end
 end
 
 class Synthesizer
@@ -32,12 +36,19 @@ class Synthesizer
   end
 
   def run
-    synthesize(@max_depth, @envs, @outputs, @test_setup)
+    @envs.zip(@outputs, @test_setup).each { |env, output, setup|
+      prog = synthesize(@max_depth, [env], [output], [setup])
+      branch = synthesize(@max_depth, [env], [true], [setup], [:true, :false])
+      puts prog
+      puts "====="
+      puts branch
+      puts "====="
+    }
   end
 
   private
 
-  def synthesize(max_depth, envs, outputs, setups)
+  def synthesize(max_depth, envs, outputs, setups, forbidden_components=[])
     tenv = TypeEnvironment.new
     envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
     tenv = load_components(tenv)
@@ -49,20 +60,21 @@ class Synthesizer
       env.to_type_env
     }.each { |t| toutenv = toutenv.merge(t) }
     tout = toutenv[:out].type
-    initial_components = guess_initial_components(tout)
+    initial_components = guess_initial_components(tout) - forbidden_components
 
-    max_depth.times { |depth|
-      generate(depth + 1, tenv, initial_components, tout).each { |prog|
+    (max_depth + 1).times { |depth|
+      progs = generate(depth, tenv, initial_components, tout).select { |prog|
         prog = prog.expr
         begin
           run_outputs = setups.zip(envs).map { |setup, env|
             eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
           }
-          return prog if run_outputs == outputs
+          run_outputs == outputs
         rescue Exception => e
           next
         end
       }
+      return progs if progs.size > 0
     }
     raise RuntimeError, "No candidates found"
   end
@@ -91,15 +103,26 @@ class Synthesizer
   end
 
   def generate(depth, tenv, components, tout)
-    r = Reachability.new(tenv)
-    paths = r.paths_to_type(tout, depth)
+    if depth == 0
+      components = components - [:send]
+      components.map { |component|
+        # syn returns 2 values. The first one is the set of concrete programs,
+        # and the second one is the set of programs with holes.
+        # The second one is always empty at the moment as we don't actually make
+        # use of holes at the moment
+        syn(component, tenv, tout, CONTRAVARIANT)[0]
+      }.flatten
+    else
+      r = Reachability.new(tenv)
+      paths = r.paths_to_type(tout, depth)
 
-    components.map { |component|
-      # syn returns 2 values. The first one is the set of concrete programs,
-      # and the second one is the set of programs with holes.
-      # The second one is always empty at the moment as we don't actually make
-      # use of holes at the moment
-      syn(component, tenv, tout, CONTRAVARIANT, { reach_set: paths })[0]
-    }.flatten
+      components.map { |component|
+        # syn returns 2 values. The first one is the set of concrete programs,
+        # and the second one is the set of programs with holes.
+        # The second one is always empty at the moment as we don't actually make
+        # use of holes at the moment
+        syn(component, tenv, tout, CONTRAVARIANT, { reach_set: paths })[0]
+      }.flatten
+    end
   end
 end

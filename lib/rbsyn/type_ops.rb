@@ -10,7 +10,7 @@ module TypeOperations
         bind.local_variable_set(:trec, trec)
         targ.compute(bind)
       else
-        raise RuntimeError, "unhandled type #{targ}"
+        targ
       end
     }
   end

@@ -44,17 +44,22 @@ module SynHelper
               targ = targs[0]
               case targ
               when RDL::Type::FiniteHashType
+                tret = compute_tout(trecv, tmeth, targs)
                 hashes = syn(:hash, tenv, targ, COVARIANT)
                 raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
                 exprs.concat hashes[0].map { |h|
                   # TODO: more type checking here for chains longer than 1
-                  tret = compute_tout(trecv, tmeth, targs)
                   TypedAST.new(tret, s(:send, const.expr, mth, h.expr))
                 }
               when RDL::Type::SingletonType
                 raise RuntimeError, "cannot handle anything other than symbol" unless targ.val.is_a? Symbol
                 tret = compute_tout(trecv, tmeth, targs)
                 exprs << TypedAST.new(tret, s(:send, const.expr, mth, s(:sym, targ.val)))
+              when RDL::Type::NominalType
+                tret = compute_tout(trecv, tmeth, targs)
+                args = syn(:lvar, tenv, targ, COVARIANT)
+                raise RuntimeError, "unexpected holes" unless args[1].size == 0
+                exprs.concat args[0].map { |arg| TypedAST.new(tret, s(:send, const.expr, mth, arg.expr)) }
               else
                 raise RuntimeError, "Don't know how to handle #{targ.inspect}"
               end
