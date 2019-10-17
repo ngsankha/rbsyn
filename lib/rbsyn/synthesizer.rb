@@ -48,8 +48,10 @@ class Synthesizer
         }
       }
       # TODO: eliminate incorrect programs by testing?
-      results = BranchCountElimination.eliminate(results)
-      OrCountElimination.eliminate(results)
+      EliminationStrategy.descendants.each { |strategy|
+        results = strategy.eliminate(results)
+      }
+      results
     }
 
     completed.each { |progcond|

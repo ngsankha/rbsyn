@@ -53,14 +53,13 @@ class ProgTuple
   end
 
   def prune_branches
-    strategies = BranchPruneStrategy.descendants
     if @prog.is_a? Array
       pruned_children = @prog.map { |prg| prg.prune_branches; prg }
       @prog = pruned_children
     end
 
     intermediate = self
-    strategies.each { |strategy|
+    BranchPruneStrategy.descendants.each { |strategy|
       intermediate = strategy.prune(intermediate)
     }
     @prog = intermediate.prog

@@ -23,10 +23,7 @@ class BoolExprFold < BranchPruneStrategy
     rbranch = progcond.prog[1].branch.expr
     rbody = progcond.prog[1].prog.expr
 
-    # puts "#{Unparser.unparse(lbranch)} -------- #{Unparser.unparse(rbranch)}"
-
     if lbranch.type == :send && lbranch.children[1] == :! && rbranch == lbranch.children[0]
-      # require 'pry'; binding.pry
       # lbranch = !p, rbranch = p
       if lbody.type == :true && rbody.type == :false
         return ProgTuple.new(progcond.prog[0].branch,
@@ -40,7 +37,6 @@ class BoolExprFold < BranchPruneStrategy
         raise RuntimeError, "unexpected"
       end
     elsif rbranch.type == :send && rbranch.children[1] == :! && lbranch == rbranch.children[0]
-      # require 'pry'; binding.pry
       # lbranch = p, rhs = !p
       if rbody.type == :true && lbody.type == :false
         return ProgTuple.new(progcond.prog[1].branch,
