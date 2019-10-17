@@ -32,28 +32,33 @@ class Synthesizer
   end
 
   def run
+    synthesize(@max_depth, @envs, @outputs, @test_setup)
+  end
+
+  private
+
+  def synthesize(max_depth, envs, outputs, setups)
     tenv = TypeEnvironment.new
-    @envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
+    envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
     tenv = load_components(tenv)
 
     toutenv = TypeEnvironment.new
-    @outenv = @outputs.map { |o|
+    outputs.map { |o|
       env = ValEnvironment.new
       env[:out] = o
       env.to_type_env
     }.each { |t| toutenv = toutenv.merge(t) }
-
     tout = toutenv[:out].type
     initial_components = guess_initial_components(tout)
 
-    @max_depth.times { |depth|
+    max_depth.times { |depth|
       generate(depth + 1, tenv, initial_components, tout).each { |prog|
         prog = prog.expr
         begin
-          outputs = @test_setup.zip(@envs).map { |setup, env|
+          run_outputs = setups.zip(envs).map { |setup, env|
             eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
           }
-          return prog if outputs == @outputs
+          return prog if run_outputs == outputs
         rescue Exception => e
           next
         end
@@ -61,8 +66,6 @@ class Synthesizer
     }
     raise RuntimeError, "No candidates found"
   end
-
-  private
 
   def env_from_args(input)
     env = ValEnvironment.new
