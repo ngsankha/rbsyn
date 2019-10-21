@@ -40,19 +40,18 @@ module Rbsyn::ActiveRecord
         }
         schema = schema.transform_keys { |k| k.to_sym }
         assoc = {}
-        model.reflect_on_all_associations.each { |a|
-          kl_type = RDL::Type::SingletonType.new(RDL::Util.to_class(a.class_name))
-          aname = a.macro
-          if assoc[aname]
-            assoc[aname] = RDL::Type::UnionType.new(assoc[aname], kl_type)
+        model.reflections.each { |assoc_name, assoc_info|
+          kl_type = RDL::Type::SingletonType.new(RDL::Util.to_class(assoc_info.class_name))
+          if assoc[assoc_name]
+            assoc[assoc_name] = RDL::Type::UnionType.new(assoc[assoc_name], kl_type)
           else
-            assoc[aname] = kl_type unless assoc[aname]
+            assoc[assoc_name] = kl_type unless assoc[assoc_name]
           end
 
-          if a.name.to_s.pluralize == a.name.to_s
-            RDL.type model, a.name, "() -> ActiveRecord_Relation<#{a.name.to_s.singularize}>", wrap: false
+          if assoc_info.name.to_s.pluralize == assoc_info.name.to_s
+            RDL.type model, assoc_info.name, "() -> ActiveRecord_Relation<#{assoc_info.name.to_s.singularize}>", wrap: false
           else
-            RDL.type model, a.name, "() -> #{a.name.to_s.camelize.singularize}", wrap: false
+            RDL.type model, assoc_info.name, "() -> #{assoc_info.name.to_s.camelize.singularize}", wrap: false
           end
         }
         schema[:__associations] = RDL::Type::FiniteHashType.new(assoc, nil)
