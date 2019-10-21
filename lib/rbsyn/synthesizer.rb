@@ -11,6 +11,11 @@ class Synthesizer
     @outputs = []
     @max_depth = max_depth
     @components = components
+    @reset_fn = nil
+  end
+
+  def reset_function(&blk)
+    @reset_fn = blk
   end
 
   def add_example(input, output, &blk)
@@ -24,8 +29,8 @@ class Synthesizer
 
   def run
     progconds = @envs.zip(@outputs, @test_setup).map { |env, output, setup|
-      progs = synthesize(@max_depth, [env], [output], [setup])
-      branches = synthesize(@max_depth, [env], [true], [setup], [:true, :false])
+      progs = synthesize(@max_depth, [env], [output], [setup], @reset_fn)
+      branches = synthesize(@max_depth, [env], [true], [setup], @reset_fn, [:true, :false])
       tuples = []
       progs.each { |prog|
         branches.each { |branch|
@@ -57,7 +62,7 @@ class Synthesizer
     completed.each { |progcond|
       ast = progcond.to_ast
       test_outputs = @test_setup.zip(@envs).map { |setup, env|
-        eval_ast(ast, env) { setup.call unless setup.nil? } rescue next
+        eval_ast(ast, env, @reset_fn) { setup.call unless setup.nil? } rescue next
       }
       return ast if test_outputs == @outputs
     }

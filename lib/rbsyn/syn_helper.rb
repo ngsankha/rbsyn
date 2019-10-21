@@ -146,7 +146,7 @@ module SynHelper
     end
   end
 
-  def synthesize(max_depth, envs, outputs, setups, forbidden_components=[])
+  def synthesize(max_depth, envs, outputs, setups, reset_fn, forbidden_components=[])
     tenv = TypeEnvironment.new
     envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
     tenv = load_components(tenv)
@@ -163,14 +163,10 @@ module SynHelper
     (max_depth + 1).times { |depth|
       progs = generate(depth, tenv, initial_components, tout).select { |prog|
         prog = prog.expr
-        begin
-          run_outputs = setups.zip(envs).map { |setup, env|
-            eval_ast(prog, env) { setup.call unless setup.nil? } rescue next
-          }
-          run_outputs == outputs
-        rescue Exception => e
-          next
-        end
+        run_outputs = setups.zip(envs).map { |setup, env|
+          eval_ast(prog, env, reset_fn) { setup.call unless setup.nil? } rescue next
+        }
+        run_outputs == outputs
       }
       return progs if progs.size > 0
     }

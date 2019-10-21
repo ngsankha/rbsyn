@@ -20,8 +20,9 @@ module AST
     Parser::AST::Node.new(type, children)
   end
 
-  def eval_ast(ast, env, &setup)
+  def eval_ast(ast, env, reset_fn, &setup)
     DBUtils.reset
+    reset_fn.call unless reset_fn.nil?
     setup.call unless setup.nil?
     klass = Class.new
     bind = klass.class_eval { binding }

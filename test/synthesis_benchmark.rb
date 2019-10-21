@@ -67,6 +67,9 @@ describe "Synthesizer Benchmark" do
     RDL.type SiteSettings, 'self.reserved_username?', '(String) -> %bool', wrap: false
 
     syn = Synthesizer.new(max_depth: 3, components: Rbsyn::ActiveRecord::Utils.models + [SiteSettings])
+    syn.reset_function {
+      SiteSettings.reserved_usernames = []
+    }
 
     syn.add_example(['bruce1'], true)
 
@@ -87,5 +90,9 @@ else
   !User.exists?(username: arg0)
 end
 }.strip
+  end
+
+  bench_performance_constant "synthesize method call chains with hashes having multiple entries" do
+    skip
   end
 end
