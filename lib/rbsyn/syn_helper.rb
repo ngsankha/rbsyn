@@ -4,7 +4,7 @@ module SynHelper
   def syn_bool(component, tenv, tout, variance, extra={})
     type = RDL::Globals.types[:bool]
     raise RuntimeError, "type mismatch for boolean" unless tout <= type
-    return [TypedAST.new(RDL::Globals.types[:bool], s(component))], []
+    return [TypedAST.new(RDL::Globals.types[:bool], s(component))]
   end
 
   def syn_const(component, tenv, tout, variance, extra={})
@@ -13,7 +13,7 @@ module SynHelper
     consts = tenv.bindings_with_type(type).select { |k, v| v.type <= tout }
     return consts.map { |k, v|
       TypedAST.new(RDL::Type::SingletonType.new(RDL::Util.to_class(k)), s(:const, nil, k))
-    }, []
+    }
   end
 
   def syn_send(component, tenv, tout, variance, extra={})
@@ -34,8 +34,7 @@ module SynHelper
             break if trecv.is_a? RDL::Type::PreciseStringType
             raise RuntimeError, "expected first element to be singleton" unless trecv.is_a? RDL::Type::SingletonType
             consts = syn(:const, tenv, trecv, COVARIANT)
-            raise RuntimeError, "unexpected holes" unless consts[1].size == 0
-            consts[0].each { |const|
+            consts.each { |const|
               mthds = methods_of(trecv)
               info = mthds[mth]
               tmeth = info[:type]
@@ -46,8 +45,7 @@ module SynHelper
               when RDL::Type::FiniteHashType
                 tret = compute_tout(trecv, tmeth, targs)
                 hashes = syn(:hash, tenv, targ, COVARIANT)
-                raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
-                exprs.concat hashes[0].map { |h|
+                exprs.concat hashes.map { |h|
                   # TODO: more type checking here for chains longer than 1
                   TypedAST.new(tret, s(:send, const.expr, mth, h.expr))
                 }
@@ -58,8 +56,7 @@ module SynHelper
               when RDL::Type::NominalType
                 tret = compute_tout(trecv, tmeth, targs)
                 args = syn(:lvar, tenv, targ, COVARIANT)
-                raise RuntimeError, "unexpected holes" unless args[1].size == 0
-                exprs.concat args[0].map { |arg| TypedAST.new(tret, s(:send, const.expr, mth, arg.expr)) }
+                exprs.concat args.map { |arg| TypedAST.new(tret, s(:send, const.expr, mth, arg.expr)) }
               else
                 raise RuntimeError, "Don't know how to handle #{targ.inspect}"
               end
@@ -79,8 +76,7 @@ module SynHelper
               }
             when RDL::Type::FiniteHashType
               hashes = syn(:hash, tenv, targ, COVARIANT)
-              raise RuntimeError, "unexpected holes" unless hashes[1].size == 0
-              hashes[0].each { |h|
+              hashes.each { |h|
                 exprs.each { |expr|
                   tret = compute_tout(trecv, tmeth, targs)
                   new_exprs << TypedAST.new(tret, s(:send, expr.expr, mth, h.expr))
@@ -98,7 +94,7 @@ module SynHelper
       guesses.concat(exprs)
     }
 
-    return guesses, []
+    return guesses
   end
 
   def syn_hash(component, tenv, tout, variance, extra={})
@@ -111,13 +107,12 @@ module SynHelper
       raise RuntimeError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType
       t = t.type
       lvars = syn(:lvar, tenv, t, COVARIANT)
-      raise RuntimeError, "unexpected holes" unless lvars[1].size == 0
-      guesses.concat lvars[0].map { |v|
+      guesses.concat lvars.map { |v|
         TypedAST.new(RDL::Type::FiniteHashType.new({k: v.type}, nil), s(:hash, s(:pair, s(:sym, k), v.expr)))
       }
     }
 
-    return guesses, []
+    return guesses
   end
 
   def syn_lvar(component, tenv, tout, variance, extra={})
@@ -130,7 +125,7 @@ module SynHelper
 
     return vars.map { |var, bind|
       TypedAST.new(RDL::Type::NominalType.new(bind.type), s(:lvar, var))
-    }, []
+    }
   end
 
   def syn(component, tenv, tout, variance, extra={})
@@ -200,22 +195,14 @@ module SynHelper
     if depth == 0
       components = components - [:send]
       components.map { |component|
-        # syn returns 2 values. The first one is the set of concrete programs,
-        # and the second one is the set of programs with holes.
-        # The second one is always empty at the moment as we don't actually make
-        # use of holes at the moment
-        syn(component, tenv, tout, CONTRAVARIANT)[0]
+        syn(component, tenv, tout, CONTRAVARIANT)
       }.flatten
     else
       r = Reachability.new(tenv)
       paths = r.paths_to_type(tout, depth)
 
       components.map { |component|
-        # syn returns 2 values. The first one is the set of concrete programs,
-        # and the second one is the set of programs with holes.
-        # The second one is always empty at the moment as we don't actually make
-        # use of holes at the moment
-        syn(component, tenv, tout, CONTRAVARIANT, { reach_set: paths })[0]
+        syn(component, tenv, tout, CONTRAVARIANT, { reach_set: paths })
       }.flatten
     end
   end

@@ -94,5 +94,21 @@ end
 
   bench_performance_constant "synthesize method call chains with hashes having multiple entries" do
     skip
+    DBUtils.reset
+    syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
+
+    syn.add_example(['bruce1', nil], true)
+
+    syn.add_example(['bruce1', 'bruce@wayne.com'], true) {
+      User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
+    }
+
+    syn.add_example(['bruce1', 'bruce@wayne.com'], false) {
+      u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
+      u.emails.create(email: 'bruce1@wayne.com')
+    }
+
+    prog = Unparser.unparse(syn.run)
+    assert_equal prog, "hello"
   end
 end
