@@ -2,10 +2,11 @@ class ProgTuple
   include AST
   include SynHelper
 
-  attr_reader :prog, :branch, :envs, :setups
+  attr_reader :prog, :branch, :envs, :setups, :ctx
 
-  def initialize(prog, branch, envs, setups)
+  def initialize(syn, prog, branch, envs, setups)
     raise RuntimeError, "expected branch condition to be a %bool" unless branch.type <= RDL::Globals.types[:bool]
+    @ctx = syn
     @prog = prog
     @branch = branch
     @envs = envs
@@ -78,24 +79,23 @@ class ProgTuple
 
   private
   def merge_impl(first, second)
-    # TODO: parameterize search depth in the synthesize call here
     if first.prog == second.prog && first.branch == second.branch
-      return ProgTuple.new(first.prog, first.branch, [*first.envs, *second.envs], [*first.setups, *second.setups])
+      return ProgTuple.new(@ctx, first.prog, first.branch, [*first.envs, *second.envs], [*first.setups, *second.setups])
     elsif first.prog == second.prog && first.branch != second.branch
-      return ProgTuple.new(first.prog,
+      return ProgTuple.new(@ctx, first.prog,
         TypedAST.new(RDL::Globals.types[:bool], s(:or, first.branch.expr, second.branch.expr)),
         [*first.envs, *second.envs], [*first.setups, *second.setups])
     elsif first.prog != second.prog && first.branch != second.branch
-      return ProgTuple.new([first, second],
+      return ProgTuple.new(@ctx, [first, second],
         TypedAST.new(RDL::Globals.types[:bool], s(:or, first.branch.expr, second.branch.expr)),
         [*first.envs, *second.envs], [*first.setups, *second.setups])
     else
       # prog different branch same, need to discover a new path condition
       output1 = Array.new(first.envs.size, true) + Array.size(second.envs.size, false)
-      bsyn1 = synthesize(3, [*first.envs, *second.envs], output1, [*first.setups, *second.setups])
+      bsyn1 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output1, [*first.setups, *second.setups])
       output2 = Array.new(first.envs.size, false) + Array.size(second.envs.size, true)
-      bsyn2 = synthesize(3, [*first.envs, *second.envs], output2, [*first.setups, *second.setups])
-      return ProgTuple.new([ProgTuple.new(first.prog, bsyn1, first.envs, first.setups),
+      bsyn2 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output2, [*first.setups, *second.setups])
+      return ProgTuple.new(@ctx, [ProgTuple.new(first.prog, bsyn1, first.envs, first.setups),
                             ProgTuple.new(second.prog, bsyn2, second.envs, second.setups)],
                             first.branch, [*first.envs, *second.envs], [*@setups, *second.setups])
     end

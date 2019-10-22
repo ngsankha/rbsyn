@@ -5,6 +5,8 @@ class Synthesizer
   include AST
   include SynHelper
 
+  attr_reader :max_depth
+
   def initialize(max_depth: 5, components: [])
     @test_setup = []
     @envs = []
@@ -34,7 +36,7 @@ class Synthesizer
       tuples = []
       progs.each { |prog|
         branches.each { |branch|
-          tuples << ProgTuple.new(prog, branch, [env], [setup])
+          tuples << ProgTuple.new(self, prog, branch, [env], [setup])
         }
       }
       tuples

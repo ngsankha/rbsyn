@@ -26,11 +26,11 @@ class BoolExprFold < BranchPruneStrategy
     if lbranch.type == :send && lbranch.children[1] == :! && rbranch == lbranch.children[0]
       # lbranch = !p, rbranch = p
       if lbody.type == :true && rbody.type == :false
-        return ProgTuple.new(progcond.prog[0].branch,
+        return ProgTuple.new(progcond.ctx, progcond.prog[0].branch,
           TypedAST.new(RDL::Globals.types[:bool], s(:true)),
           progcond.envs, progcond.setups)
       elsif lbody.type == :false && rbody.type == :true
-        return ProgTuple.new(progcond.prog[1].branch,
+        return ProgTuple.new(progcond.ctx, progcond.prog[1].branch,
           TypedAST.new(RDL::Globals.types[:bool], s(:true)),
           progcond.envs, progcond.setups)
       else
@@ -39,11 +39,11 @@ class BoolExprFold < BranchPruneStrategy
     elsif rbranch.type == :send && rbranch.children[1] == :! && lbranch == rbranch.children[0]
       # lbranch = p, rhs = !p
       if rbody.type == :true && lbody.type == :false
-        return ProgTuple.new(progcond.prog[1].branch,
+        return ProgTuple.new(progcond.ctx, progcond.prog[1].branch,
           TypedAST.new(RDL::Globals.types[:bool], s(:true)),
           progcond.envs, progcond.setups)
       elsif rbody.type == :false && lbody.type == :true
-        return ProgTuple.new(progcond.prog[0].branch,
+        return ProgTuple.new(progcond.ctx, progcond.prog[0].branch,
           TypedAST.new(RDL::Globals.types[:bool], s(:true)),
           progcond.envs, progcond.setups)
       else
