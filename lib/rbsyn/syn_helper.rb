@@ -12,7 +12,11 @@ module SynHelper
     raise RuntimeError, "type mismatch for const" unless tout <= type
     consts = tenv.bindings_with_type(type).select { |k, v| v.type <= tout }
     return consts.map { |k, v|
-      TypedAST.new(RDL::Type::SingletonType.new(RDL::Util.to_class(k)), s(:const, nil, k))
+      if v.type.is_a?(RDL::Type::SingletonType) && v.type.val.nil?
+        TypedAST.new(v.type, s(:const, nil, k))
+      else
+        TypedAST.new(RDL::Type::SingletonType.new(RDL::Util.to_class(k)), s(:const, nil, k))
+      end
     }
   end
 
@@ -42,6 +46,9 @@ module SynHelper
               # TODO: we only handle the first argument now
               targ = targs[0]
               case targ
+              when nil
+                tret = compute_tout(trecv, tmeth, nil)
+                exprs << TypedAST.new(tret, s(:send, const.expr, mth))
               when RDL::Type::FiniteHashType
                 tret = compute_tout(trecv, tmeth, targs)
                 hashes = syn(:hash, tenv, targ, COVARIANT)

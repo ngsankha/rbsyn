@@ -78,26 +78,65 @@ class ProgTuple
   end
 
   private
-  def merge_impl(first, second)
-    if first.prog == second.prog && first.branch == second.branch
-      return ProgTuple.new(@ctx, first.prog, first.branch, [*first.envs, *second.envs], [*first.setups, *second.setups])
-    elsif first.prog == second.prog && first.branch != second.branch
-      return ProgTuple.new(@ctx, first.prog,
-        TypedAST.new(RDL::Globals.types[:bool], s(:or, first.branch.expr, second.branch.expr)),
-        [*first.envs, *second.envs], [*first.setups, *second.setups])
-    elsif first.prog != second.prog && first.branch != second.branch
-      return ProgTuple.new(@ctx, [first, second],
-        TypedAST.new(RDL::Globals.types[:bool], s(:or, first.branch.expr, second.branch.expr)),
-        [*first.envs, *second.envs], [*first.setups, *second.setups])
+  def make_or(first, second)
+    raise RuntimeError, "expected parser nodes" unless first.is_a?(Parser::AST::Node) && second.is_a?(Parser::AST::Node)
+    if first.type == :or
+      children1 = first.children
     else
+      children1 = [first]
+    end
+
+    if second.type == :or
+      children2 = second.children
+    else
+      children2 = [second]
+    end
+
+    s(:or, *children1, *children2)
+  end
+
+  def equiv(first, second)
+    raise "cannot handle both or now" if first.expr.type == :or && second.expr.type == :or
+    first, second = second, first if second.expr.type == :or
+    if first.expr.type == :or
+      first.expr.children.include? second.expr
+    else
+      first == second
+    end
+  end
+
+  def merge_impl(first, second)
+    if first.prog == second.prog && equiv(first.branch, second.branch)
+      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.envs, *second.envs], [*first.setups, *second.setups])]
+    elsif first.prog == second.prog && !equiv(first.branch, second.branch)
+      return [ProgTuple.new(@ctx, first.prog,
+        TypedAST.new(RDL::Globals.types[:bool], make_or(first.branch.expr, second.branch.expr)),
+        [*first.envs, *second.envs], [*first.setups, *second.setups])]
+    elsif first.prog != second.prog && !equiv(first.branch, second.branch)
+      return [ProgTuple.new(@ctx, [first, second],
+        TypedAST.new(RDL::Globals.types[:bool], make_or(first.branch.expr, second.branch.expr)),
+        [*first.envs, *second.envs], [*first.setups, *second.setups])]
+    else
+      # HACK: this is because synthesize is from a module, and needs @components variable
+      # @components is available in Synthesizer class but not here.
+      # TODO: refactor
+      @components = @ctx.components
       # prog different branch same, need to discover a new path condition
-      output1 = Array.new(first.envs.size, true) + Array.size(second.envs.size, false)
-      bsyn1 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output1, [*first.setups, *second.setups])
-      output2 = Array.new(first.envs.size, false) + Array.size(second.envs.size, true)
-      bsyn2 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output2, [*first.setups, *second.setups])
-      return ProgTuple.new(@ctx, [ProgTuple.new(first.prog, bsyn1, first.envs, first.setups),
-                            ProgTuple.new(second.prog, bsyn2, second.envs, second.setups)],
-                            first.branch, [*first.envs, *second.envs], [*@setups, *second.setups])
+      output1 = Array.new(first.envs.size, true) + Array.new(second.envs.size, false)
+      bsyn1 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output1, [*first.setups, *second.setups], @ctx.reset_fn)
+      output2 = Array.new(first.envs.size, false) + Array.new(second.envs.size, true)
+      bsyn2 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output2, [*first.setups, *second.setups], @ctx.reset_fn)
+      tuples = []
+      bsyn1.each { |b1|
+        bsyn2.each { |b2|
+          # puts "branch 1: #{b1}"
+          # puts "branch 2: #{b2}"
+          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, b1, first.envs, first.setups),
+            ProgTuple.new(@ctx, second.prog, b2, second.envs, second.setups)],
+            first.branch, [*first.envs, *second.envs], [*@setups, *second.setups])
+        }
+      }
+      return tuples
     end
   end
 end

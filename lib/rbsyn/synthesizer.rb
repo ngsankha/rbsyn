@@ -49,11 +49,12 @@ class Synthesizer
       results = []
       merged_prog.each { |mp|
         progcond.each { |pp|
-          t = (mp + pp)
-          t.prune_branches
-          results << t
+          possible = (mp + pp)
+          possible.each { |t| t.prune_branches }
+          results.push(*possible)
         }
       }
+
       # TODO: eliminate incorrect programs by testing?
       EliminationStrategy.descendants.each { |strategy|
         results = strategy.eliminate(results)

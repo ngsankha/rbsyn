@@ -6,7 +6,7 @@ class ValBinding
     @name = name
     @value = value
     case value
-    when Numeric, String, TrueClass, FalseClass
+    when Numeric, String, TrueClass, FalseClass, NilClass
       @type = RDL::Globals.parser.scan_str("#T #{value.inspect}")
     else
       raise RuntimeError, "Expected value to be a string or number"
