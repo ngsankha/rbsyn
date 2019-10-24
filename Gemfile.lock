@@ -29,6 +29,7 @@ GEM
     ansi (1.5.0)
     ast (2.4.0)
     builder (3.2.3)
+    byebug (11.0.1)
     coderay (1.1.2)
     concord (0.1.5)
       adamantium (~> 0.2.0)
@@ -56,6 +57,9 @@ GEM
     pry (0.12.2)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
+    pry-byebug (3.7.0)
+      byebug (~> 11.0)
+      pry (~> 0.10)
     racc (1.4.15)
     rake (10.5.0)
     rdl (2.2.0)
@@ -87,6 +91,7 @@ DEPENDENCIES
   minitest-hooks
   minitest-reporters
   pry
+  pry-byebug
   rake (~> 10.0)
   rbsyn!
 
