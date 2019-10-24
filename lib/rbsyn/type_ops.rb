@@ -53,6 +53,39 @@ module TypeOperations
     end
   end
 
+  def constructable?(targs, tenv, strict=false)
+    targs.all? { |targ|
+      case targ
+      when RDL::Type::FiniteHashType
+        if strict
+          targ.elts.values.all? { |v| constructable? [v], tenv, strict }
+        else
+          targ.elts.values.any? { |v| constructable? [v], tenv, strict }
+        end
+      when RDL::Type::OptionalType
+        constructable? [targ.type], tenv, strict
+      when RDL::Type::NominalType
+        tenv.any? { |t| t <= targ }
+      when RDL::Type::SingletonType
+        if targ.val.is_a? Symbol
+          true
+        else
+          raise RuntimeError, "unhandled type #{targ.inspect}"
+        end
+      else
+        raise RuntimeError, "unhandled type #{targ.inspect}"
+      end
+    }
+  end
+
+  def types_from_tenv(tenv)
+    s = Set.new
+    tenv.bindings.each { |b|
+      s.add(tenv[b].type)
+    }
+    return s
+  end
+
   def methods_of(trecv)
     Hash[*parents_of(trecv).map { |klass|
         RDL::Globals.info.info[klass]

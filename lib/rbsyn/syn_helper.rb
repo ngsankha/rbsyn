@@ -32,7 +32,7 @@ module SynHelper
           mth = tokens.next
           if exprs.empty?
             break if trecv.is_a? RDL::Type::PreciseStringType
-            raise RuntimeError, "expected first element to be singleton" unless trecv.is_a? RDL::Type::SingletonType
+            raise RuntimeError, "expected first element to be singleton #{trecv}" unless trecv.is_a? RDL::Type::SingletonType
             consts = syn(:const, tenv, trecv, COVARIANT)
             consts.each { |const|
               mthds = methods_of(trecv)
@@ -97,18 +97,72 @@ module SynHelper
     return guesses
   end
 
+  def hash_combinations(thash, size)
+    choices = thash.elts.to_a.combination(size).map { |arr| RDL::Type::FiniteHashType.new(Hash[arr], nil) }
+    choices.map { |choice|
+      choice = choice.elts
+      rest = choice.reject { |k, v| v.is_a? RDL::Type::FiniteHashType }
+      hashes = choice.select { |k, v| v.is_a? RDL::Type::FiniteHashType }
+      hashes_arr = []
+      hashes.each { |k, v|
+        hash_choices = []
+        hash_size = v.elts.size
+        hash_size.times { |hs|
+          hs += 1
+          hash_choices.push(*hash_combinations(v, hs))
+        }
+        hash_choices.map! { |h| [k, h] }
+        hashes_arr << hash_choices
+      }
+
+      if hashes_arr.empty?
+        [RDL::Type::FiniteHashType.new(rest, nil)]
+      else
+        [rest.to_a].product(*hashes_arr).map { |h|
+          first = h.shift
+          h = [*h, *first]
+          RDL::Type::FiniteHashType.new(Hash[h], nil)
+        }
+      end
+    }.flatten(1)
+  end
+
+  def thash_to_sexpr(thash, tenv)
+    keyvals = []
+    choices = thash.elts.map { |k, v|
+      if v.is_a? RDL::Type::FiniteHashType
+        subhashes = syn(:hash, tenv, v, COVARIANT)
+        subhashes.map { |subhash| s(:pair, s(:sym, k), subhash.expr) }
+      else
+        lvars = syn(:lvar, tenv, v, COVARIANT)
+        lvars.map { |lvar| s(:pair, s(:sym, k), lvar.expr) }
+      end
+    }
+    if choices.size == 1
+      choices[0].map { |choice| s(:hash, choice) }
+    else
+      choices[0].product(*choices[1..choices.size]).map { |choice| s(:hash, *choice) }
+    end
+  end
+
   def syn_hash(component, tenv, tout, variance, extra={})
     raise RuntimeError unless tout.is_a? RDL::Type::FiniteHashType
 
     guesses = []
-    # TODO: generate hashes with multiple keys
+
     # TODO: some hashes can have mandatory keys too
-    tout.elts.each { |k, t|
-      raise RuntimeError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType
-      t = t.type
-      lvars = syn(:lvar, tenv, t, COVARIANT)
-      guesses.concat lvars.map { |v|
-        TypedAST.new(RDL::Type::FiniteHashType.new({k: v.type}, nil), s(:hash, s(:pair, s(:sym, k), v.expr)))
+    tout.elts.each { |k, t| raise RuntimeError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType }
+    possible_types = []
+    tout.elts.size.times { |ts|
+      ts += 1
+      possible_types.push(*hash_combinations(tout, ts))
+    }
+
+    possible_types.select! { |t| constructable?([t], types_from_tenv(tenv), true) }
+
+    possible_types.each { |t|
+      guesses.concat thash_to_sexpr(t, tenv).map { |concrete|
+        TypedAST.new(t, concrete)
       }
     }
 
@@ -116,6 +170,9 @@ module SynHelper
   end
 
   def syn_lvar(component, tenv, tout, variance, extra={})
+    # TODO: missing some cases probably?
+    tout = tout.type if tout.is_a? RDL::Type::OptionalType
+
     vars = case variance
     when CONTRAVARIANT
       tenv.bindings_with_supertype(tout)

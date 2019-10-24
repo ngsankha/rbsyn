@@ -5,7 +5,7 @@ class Synthesizer
   include AST
   include SynHelper
 
-  attr_reader :max_depth
+  attr_reader :max_depth, :reset_fn, :components
 
   def initialize(max_depth: 5, components: [])
     @test_setup = []

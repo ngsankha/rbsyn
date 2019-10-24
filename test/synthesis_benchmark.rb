@@ -2,7 +2,7 @@ require "test_helper"
 require "minitest/benchmark"
 
 describe "Synthesizer Benchmark" do
-  bench_performance_constant "synthesize a trivial false program" do
+  bench_performance_constant "trivial false program" do
     DBUtils.reset
     syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
 
@@ -12,7 +12,7 @@ describe "Synthesizer Benchmark" do
     assert_equal prog, "false"
   end
 
-  bench_performance_constant "synthesize top-level lvar programs" do
+  bench_performance_constant "top-level lvar programs" do
     DBUtils.reset
     syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
 
@@ -22,7 +22,7 @@ describe "Synthesizer Benchmark" do
     assert_equal prog, "arg0"
   end
 
-  bench_performance_constant "synthesize a User exists program" do
+  bench_performance_constant "User exists program" do
     DBUtils.reset
     syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
 
@@ -37,7 +37,7 @@ describe "Synthesizer Benchmark" do
     assert_equal prog, "User.exists?(username: arg0)"
   end
 
-  bench_performance_constant "synthesize method chains" do
+  bench_performance_constant "method chains" do
     DBUtils.reset
     syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
 
@@ -52,7 +52,7 @@ describe "Synthesizer Benchmark" do
     assert_equal prog, "!User.exists?(username: arg0)"
   end
 
-  bench_performance_constant "synthesize an if condition" do
+  bench_performance_constant "if condition" do
     DBUtils.reset
     class SiteSettings
       class << self
@@ -92,8 +92,7 @@ end
 }.strip
   end
 
-  bench_performance_constant "synthesize method call chains with hashes having multiple entries" do
-    skip
+  bench_performance_constant "search branch conditions during program merge" do
     DBUtils.reset
     syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
 
@@ -109,6 +108,6 @@ end
     }
 
     prog = Unparser.unparse(syn.run)
-    assert_equal prog, "hello"
+    assert_equal prog, "!User.joins(:emails).exists?(username: arg0)"
   end
 end
