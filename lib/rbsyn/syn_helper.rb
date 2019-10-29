@@ -141,7 +141,13 @@ module SynHelper
         subhashes = syn(:hash, tenv, v, COVARIANT)
         subhashes.map { |subhash| s(:pair, s(:sym, k), subhash.expr) }
       else
+        raise RuntimeError, "expected optional type" unless v.is_a? RDL::Type::OptionalType
+        v = v.type
         lvars = syn(:lvar, tenv, v, COVARIANT)
+        if v <= RDL::Globals.types[:bool]
+          lvars.push(*syn(:true, tenv, v, COVARIANT))
+          lvars.push(*syn(:false, tenv, v, COVARIANT))
+        end
         lvars.map { |lvar| s(:pair, s(:sym, k), lvar.expr) }
       end
     }
@@ -177,9 +183,6 @@ module SynHelper
   end
 
   def syn_lvar(component, tenv, tout, variance, extra={})
-    # TODO: missing some cases probably?
-    tout = tout.type if tout.is_a? RDL::Type::OptionalType
-
     vars = case variance
     when CONTRAVARIANT
       tenv.bindings_with_supertype(tout)

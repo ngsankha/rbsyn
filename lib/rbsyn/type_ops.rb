@@ -54,6 +54,7 @@ module TypeOperations
   end
 
   def constructable?(targs, tenv, strict=false)
+    bool = Proc.new { |targ| targ <= RDL::Globals.types[:bool] }
     targs.all? { |targ|
       case targ
       when RDL::Type::FiniteHashType
@@ -72,6 +73,8 @@ module TypeOperations
         else
           raise RuntimeError, "unhandled type #{targ.inspect}"
         end
+      when bool
+        true
       else
         raise RuntimeError, "unhandled type #{targ.inspect}"
       end
