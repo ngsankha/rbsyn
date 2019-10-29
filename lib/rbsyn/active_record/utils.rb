@@ -25,7 +25,7 @@ module Rbsyn::ActiveRecord
           case tname
           when "Boolean"
             tname = "%bool"
-            schema[k] = RD::Globals.types[:bool]
+            schema[k] = RDL::Globals.types[:bool]
           when "Datetime"
             tname = "DateTime or Time"
             schema[k] = RDL::Type::UnionType.new(RDL::Type::NominalType.new(Time), RDL::Type::NominalType.new(DateTime))

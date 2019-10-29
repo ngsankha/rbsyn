@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rdl"
   spec.add_dependency "sqlite3"
   spec.add_dependency "activerecord"
+  spec.add_dependency "ruby-minisat"
 end

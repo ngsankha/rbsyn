@@ -5,6 +5,7 @@ PATH
       activerecord
       parser
       rdl
+      ruby-minisat
       sqlite3
       unparser
 
@@ -65,6 +66,7 @@ GEM
     rdl (2.2.0)
       parser (~> 2.3, >= 2.3.1.4)
       sql-parser (~> 0.0.2)
+    ruby-minisat (2.2.0.2)
     ruby-progressbar (1.10.1)
     sql-parser (0.0.2)
       racc
