@@ -3,11 +3,13 @@ require "unparser"
 require 'parser/current'
 require "sqlite3"
 require "active_record"
+require "minisat"
 
 require "rbsyn/version"
 require "rbsyn/ast"
 require "rbsyn/hole"
 require "rbsyn/type_ops"
+require "rbsyn/bool_cond"
 require "rbsyn/syn_helper"
 require "rbsyn/prune_strategy"
 require "rbsyn/elimination_strategy"

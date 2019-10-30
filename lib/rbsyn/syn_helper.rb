@@ -166,7 +166,7 @@ module SynHelper
     # TODO: some hashes can have mandatory keys too
     tout.elts.each { |k, t| raise RuntimeError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType }
     possible_types = []
-    tout.elts.size.times { |ts|
+    @max_hash_size.times { |ts|
       ts += 1
       possible_types.push(*hash_combinations(tout, ts))
     }

@@ -10,6 +10,10 @@ class TypedAST
     "#{Unparser.unparse(@expr)} : #{@type}"
   end
 
+  def eql?(other)
+    self == other
+  end
+
   def ==(other)
     @expr == other.expr
   end

@@ -26,30 +26,25 @@ class BranchCountElimination < EliminationStrategy
   end
 end
 
-class OrCountElimination < EliminationStrategy
-  # eliminate same programs, only keeps programs with longer branch conditions
+class DuplicateElimiation < EliminationStrategy
   def self.eliminate(progs)
-    or_map = {}
-    progs.map { |prog|
-      score = or_score(prog.branch.expr)
-      unless or_map.key? prog.prog
-        or_map[prog.prog] = prog
-      else
-        old = or_score(or_map[prog.prog].branch.expr)
-        or_map[prog.prog] = prog if score > old
-      end
-    }
-    or_map.values
-  end
-
-  private
-  def self.or_score(branch)
-    if branch.type == :or
-      lhs = or_score(branch.children[0])
-      rhs = or_score(branch.children[1])
-      return lhs + rhs + 1
-    else
-      return 0
-    end
+    Set[*progs].to_a
   end
 end
+
+# class OrCountElimination < EliminationStrategy
+#   # eliminate same programs, only keeps programs with longer branch conditions
+#   def self.eliminate(progs)
+#     or_map = {}
+#     progs.map { |prog|
+#       score = prog.branch.conds.size
+#       unless or_map.key? prog.prog
+#         or_map[prog.prog] = prog
+#       else
+#         old = or_score(or_map[prog.prog].branch.expr)
+#         or_map[prog.prog] = prog if score > old
+#       end
+#     }
+#     or_map.values
+#   end
+# end

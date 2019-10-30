@@ -1,3 +1,9 @@
+GIT
+  remote: https://github.com/ngsankha/ruby-minisat-1
+  revision: 685d9ae6cab8c42ae47cc97e8a8270117e221a64
+  specs:
+    minisat (0.1.0)
+
 PATH
   remote: .
   specs:
@@ -5,7 +11,6 @@ PATH
       activerecord
       parser
       rdl
-      ruby-minisat
       sqlite3
       unparser
 
@@ -66,7 +71,6 @@ GEM
     rdl (2.2.0)
       parser (~> 2.3, >= 2.3.1.4)
       sql-parser (~> 0.0.2)
-    ruby-minisat (2.2.0.2)
     ruby-progressbar (1.10.1)
     sql-parser (0.0.2)
       racc
@@ -89,6 +93,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 2.0)
+  minisat!
   minitest (~> 5.0)
   minitest-hooks
   minitest-reporters

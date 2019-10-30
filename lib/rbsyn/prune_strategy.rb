@@ -18,36 +18,76 @@ class BoolExprFold < BranchPruneStrategy
     # the strategy works only for 2 branches
     return progcond unless progcond.prog.size == 2
 
-    lbranch = progcond.prog[0].branch.expr
+    lbranch = progcond.prog[0].branch
     lbody = progcond.prog[0].prog.expr
-    rbranch = progcond.prog[1].branch.expr
+    rbranch = progcond.prog[1].branch
     rbody = progcond.prog[1].prog.expr
 
-    if lbranch.type == :send && lbranch.children[1] == :! && rbranch == lbranch.children[0]
-      # lbranch = !p, rbranch = p
+    if lbranch.inverse?(rbranch)
+      cond = BoolCond.new
+      [*lbranch.conds, *rbranch.conds].each { |c|
+        cond << TypedAST.new(RDL::Globals.types[:bool], c)
+      }
+
       if lbody.type == :true && rbody.type == :false
-        return ProgTuple.new(progcond.ctx, progcond.prog[0].branch,
-          TypedAST.new(RDL::Globals.types[:bool], s(:true)),
+        return ProgTuple.new(progcond.ctx,
+          TypedAST.new(RDL::Globals.types[:bool], lbranch.to_ast),
+          cond,
           progcond.envs, progcond.setups)
       elsif lbody.type == :false && rbody.type == :true
-        return ProgTuple.new(progcond.ctx, progcond.prog[1].branch,
-          TypedAST.new(RDL::Globals.types[:bool], s(:true)),
+        return ProgTuple.new(progcond.ctx,
+          TypedAST.new(RDL::Globals.types[:bool], rbranch.to_ast),
+          cond,
           progcond.envs, progcond.setups)
       else
-        raise RuntimeError, "unexpected"
+        return progcond
       end
-    elsif rbranch.type == :send && rbranch.children[1] == :! && lbranch == rbranch.children[0]
-      # lbranch = p, rhs = !p
-      if rbody.type == :true && lbody.type == :false
-        return ProgTuple.new(progcond.ctx, progcond.prog[1].branch,
-          TypedAST.new(RDL::Globals.types[:bool], s(:true)),
-          progcond.envs, progcond.setups)
-      elsif rbody.type == :false && lbody.type == :true
-        return ProgTuple.new(progcond.ctx, progcond.prog[0].branch,
-          TypedAST.new(RDL::Globals.types[:bool], s(:true)),
-          progcond.envs, progcond.setups)
-      else
-        raise RuntimeError, "unexpected"
+    else
+      return progcond
+    end
+  end
+end
+
+class InverseBranchFold < BranchPruneStrategy
+  extend AST
+
+  def self.prune(progcond)
+    return progcond unless progcond.prog.is_a? Array
+    return progcond unless progcond.prog.size == 2
+
+    lbranch = progcond.prog[0].branch
+    lbody = progcond.prog[0].prog.expr
+    rbranch = progcond.prog[1].branch
+    rbody = progcond.prog[1].prog.expr
+
+    if lbranch.inverse?(rbranch)
+      cond = BoolCond.new
+      [*lbranch.conds, *rbranch.conds].each { |c|
+        cond << TypedAST.new(RDL::Globals.types[:bool], c)
+      }
+
+      begin
+        # these may throw exception if the positive? is not known
+        lbranch_bool = lbranch.positive?
+        rbranch_bool = rbranch.positive?
+
+        if lbranch_bool != rbranch_bool
+          if lbranch_bool
+            return ProgTuple.new(progcond.ctx,
+              TypedAST.new(progcond.prog[0].prog.type, s(:if, lbranch.to_ast, lbody, rbody)),
+              cond,
+              progcond.envs, progcond.setups)
+          else
+            return ProgTuple.new(progcond.ctx,
+              TypedAST.new(progcond.prog[0].prog.type, s(:if, rbranch.to_ast, rbody, lbody)),
+              cond,
+              progcond.envs, progcond.setups)
+          end
+        else
+          return progcond
+        end
+      rescue
+        return progcond
       end
     else
       return progcond
