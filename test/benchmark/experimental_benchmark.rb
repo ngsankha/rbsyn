@@ -1,7 +1,7 @@
 require "test_helper"
 
 describe "Synthesis Benchmark" do
-  it "false" do
+  it "experiment" do
     skip
 
   # bench_performance_constant "search branch conditions during program merge 2" do
