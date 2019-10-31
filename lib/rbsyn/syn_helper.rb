@@ -208,27 +208,24 @@ module SynHelper
     end
   end
 
-  def synthesize(max_depth, envs, outputs, setups, reset_fn, forbidden_components=[])
+  def synthesize(max_depth, tout, envs, outputs, setups, reset_fn, forbidden_components=[])
     tenv = TypeEnvironment.new
     envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
     tenv = load_components(tenv)
 
     toutenv = TypeEnvironment.new
-    outputs.map { |o|
-      env = ValEnvironment.new
-      env[:out] = o
-      env.to_type_env
-    }.each { |t| toutenv = toutenv.merge(t) }
-    tout = toutenv[:out].type
+    # TODO: Type can be automatically inferred by running the post block with result as a dummy object.
+    # Methods calls like == or eql? will get the value, and from that we can infer the type
     initial_components = guess_initial_components(tout) - forbidden_components
 
     (max_depth + 1).times { |depth|
       progs = generate(depth, tenv, initial_components, tout).select { |prog|
         prog = prog.expr
-        run_outputs = setups.zip(envs).map { |setup, env|
-          eval_ast(prog, env, reset_fn) { setup.call unless setup.nil? } rescue next
+        tested = setups.zip(envs, outputs).map { |setup, env, output|
+          res = eval_ast(prog, env, reset_fn) { setup.call unless setup.nil? } rescue next
+          output.call(res)
         }
-        run_outputs == outputs
+        tested.all?
       }
       return progs if progs.size > 0
     }

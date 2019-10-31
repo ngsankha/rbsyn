@@ -145,10 +145,11 @@ class ProgTuple
       @max_hash_size = @ctx.max_hash_size
       @max_depth = @ctx.max_depth
       # prog different branch same, need to discover a new path condition
-      output1 = Array.new(first.envs.size, true) + Array.new(second.envs.size, false)
-      bsyn1 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output1, [*first.setups, *second.setups], @ctx.reset_fn)
-      output2 = Array.new(first.envs.size, false) + Array.new(second.envs.size, true)
-      bsyn2 = synthesize(@ctx.max_depth, [*first.envs, *second.envs], output2, [*first.setups, *second.setups], @ctx.reset_fn)
+      # TODO: make a function that returns the post cond for booleans
+      output1 = (Array.new(first.envs.size, true) + Array.new(second.envs.size, false)).map { |item| Proc.new { |result| result == item }}
+      bsyn1 = synthesize(@ctx.max_depth, RDL::Globals.types[:bool], [*first.envs, *second.envs], output1, [*first.setups, *second.setups], @ctx.reset_fn)
+      output2 = (Array.new(first.envs.size, false) + Array.new(second.envs.size, true)).map { |item| Proc.new { |result| result == item }}
+      bsyn2 = synthesize(@ctx.max_depth, RDL::Globals.types[:bool], [*first.envs, *second.envs], output2, [*first.setups, *second.setups], @ctx.reset_fn)
       tuples = []
       bsyn1.each { |b1|
         bsyn2.each { |b2|

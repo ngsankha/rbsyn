@@ -1,5 +1,6 @@
 COVARIANT = :+
 CONTRAVARIANT = :-
+TRUE_POSTCOND = Proc.new { |result| result == true }
 
 class Synthesizer
   include AST
@@ -8,36 +9,33 @@ class Synthesizer
   attr_reader :max_depth, :max_hash_size, :reset_fn, :components
 
   def initialize(max_depth: 5, max_hash_size: 1, components: [])
-    @test_setup = []
+    @pre_conds = []
     @envs = []
-    @outputs = []
+    @post_conds = []
     @max_depth = max_depth
     @max_hash_size = max_hash_size
     @components = components
     @reset_fn = nil
   end
 
-  def reset_function(&blk)
+  def reset_function(blk)
     @reset_fn = blk
   end
 
-  def add_example(input, output, &blk)
-    DBUtils.reset
-    yield if block_given?
-    @test_setup << blk
+  def add_test(input, pre, post)
+    @pre_conds << pre
     @envs << env_from_args(input)
-    @outputs << output
-    DBUtils.reset
+    @post_conds << post
   end
 
-  def run
-    progconds = @envs.zip(@outputs, @test_setup).map { |env, output, setup|
-      progs = synthesize(@max_depth, [env], [output], [setup], @reset_fn)
-      branches = synthesize(@max_depth, [env], [true], [setup], @reset_fn, [:true, :false])
+  def run(tout)
+    progconds = @envs.zip(@post_conds, @pre_conds).map { |env, post, pre|
+      progs = synthesize(@max_depth, tout, [env], [post], [pre], @reset_fn)
+      branches = synthesize(@max_depth, RDL::Globals.types[:bool], [env], [TRUE_POSTCOND], [pre], @reset_fn, [:true, :false])
       tuples = []
       progs.each { |prog|
         branches.each { |branch|
-          tuples << ProgTuple.new(self, prog, branch, [env], [setup])
+          tuples << ProgTuple.new(self, prog, branch, [env], [pre])
         }
       }
       tuples
@@ -65,10 +63,11 @@ class Synthesizer
 
     completed.each { |progcond|
       ast = progcond.to_ast
-      test_outputs = @test_setup.zip(@envs).map { |setup, env|
-        eval_ast(ast, env, @reset_fn) { setup.call unless setup.nil? } rescue next
+      test_outputs = @pre_conds.zip(@envs, @post_conds).map { |setup, env, post_cond|
+        res = eval_ast(ast, env, @reset_fn) { setup.call unless setup.nil? } rescue next
+        post_cond.call(res)
       }
-      return ast if test_outputs == @outputs
+      return ast if test_outputs.all?
     }
     raise RuntimeError, "No candidates found"
   end
