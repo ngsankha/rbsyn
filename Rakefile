@@ -12,7 +12,8 @@ Rake::TestTask.new(:bench) do |t|
   t.libs << "test"
   t.libs << "lib"
   t.libs << "models"
-  t.test_files = FileList["test/benchmark/*_benchmark.rb"]
+  # t.test_files = FileList["test/benchmark/*_benchmark.rb"]
+  t.test_files = FileList["test/benchmark/benchmark_*.rb"]
 end
 
 task :default => [] do

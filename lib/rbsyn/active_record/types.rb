@@ -24,6 +24,7 @@ class ActiveRecord_Relation
   type_params [:t], :dummy
 
   type :exists?, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false
+  type :first, "() -> ``DBTypes.rec_to_nominal(trec)``", wrap: false
 end
 
 class DBTypes
@@ -69,6 +70,22 @@ class DBTypes
       raise RuntimeError
     end
     RDL::Type::FiniteHashType.new(schema, nil)
+  end
+
+  def self.rec_to_nominal(trec)
+    case trec
+    when RDL::Type::GenericType
+      raise RuntimeError, "got unexpected type #{trec}" unless trec.base.klass == ActiveRecord_Relation
+      param = trec.params[0]
+      case param
+      when RDL::Type::NominalType
+        return param
+      else
+        raise RuntimeError, "unhandled type"
+      end
+    else
+      raise RuntimeError, "unhandled type"
+    end
   end
 
   def self.array_schema(trec)

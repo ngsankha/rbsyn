@@ -8,13 +8,32 @@ class ValBinding
     case value
     when Numeric, String, TrueClass, FalseClass, NilClass
       @type = RDL::Globals.parser.scan_str("#T #{value.inspect}")
+    when Hash
+      @type = infer_hash_type(value)
     else
-      raise RuntimeError, "Expected value to be a string or number"
+      raise RuntimeError, "Expected value to be a string or number, got #{value}"
     end
   end
 
   def to_s
     @value.to_s
+  end
+
+  def infer_hash_type(value)
+    raise RuntimeError, "expected hash" unless value.is_a? Hash
+    thash = {}
+    value.each { |k, v|
+      t = case v
+      when Numeric, String, TrueClass, FalseClass, NilClass
+        RDL::Globals.parser.scan_str("#T #{v.inspect}")
+      when Hash
+        infer_hash_type(v)
+      else
+        raise RuntimeError, "unhandled type of value"
+      end
+      thash[k.to_sym] = t
+    }
+    RDL::Type::FiniteHashType.new(thash, nil)
   end
 end
 

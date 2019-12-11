@@ -263,11 +263,15 @@ module SynHelper
       }.flatten
     else
       r = Reachability.new(tenv)
+      puts r.paths_to_type(RDL::Globals.types[:bot], 1)
+      puts "======="
       paths = r.paths_to_type(tout, depth)
 
-      components.map { |component|
+      tmp = components.map { |component|
         syn(component, tenv, tout, CONTRAVARIANT, { reach_set: paths })
       }.flatten
+      puts tmp
+      return tmp
     end
   end
 end

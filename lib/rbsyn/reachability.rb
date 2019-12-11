@@ -50,16 +50,24 @@ class Reachability
       queue.each { |path|
         trecv = path.last
         mthds = methods_of(trecv)
+        mthds.delete(:__getobj__)
         mthds.each { |mthd, info|
-          next if mthd == :__getobj__
           tmeth = info[:type]
           targs = compute_targs(trecv, tmeth)
           next unless constructable? targs, path.tenv
           tout = compute_tout(trecv, tmeth, targs)
           # convert :self types to actual object
           tout = trecv if tout.is_a?(RDL::Type::VarType) && tout.name == :self
-          new_tenv = make_new_tenv(tout, path.tenv)
-          new_queue << CallChain.new(path.path + [mthd, tout], new_tenv)
+          # make individual paths for union types
+          if tout.is_a? RDL::Type::UnionType
+            tout.types.each { |typ|
+              new_tenv = make_new_tenv(typ, path.tenv)
+              new_queue << CallChain.new(path.path + [mthd, typ], new_tenv)
+            }
+          else
+            new_tenv = make_new_tenv(tout, path.tenv)
+            new_queue << CallChain.new(path.path + [mthd, tout], new_tenv)
+          end
         }
       }
       queue = new_queue

@@ -48,6 +48,8 @@ module TypeOperations
       parents_of trecv.base
     when RDL::Type::NominalType
       RDL::Util.to_class(trecv.name).ancestors.map { |klass| klass.to_s }
+    when RDL::Type::FiniteHashType
+      Hash.ancestors.map { |klass| klass.to_s }
     else
       raise RuntimeError, "unhandled type #{trecv.inspect}"
     end
@@ -57,6 +59,8 @@ module TypeOperations
     bool = Proc.new { |targ| targ <= RDL::Globals.types[:bool] }
     targs.all? { |targ|
       case targ
+      when RDL::Type::BotType, RDL::Type::TopType
+        false
       when RDL::Type::FiniteHashType
         if strict
           targ.elts.values.all? { |v| constructable? [v], tenv, strict }
@@ -67,8 +71,10 @@ module TypeOperations
         constructable? [targ.type], tenv, strict
       when RDL::Type::NominalType
         tenv.any? { |t| t <= targ }
+      when RDL::Type::UnionType
+        targ.types.any? { |t| constructable? [t], tenv, strict }
       when RDL::Type::SingletonType
-        if targ.val.is_a? Symbol
+        if [Symbol, TrueClass, FalseClass].include? targ.val.class
           true
         else
           raise RuntimeError, "unhandled type #{targ.inspect}"
