@@ -37,6 +37,7 @@ module SynHelper
           if exprs.empty?
             break if trecv.is_a? RDL::Type::PreciseStringType
             raise RuntimeError, "expected first element to be singleton #{trecv}" unless trecv.is_a? RDL::Type::SingletonType
+            # TODO: support calls on lvars
             consts = syn(:const, tenv, trecv, COVARIANT)
             consts.each { |const|
               mthds = methods_of(trecv)
@@ -208,9 +209,7 @@ module SynHelper
     end
   end
 
-  def synthesize(max_depth, tout, envs, outputs, setups, reset_fn, forbidden_components=[])
-    tenv = TypeEnvironment.new
-    envs.map(&:to_type_env).each { |t| tenv = tenv.merge(t) }
+  def synthesize(max_depth, tout, envs, tenv, outputs, setups, reset_fn, forbidden_components=[])
     tenv = load_components(tenv)
 
     toutenv = TypeEnvironment.new
@@ -263,8 +262,6 @@ module SynHelper
       }.flatten
     else
       r = Reachability.new(tenv)
-      puts r.paths_to_type(RDL::Globals.types[:bot], 1)
-      puts "======="
       paths = r.paths_to_type(tout, depth)
 
       tmp = components.map { |component|

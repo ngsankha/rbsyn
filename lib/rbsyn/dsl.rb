@@ -46,7 +46,9 @@ class SynthesizerProxy
   end
 
   def generate_program
-    syn = Synthesizer.new(components: @components)
+    tenv = TypeEnvironment.new
+    @type.args.each_with_index { |type, idx| tenv["arg#{idx}".to_sym] = type }
+    syn = Synthesizer.new(tenv, components: @components)
     syn.reset_function @reset_fn unless @reset_fn.nil?
     @specs.each { |spec|
       syn.add_test(spec.inputs, spec.pre_blk, spec.post_blk)

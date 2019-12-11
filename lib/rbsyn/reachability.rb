@@ -58,16 +58,8 @@ class Reachability
           tout = compute_tout(trecv, tmeth, targs)
           # convert :self types to actual object
           tout = trecv if tout.is_a?(RDL::Type::VarType) && tout.name == :self
-          # make individual paths for union types
-          if tout.is_a? RDL::Type::UnionType
-            tout.types.each { |typ|
-              new_tenv = make_new_tenv(typ, path.tenv)
-              new_queue << CallChain.new(path.path + [mthd, typ], new_tenv)
-            }
-          else
-            new_tenv = make_new_tenv(tout, path.tenv)
-            new_queue << CallChain.new(path.path + [mthd, tout], new_tenv)
-          end
+          new_tenv = make_new_tenv(tout, path.tenv)
+          new_queue << CallChain.new(path.path + [mthd, tout], new_tenv)
         }
       }
       queue = new_queue

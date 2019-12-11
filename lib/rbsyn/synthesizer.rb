@@ -8,8 +8,9 @@ class Synthesizer
 
   attr_reader :max_depth, :max_hash_size, :reset_fn, :components
 
-  def initialize(max_depth: 5, max_hash_size: 1, components: [])
+  def initialize(tenv, max_depth: 5, max_hash_size: 1, components: [])
     @pre_conds = []
+    @tenv = tenv
     @envs = []
     @post_conds = []
     @max_depth = max_depth
@@ -30,8 +31,8 @@ class Synthesizer
 
   def run(tout)
     progconds = @envs.zip(@post_conds, @pre_conds).map { |env, post, pre|
-      progs = synthesize(@max_depth, tout, [env], [post], [pre], @reset_fn)
-      branches = synthesize(@max_depth, RDL::Globals.types[:bool], [env], [TRUE_POSTCOND], [pre], @reset_fn, [:true, :false])
+      progs = synthesize(@max_depth, tout, [env], @tenv, [post], [pre], @reset_fn)
+      # branches = synthesize(@max_depth, RDL::Globals.types[:bool], [env], @tenv, [TRUE_POSTCOND], [pre], @reset_fn, [:true, :false])
       tuples = []
       progs.each { |prog|
         branches.each { |branch|
