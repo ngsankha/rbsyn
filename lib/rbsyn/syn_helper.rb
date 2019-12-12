@@ -36,9 +36,12 @@ module SynHelper
           mth = tokens.next
           if exprs.empty?
             break if trecv.is_a? RDL::Type::PreciseStringType
-            raise RuntimeError, "expected first element to be singleton #{trecv}" unless trecv.is_a? RDL::Type::SingletonType
-            # TODO: support calls on lvars
-            consts = syn(:const, tenv, trecv, COVARIANT)
+            if trecv.is_a? RDL::Type::SingletonType
+              consts = syn(:const, tenv, trecv, COVARIANT)
+            else
+              # TODO: support calls on lvars
+              consts = syn(:lvar, tenv, trecv, COVARIANT)
+            end
             consts.each { |const|
               mthds = methods_of(trecv)
               info = mthds[mth]
@@ -65,8 +68,15 @@ module SynHelper
                 tret = compute_tout(trecv, tmeth, targs)
                 args = syn(:lvar, tenv, targ, COVARIANT)
                 exprs.concat args.map { |arg| TypedAST.new(tret, s(:send, const.expr, mth, arg.expr)) }
+              when RDL::Type::UnionType
+                raise RuntimeError, "only singletons supported at the moment" unless targ.types.all? { |t| t.is_a? RDL::Type::SingletonType }
+                require "pry"; binding.pry
+                exprs.concat targ.types.map { |t|
+                  tret = compute_tout(trecv, tmeth, [t])
+                  TypedAST.new(tret, s(:sym, t.val))
+                }
               else
-                raise RuntimeError, "Don't know how to handle #{targ.inspect}"
+                raise RuntimeError, "Don't know how to handle #{targ}"
               end
             }
           else
@@ -100,6 +110,7 @@ module SynHelper
         end
       }
       guesses.concat(exprs)
+      puts guesses
     }
 
     return guesses
@@ -145,6 +156,7 @@ module SynHelper
         raise RuntimeError, "expected optional type" unless v.is_a? RDL::Type::OptionalType
         v = v.type
         lvars = syn(:lvar, tenv, v, COVARIANT)
+        lvars.append(syn(:send, tenv, v, CONTRAVARIANT, { reach_set: one_call_away(tenv, v) }))
         if v <= RDL::Globals.types[:bool]
           lvars.push(*syn(:true, tenv, v, COVARIANT))
           lvars.push(*syn(:false, tenv, v, COVARIANT))
@@ -157,6 +169,12 @@ module SynHelper
     else
       choices[0].product(*choices[1..choices.size]).map { |choice| s(:hash, *choice) }
     end
+  end
+
+  # TODO: remove this, and move to a hole based approach
+  def one_call_away(tenv, tout)
+    r = Reachability.new(tenv)
+    r.paths_to_type(tout, 1)
   end
 
   def syn_hash(component, tenv, tout, variance, extra={})
@@ -172,7 +190,7 @@ module SynHelper
       possible_types.push(*hash_combinations(tout, ts))
     }
 
-    # possible_types.select! { |t| constructable?([t], types_from_tenv(tenv), true) }
+    possible_types.select! { |t| constructable?([t], types_from_tenv(tenv), true) }
 
     possible_types.each { |t|
       guesses.concat thash_to_sexpr(t, tenv).map { |concrete|
