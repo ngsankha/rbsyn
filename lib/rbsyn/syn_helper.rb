@@ -172,7 +172,7 @@ module SynHelper
       possible_types.push(*hash_combinations(tout, ts))
     }
 
-    possible_types.select! { |t| constructable?([t], types_from_tenv(tenv), true) }
+    # possible_types.select! { |t| constructable?([t], types_from_tenv(tenv), true) }
 
     possible_types.each { |t|
       guesses.concat thash_to_sexpr(t, tenv).map { |concrete|
@@ -181,6 +181,10 @@ module SynHelper
     }
 
     return guesses
+  end
+
+  def syn_hole(component, tenv, tout, variance, extra={})
+    TypedAST.new(tout, s(:hole, HoleInfo.new(tout)))
   end
 
   def syn_lvar(component, tenv, tout, variance, extra={})
