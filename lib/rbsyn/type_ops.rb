@@ -10,7 +10,7 @@ module TypeOperations
         bind.local_variable_set(:trec, trec)
         targ.compute(bind)
       else
-        raise RuntimeError, "unhandled type #{targ}"
+        targ
       end
     }
   end
@@ -37,7 +37,7 @@ module TypeOperations
       if cls.is_a? Class
         cls.ancestors.map { |klass| RDL::Util.add_singleton_marker(klass.to_s) }
       else
-        raise RuntimeError, "expected only true/false" unless (cls == true || cls == false)
+        raise RuntimeError, "expected only true/false" unless (cls == true || cls == false || cls.nil?)
         cls.class.ancestors.map { |klass| klass.to_s }
       end
     when RDL::Type::PreciseStringType
@@ -51,6 +51,42 @@ module TypeOperations
     else
       raise RuntimeError, "unhandled type #{trecv.inspect}"
     end
+  end
+
+  def constructable?(targs, tenv, strict=false)
+    bool = Proc.new { |targ| targ <= RDL::Globals.types[:bool] }
+    targs.all? { |targ|
+      case targ
+      when RDL::Type::FiniteHashType
+        if strict
+          targ.elts.values.all? { |v| constructable? [v], tenv, strict }
+        else
+          targ.elts.values.any? { |v| constructable? [v], tenv, strict }
+        end
+      when RDL::Type::OptionalType
+        constructable? [targ.type], tenv, strict
+      when RDL::Type::NominalType
+        tenv.any? { |t| t <= targ }
+      when RDL::Type::SingletonType
+        if targ.val.is_a? Symbol
+          true
+        else
+          raise RuntimeError, "unhandled type #{targ.inspect}"
+        end
+      when bool
+        true
+      else
+        raise RuntimeError, "unhandled type #{targ.inspect}"
+      end
+    }
+  end
+
+  def types_from_tenv(tenv)
+    s = Set.new
+    tenv.bindings.each { |b|
+      s.add(tenv[b].type)
+    }
+    return s
   end
 
   def methods_of(trecv)

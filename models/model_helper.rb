@@ -4,9 +4,11 @@ ActiveRecord::Schema.define do
     t.string :username
     t.string :username_lower
     t.string :password
+    t.boolean :staged
   end
   create_table :user_emails, force: true do |t|
     t.string :email
+    t.boolean :primary
     t.references :user
   end
 end

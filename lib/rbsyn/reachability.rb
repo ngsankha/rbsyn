@@ -27,6 +27,10 @@ class CallChain
   def last
     @path.last
   end
+
+  def to_s
+    @path.join(' -> ')
+  end
 end
 
 class Reachability
@@ -47,6 +51,7 @@ class Reachability
         trecv = path.last
         mthds = methods_of(trecv)
         mthds.each { |mthd, info|
+          next if mthd == :__getobj__
           tmeth = info[:type]
           targs = compute_targs(trecv, tmeth)
           next unless constructable? targs, path.tenv
@@ -73,34 +78,5 @@ class Reachability
   def make_new_tenv(tout, tenv)
     new_tenv = tenv.clone
     new_tenv.add(tout)
-  end
-
-  def constructable?(targs, tenv)
-    targs.all? { |targ|
-      case targ
-      when RDL::Type::FiniteHashType
-        targ.elts.values.any? { |v| constructable? [v], tenv }
-      when RDL::Type::OptionalType
-        constructable? [targ.type], tenv
-      when RDL::Type::NominalType
-        tenv.any? { |t| t <= targ }
-      when RDL::Type::SingletonType
-        if targ.val.is_a? Symbol
-          true
-        else
-          raise RuntimeError, "unhandled type #{targ.inspect}"
-        end
-      else
-        raise RuntimeError, "unhandled type #{targ.inspect}"
-      end
-    }
-  end
-
-  def types_from_tenv(tenv)
-    s = Set.new
-    tenv.bindings.each { |b|
-      s.add(tenv[b].type)
-    }
-    return s
   end
 end

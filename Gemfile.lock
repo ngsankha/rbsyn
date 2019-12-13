@@ -1,3 +1,9 @@
+GIT
+  remote: https://github.com/ngsankha/ruby-minisat-1
+  revision: 685d9ae6cab8c42ae47cc97e8a8270117e221a64
+  specs:
+    minisat (0.1.0)
+
 PATH
   remote: .
   specs:
@@ -29,6 +35,7 @@ GEM
     ansi (1.5.0)
     ast (2.4.0)
     builder (3.2.3)
+    byebug (11.0.1)
     coderay (1.1.2)
     concord (0.1.5)
       adamantium (~> 0.2.0)
@@ -36,7 +43,7 @@ GEM
     concurrent-ruby (1.1.5)
     diff-lcs (1.3)
     equalizer (0.0.11)
-    i18n (1.6.0)
+    i18n (1.7.0)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
     memoizable (0.4.2)
@@ -50,12 +57,15 @@ GEM
       builder
       minitest (>= 5.0)
       ruby-progressbar
-    parser (2.6.4.1)
+    parser (2.6.5.0)
       ast (~> 2.4.0)
     procto (0.0.3)
     pry (0.12.2)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
+    pry-byebug (3.7.0)
+      byebug (~> 11.0)
+      pry (~> 0.10)
     racc (1.4.15)
     rake (10.5.0)
     rdl (2.2.0)
@@ -76,17 +86,19 @@ GEM
       equalizer (~> 0.0.9)
       parser (~> 2.6.3)
       procto (~> 0.0.2)
-    zeitwerk (2.1.10)
+    zeitwerk (2.2.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   bundler (~> 2.0)
+  minisat!
   minitest (~> 5.0)
   minitest-hooks
   minitest-reporters
   pry
+  pry-byebug
   rake (~> 10.0)
   rbsyn!
 

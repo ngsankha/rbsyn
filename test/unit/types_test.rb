@@ -14,7 +14,7 @@ describe "TableTypes" do
   it "type checks joins" do
     class Foo
       def bar2
-        User.joins(:user_emails)
+        User.joins(:emails)
       end
     end
     RDL.type Foo, :bar2, "() -> ActiveRecord_Relation<JoinTable<User, UserEmail>>", wrap: false, typecheck: :later2
@@ -24,7 +24,7 @@ describe "TableTypes" do
   it "type checks joins followed by exists" do
     class Foo
       def bar3
-        User.joins(:user_emails).exists?(username: "bar", emails: { email: "bar@foo.com" })
+        User.joins(:emails).exists?(username: "bar", emails: { email: "bar@foo.com" })
       end
     end
     RDL.type Foo, :bar3, "() -> %bool", wrap: false, typecheck: :later3

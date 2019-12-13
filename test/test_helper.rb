@@ -6,7 +6,10 @@ require_relative "../models/model_helper"
 require "minitest/autorun"
 require "minitest/hooks/test"
 require "minitest/reporters"
-require "minitest/benchmark"
+
+class Object
+  include SpecDSL
+end
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 

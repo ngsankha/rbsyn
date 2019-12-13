@@ -3,7 +3,7 @@ class ActiveRecord::Base
 
   type 'self.where', "(``DBTypes.schema_type(trec)``) -> ``DBTypes.array_schema(trec)``", wrap: false
   type 'self.exists?', "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false
-  type 'self.joins', "(``DBTypes.joins_input_type(trec)``) -> ``DBTypes.joins_output_type(trec)``", wrap: false
+  type 'self.joins', "(``DBTypes.joins_input_type(trec)``) -> ``DBTypes.joins_output_type(trec, targs)``", wrap: false
 end
 
 class JoinTable
@@ -84,41 +84,17 @@ class DBTypes
     raise RuntimeError unless trec.is_a? RDL::Type::SingletonType
     trec = trec.val
     associations = DBUtils.get_schema(trec.name.to_sym).params[0].elts[:__associations].elts
-    joins_type = nil
-    associations.each { |k, v|
-      if joins_type
-        joins_type = RDL::Type::UnionType.new(v, joins_type)
-      else
-        joins_type = v
-      end
-    }
-    joins_type = joins_type.canonical
-    if joins_type.is_a? RDL::Type::UnionType
-      joins_type = RDL::Type::UnionType.new(*joins_type.types.map { |t|
-        raise RuntimeError, "Expected singleton here" unless t.is_a? RDL::Type::SingletonType
-        RDL::Type::SingletonType.new(t.val.name.tableize.to_sym)
-      })
-    else
-      raise RuntimeError, "Expected singleton here" unless joins_type.is_a? RDL::Type::SingletonType
-      joins_type = RDL::Type::SingletonType.new(joins_type.val.name.tableize.to_sym)
-    end
-    joins_type
+    joins_type = RDL::Type::UnionType.new(*associations.keys.map { |k| RDL::Type::SingletonType.new(k.to_sym) })
+    joins_type.canonical
   end
 
-  def self.joins_output_type(trec)
-    tjoin = joins_input_type(trec)
-    tjoin = case tjoin
-    when RDL::Type::SingletonType
-      RDL::Type::NominalType.new(RDL::Util.to_class(tjoin.val.to_s.classify))
-    when RDL::Type::UnionType
-      RDL::Type::UnionType.new(*tjoin.types.map { |t|
-        raise RuntimeError, "Expected singleton here" unless t.is_a? RDL::Type::SingletonType
-        RDL::Type::NominalType.new(RDL::Util.to_class(t.val.to_s.classify))
-      })
-    else
-      raise RuntimeError, 'Unknown type'
-    end
-    jt = RDL::Type::GenericType.new(RDL::Type::NominalType.new(JoinTable), RDL::Type::NominalType.new(trec.val), tjoin)
+  def self.joins_output_type(trec, targs)
+    raise RuntimeError, "Expected only argument that is a singleton" if targs.size > 1 || !targs[0].is_a?(RDL::Type::SingletonType)
+    trec = trec.val
+    tjoined = DBUtils.get_schema(trec.name.to_sym).params[0].elts[:__associations].elts[targs[0].val.to_s]
+    raise RuntimeError, "Association doesn't exist" if tjoined.nil?
+    tjoin = RDL::Type::NominalType.new(tjoined.val)
+    jt = RDL::Type::GenericType.new(RDL::Type::NominalType.new(JoinTable), RDL::Type::NominalType.new(trec), tjoin)
     RDL::Type::GenericType.new(RDL::Type::NominalType.new(ActiveRecord_Relation), jt)
   end
 end
