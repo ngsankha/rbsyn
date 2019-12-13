@@ -1,23 +1,3 @@
-class ValBinding
-  attr_reader :name, :type
-  attr_accessor :value
-
-  def initialize(name, value)
-    @name = name
-    @value = value
-    case value
-    when Numeric, String, TrueClass, FalseClass
-      @type = RDL::Globals.parser.scan_str("#T #{value.inspect}")
-    else
-      raise RuntimeError, "Expected value to be a string or number"
-    end
-  end
-
-  def to_s
-    @value.to_s
-  end
-end
-
 class TypeBinding
   attr_reader :name, :type
 
@@ -31,7 +11,7 @@ class TypeBinding
   end
 end
 
-class Environment
+class TypeEnvironment
   def initialize
     @var_map = {}
   end
@@ -67,24 +47,7 @@ class Environment
   def to_s
     "{#{@var_map.map{ |k, v| "#{k}: #{v}" }.join(', ')}}"
   end
-end
 
-class ValEnvironment < Environment
-  def []=(key, val)
-    raise RuntimeError if val.is_a? RDL::Type::Type
-    @var_map[key] = ValBinding.new(key, val)
-  end
-
-  def to_type_env
-    tenv = TypeEnvironment.new
-    @var_map.each { |k, v|
-      tenv[k] = v.type
-    }
-    tenv
-  end
-end
-
-class TypeEnvironment < Environment
   def []=(key, val)
     raise RuntimeError unless val.is_a? RDL::Type::Type
     @var_map[key] = TypeBinding.new(key, val)

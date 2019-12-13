@@ -1,3 +1,11 @@
+class HoleInfo
+  attr_reader :type
+
+  def initialize(type)
+    @type = type
+  end
+end
+
 class HoleVisitor < ::AST::Processor
   def on_hole(node)
     # TODO: change this
