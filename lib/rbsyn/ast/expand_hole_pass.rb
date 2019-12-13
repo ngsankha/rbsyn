@@ -26,16 +26,16 @@ class ExpandHolePass < ::AST::Processor
       if node.ttype.is_a? RDL::Type::FiniteHashType
         expanded.concat finite_hash(node.ttype)
       end
-
-      if depth + 1 <= max_depth
-        # synthesize a hole with higher depth
-        expanded << s(node.ttype, :hole, depth + 1, max_depth)
-      end
     else
       # synthesize function calls
       r = Reachability.new(@ctx.tenv)
       paths = r.paths_to_type(node.ttype, depth)
       expanded.concat paths.map { |path| fn_call(path) }
+    end
+
+    if depth + 1 <= max_depth
+      # synthesize a hole with higher depth
+      expanded << s(node.ttype, :hole, depth + 1, max_depth)
     end
 
     @expand_map << expanded.size

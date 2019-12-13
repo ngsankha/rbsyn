@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "method chains" do
-    skip
 
     define :username_available?, "(String) -> %bool" do
 
