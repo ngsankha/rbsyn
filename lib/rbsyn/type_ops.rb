@@ -82,11 +82,7 @@ module TypeOperations
   end
 
   def types_from_tenv(tenv)
-    s = Set.new
-    tenv.bindings.each { |b|
-      s.add(tenv[b].type)
-    }
-    return s
+    tenv.values.to_set
   end
 
   def methods_of(trecv)

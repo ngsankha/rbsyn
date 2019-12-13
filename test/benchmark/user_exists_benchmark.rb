@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "user exists" do
-    skip
 
     define :username_exists?, "(String) -> %bool" do
 

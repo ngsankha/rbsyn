@@ -11,9 +11,9 @@ class Synthesizer
 
   def run
     @ctx.load_tenv!
-    work_list = [s(@ctx.functype.ret, :hole)]
-    new_work_list = []
-    work_list.each { |ast|
+    work_list = [s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth)]
+    until work_list.empty?
+      ast = work_list.shift
       pass1 = ExpandHolePass.new @ctx
       expanded = pass1.process(ast)
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
@@ -31,8 +31,8 @@ class Synthesizer
       }
 
       remainder_holes = generated_asts.select { |ast| NoHolePass.has_hole? ast }
-      new_work_list.concat(remainder_holes)
-    }
+      work_list.concat(remainder_holes)
+    end
     raise RuntimeError, "No candidates found"
   end
 end

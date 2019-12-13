@@ -1,6 +1,6 @@
 class Context
   attr_accessor :fn_call_depth, :components, :preconds, :args, :postconds,
-    :reset_func, :functype, :tenv
+    :reset_func, :functype, :tenv, :max_hash_size
 
   def initialize
     @fn_call_depth = 0
@@ -11,6 +11,7 @@ class Context
     @tenv = {}
     @reset_func = nil
     @functype = nil
+    @max_hash_size = 1
   end
 
   def add_example(precond, arg, postcond)

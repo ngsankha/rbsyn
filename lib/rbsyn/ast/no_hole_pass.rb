@@ -17,12 +17,8 @@ class NoHolePass < ::AST::Processor
   end
 
   def handler_missing(node)
-    node.updated(nil, node.children.map { |k|
-      if k.is_a?(TypedNode) && k.type == :hole
-        process(k)
-      else
-        k
-      end
-    })
+    node.children.map { |k|
+      k.is_a?(TypedNode) ? process(k) : k
+    }
   end
 end
