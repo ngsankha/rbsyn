@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "fold branches" do
-    skip
 
     define :username_exists?, "(String, String) -> %bool" do
 

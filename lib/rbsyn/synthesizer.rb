@@ -4,6 +4,7 @@ TRUE_POSTCOND = Proc.new { |result| result == true }
 
 class Synthesizer
   include AST
+  include SynHelper
 
   def initialize(ctx)
     @ctx = ctx
@@ -11,28 +12,51 @@ class Synthesizer
 
   def run
     @ctx.load_tenv!
-    work_list = [s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth)]
-    until work_list.empty?
-      ast = work_list.shift
-      pass1 = ExpandHolePass.new @ctx
-      expanded = pass1.process(ast)
-      expand_map = pass1.expand_map.map { |i| i.times.to_a }
-      generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
-        pass2 = ExtractASTPass.new(selection)
-        pass2.process(expanded)
-      }
-      evaluable = generated_asts.reject { |ast| NoHolePass.has_hole? ast }
-      evaluable.each { |ast|
-        test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-          res = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } #rescue next
-          postcond.call(res)
+    # seed_hole = s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth)
+
+    progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
+      progs = generate(
+        s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth, false),
+        [precond], [arg], [postcond], true)
+      branches = generate(
+        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, true),
+        [precond], [arg], [TRUE_POSTCOND], true)
+      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch, [precond], [arg]) }
+    }
+
+    # if there is only one generated, there is nothing to merge, we return the first synthesized program
+    return progconds[0][0].prog if progconds.size == 1
+
+    # TODO: we need to merge only the program with different body
+    # (same programs with different branch conditions are wasted work?)
+    completed = progconds.reduce { |merged_prog, progcond|
+      results = []
+      merged_prog.each { |mp|
+        progcond.each { |pp|
+          possible = (mp + pp)
+          possible.each { |t| t.prune_branches }
+          results.push(*possible)
         }
-        return ast if test_outputs.all?
       }
 
-      remainder_holes = generated_asts.select { |ast| NoHolePass.has_hole? ast }
-      work_list.concat(remainder_holes)
-    end
+      # TODO: eliminate incorrect programs by testing?
+      # TODO: ordering?
+      # EliminationStrategy.descendants.each { |strategy|
+      #   results = strategy.eliminate(results)
+      # }
+      results = DuplicateElimiation.eliminate(results)
+      results = BranchCountElimination.eliminate(results)
+      results
+    }
+
+    completed.each { |progcond|
+      ast = progcond.to_ast
+      test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
+        res = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } rescue next
+        postcond.call(res)
+      }
+      return ast if test_outputs.all?
+    }
     raise RuntimeError, "No candidates found"
   end
 end

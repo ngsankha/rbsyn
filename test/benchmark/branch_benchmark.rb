@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "branching" do
-    skip
 
     class SiteSettings
       class << self

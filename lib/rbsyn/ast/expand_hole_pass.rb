@@ -12,12 +12,22 @@ class ExpandHolePass < ::AST::Processor
   def on_hole(node)
     depth = node.children[0]
     max_depth = node.children[1]
+    is_pc = node.children[2]
     expanded = []
 
     if depth == 0
       # synthesize boolean constants
-      if node.ttype <= RDL::Globals.types[:bool]
+      if node.ttype <= RDL::Globals.types[:bool] && !is_pc
         expanded.concat bool_const
+      end
+
+      if node.ttype.is_a?(RDL::Type::SingletonType) && node.ttype.val.is_a?(Symbol)
+        expanded.concat symbols([node.ttype])
+      end
+
+      if node.ttype.is_a?(RDL::Type::UnionType) &&
+        node.ttype.types.all? { |t| t.is_a?(RDL::Type::SingletonType) && t.val.is_a?(Symbol) }
+        expanded.concat symbols(node.ttype.types)
       end
 
       # synthesize variables in the environment
@@ -35,7 +45,7 @@ class ExpandHolePass < ::AST::Processor
 
     if depth + 1 <= max_depth
       # synthesize a hole with higher depth
-      expanded << s(node.ttype, :hole, depth + 1, max_depth)
+      expanded << s(node.ttype, :hole, depth + 1, max_depth, false)
     end
 
     @expand_map << expanded.size
@@ -50,8 +60,13 @@ class ExpandHolePass < ::AST::Processor
 
   private
   def bool_const
-    [TypedNode.new(RDL::Globals.types[:true], :true),
-    TypedNode.new(RDL::Globals.types[:false], :false)]
+    [s(RDL::Globals.types[:bool], :true),
+    s(RDL::Globals.types[:bool], :false)]
+  end
+
+  def symbols(types)
+    # assume types are singleton types are symbols
+    types.map { |t| s(t, :sym, t.val) }
   end
 
   def lvar(type)
@@ -72,9 +87,9 @@ class ExpandHolePass < ::AST::Processor
         targs = compute_targs(trecv, tmeth)
         tret = compute_tout(trecv, tmeth, targs)
         # allowing only lvars now
-        hole_args = targs.map { |targ| s(targ, :hole, 0, 0) }
+        hole_args = targs.map { |targ| s(targ, :hole, 0, 0, false) }
         if accum.nil?
-          accum = s(tret, :send, s(trecv, :hole, 0, 0),
+          accum = s(tret, :send, s(trecv, :hole, 0, 0, false),
             mth, *hole_args)
         else
           raise RuntimeError, "expected type" unless accum.ttype <= trecv
@@ -97,7 +112,7 @@ class ExpandHolePass < ::AST::Processor
       keyvals = thash.elts.map { |k, v|
         s(RDL::Globals.types[:top], :pair,
           s(RDL::Globals.types[:top], :sym, k),
-          s(v.type, :hole, 0, 0))
+          s(v.type, :hole, 0, 0, false))
       }
       # puts "===="
       # puts keyvals
