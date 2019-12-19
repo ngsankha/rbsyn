@@ -27,12 +27,15 @@ class SynthesizerProxy
   attr_accessor :assertions
 
   def initialize(mth_name, type, components)
+    @ctx = Context.new
+    @ctx.fn_call_depth = 5
+    @ctx.components = [*Rbsyn::ActiveRecord::Utils.models, *components]
+    @ctx.functype = RDL::Globals.parser.scan_str type
+    raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
+
     @mth_name = mth_name.to_sym
-    @components = [*Rbsyn::ActiveRecord::Utils.models, *components]
     @specs = []
-    @type = RDL::Globals.parser.scan_str type
     @assertions = 0
-    raise RuntimeError, "expected method type" unless @type.is_a? RDL::Type::MethodType
   end
 
   def spec(desc, &blk)
@@ -42,23 +45,22 @@ class SynthesizerProxy
   end
 
   def reset(&blk)
-    @reset_fn = blk
+    @ctx.reset_func = blk
   end
 
   def generate_program
-    tenv = TypeEnvironment.new
-    @type.args.each_with_index { |type, idx| tenv["arg#{idx}".to_sym] = type }
-    syn = Synthesizer.new(tenv, components: @components)
-    syn.reset_function @reset_fn unless @reset_fn.nil?
     @specs.each { |spec|
-      syn.add_test(spec.inputs, spec.pre_blk, spec.post_blk)
+      @ctx.add_example(spec.pre_blk, spec.inputs, spec.post_blk)
     }
+    syn = Synthesizer.new(@ctx)
     max_args = @specs.map { |spec| spec.inputs.size }.max
     args = max_args.times.map { |t| "arg#{t}".to_sym }
-    prog = syn.run @type.ret
-    fn = s(:def, @mth_name,
-      s(:args, *args.map { |arg| s(:arg, arg) }),
-      prog)
+    prog = syn.run
+    # TODO: these types can be made more precise
+    fn = s(@ctx.functype, :def, @mth_name,
+      s(RDL::Globals.types[:top], :args, *args.map { |arg|
+        s(RDL::Globals.types[:top], :arg, arg)
+      }), prog)
     Unparser.unparse(fn)
   end
 end

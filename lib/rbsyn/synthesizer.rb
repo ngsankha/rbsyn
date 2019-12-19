@@ -6,45 +6,29 @@ class Synthesizer
   include AST
   include SynHelper
 
-  attr_reader :max_depth, :max_hash_size, :reset_fn, :components
-
-  def initialize(tenv, max_depth: 5, max_hash_size: 1, components: [])
-    @pre_conds = []
-    @tenv = tenv
-    @envs = []
-    @post_conds = []
-    @max_depth = max_depth
-    @max_hash_size = max_hash_size
-    @components = components
-    @reset_fn = nil
+  def initialize(ctx)
+    @ctx = ctx
   end
 
-  def reset_function(blk)
-    @reset_fn = blk
-  end
+  def run
+    @ctx.load_tenv!
+    # seed_hole = s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth)
 
-  def add_test(input, pre, post)
-    @pre_conds << pre
-    @envs << env_from_args(input)
-    @post_conds << post
-  end
-
-  def run(tout)
-    progconds = @envs.zip(@post_conds, @pre_conds).map { |env, post, pre|
-      progs = synthesize(@max_depth, tout, [env], @tenv, [post], [pre], @reset_fn)
-      # branches = synthesize(@max_depth, RDL::Globals.types[:bool], [env], @tenv, [TRUE_POSTCOND], [pre], @reset_fn, [:true, :false])
-      tuples = []
-      progs.each { |prog|
-        branches.each { |branch|
-          tuples << ProgTuple.new(self, prog, branch, [env], [pre])
-        }
-      }
-      tuples
+    progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
+      progs = generate(
+        s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth, false),
+        [precond], [arg], [postcond], true)
+      branches = generate(
+        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, true),
+        [precond], [arg], [TRUE_POSTCOND], true)
+      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch, [precond], [arg]) }
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
-    return progconds[0][0].prog.expr if progconds.size == 1
+    return progconds[0][0].prog if progconds.size == 1
 
+    # TODO: we need to merge only the program with different body
+    # (same programs with different branch conditions are wasted work?)
     completed = progconds.reduce { |merged_prog, progcond|
       results = []
       merged_prog.each { |mp|
@@ -56,17 +40,20 @@ class Synthesizer
       }
 
       # TODO: eliminate incorrect programs by testing?
-      EliminationStrategy.descendants.each { |strategy|
-        results = strategy.eliminate(results)
-      }
+      # TODO: ordering?
+      # EliminationStrategy.descendants.each { |strategy|
+      #   results = strategy.eliminate(results)
+      # }
+      results = DuplicateElimiation.eliminate(results)
+      results = BranchCountElimination.eliminate(results)
       results
     }
 
     completed.each { |progcond|
       ast = progcond.to_ast
-      test_outputs = @pre_conds.zip(@envs, @post_conds).map { |setup, env, post_cond|
-        res = eval_ast(ast, env, @reset_fn) { setup.call unless setup.nil? } rescue next
-        post_cond.call(res)
+      test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
+        res = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } rescue next
+        postcond.call(res)
       }
       return ast if test_outputs.all?
     }

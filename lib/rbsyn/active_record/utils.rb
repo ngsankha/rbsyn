@@ -49,7 +49,7 @@ module Rbsyn::ActiveRecord
           end
 
           if assoc_info.name.to_s.pluralize == assoc_info.name.to_s
-            RDL.type model, assoc_info.name, "() -> ActiveRecord_Relation<#{assoc_info.name.to_s.singularize}>", wrap: false
+            RDL.type model, assoc_info.name, "() -> ActiveRecord_Relation<#{assoc_info.class_name}>", wrap: false
           else
             RDL.type model, assoc_info.name, "() -> #{assoc_info.name.to_s.camelize.singularize}", wrap: false
           end

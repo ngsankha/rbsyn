@@ -7,11 +7,11 @@ ActiveRecord::Schema.define do
     t.boolean :staged
     t.string :email
   end
-  # create_table :user_emails, force: true do |t|
-  #   t.string :email
-  #   t.boolean :primary
-  #   t.references :user
-  # end
+  create_table :user_emails, force: true do |t|
+    t.string :email
+    t.boolean :primary
+    t.references :user
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base

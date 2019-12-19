@@ -1,3 +1,3 @@
-# class UserEmail < ApplicationRecord
-#   belongs_to :user
-# end
+class UserEmail < ApplicationRecord
+  belongs_to :user
+end

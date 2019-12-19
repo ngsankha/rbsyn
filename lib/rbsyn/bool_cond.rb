@@ -8,8 +8,8 @@ class BoolCond
   end
 
   def <<(cond)
-    raise RuntimeError, "expected TypedAST, got #{cond}" unless cond.is_a? TypedAST
-    @conds << cond.expr
+    raise RuntimeError, "expected TypedAST, got #{cond}" unless cond.is_a? TypedNode
+    @conds << cond
   end
 
   def positive?
@@ -26,7 +26,7 @@ class BoolCond
     if conds.size == 1
       conds[0]
     else
-      s(:or, *conds)
+      s(RDL::Globals.types[:bool], :or, *conds)
     end
   end
 

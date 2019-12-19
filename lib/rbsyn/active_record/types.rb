@@ -40,6 +40,9 @@ class DBTypes
     when RDL::Type::SingletonType
       trec = trec.val
       schema = table_name_to_schema_hash(trec.name.to_sym)
+    when RDL::Type::VarType
+      raise RuntimeError, "expected only Symbol" unless trec.name.is_a? Symbol
+      schema = table_name_to_schema_hash(trec.name)
     when RDL::Type::GenericType
       raise RuntimeError unless trec.base.klass == ActiveRecord_Relation
       param = trec.params[0]
@@ -63,6 +66,9 @@ class DBTypes
         end
       when RDL::Type::NominalType
         schema = table_name_to_schema_hash(param.name.to_sym)
+      when RDL::Type::VarType
+        raise RuntimeError, "expected only Symbol" unless param.name.is_a? Symbol
+        schema = table_name_to_schema_hash(param.name)
       else
         raise RuntimeError, "unknown: #{param.inspect}"
       end
@@ -80,6 +86,9 @@ class DBTypes
       case param
       when RDL::Type::NominalType
         return param
+      when RDL::Type::GenericType
+        raise RuntimeError, "expected only JoinTable" unless param.base.klass == JoinTable
+        return param.params[0]
       else
         raise RuntimeError, "unhandled type"
       end

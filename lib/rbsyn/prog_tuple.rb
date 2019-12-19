@@ -2,20 +2,20 @@ class ProgTuple
   include AST
   include SynHelper
 
-  attr_reader :prog, :branch, :envs, :setups, :ctx
+  attr_reader :ctx, :branch, :prog, :preconds, :args
 
-  def initialize(syn, prog, branch, envs, setups)
+  def initialize(ctx, prog, branch, preconds, args)
+    @ctx = ctx
     if branch.is_a? BoolCond
       @branch = branch
     else
-      raise RuntimeError, "expected branch condition to be a %bool" unless branch.type <= RDL::Globals.types[:bool]
+      raise RuntimeError, "expected branch condition to be a %bool" unless branch.ttype <= RDL::Globals.types[:bool]
       @branch = BoolCond.new
       @branch << branch
     end
-    @ctx = syn
     @prog = prog
-    @envs = envs
-    @setups = setups
+    @preconds = preconds
+    @args = args
   end
 
   def eql?(other)
@@ -30,7 +30,7 @@ class ProgTuple
 
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
-    raise RuntimeError, "both progs should be of same type" if other.prog.type != @prog.type
+    raise RuntimeError, "both progs should be of same type" if other.prog.ttype != @prog.ttype
     # TODO: how to merge when ProgCond are composed of multiple programs
     raise RuntimeError, "unimplemented" if other.prog.is_a?(Array) || @prog.is_a?(Array)
     merge_impl(self, other)
@@ -52,9 +52,9 @@ class ProgTuple
           end
         else
           if merged.nil?
-            merged = s(:if, branch.to_ast, fragment)
+            merged = s(fragment.ttype, :if, branch.to_ast, fragment)
           else
-            merged = s(:if, branch.to_ast, fragment, merged)
+            merged = s(fragment.ttype, :if, branch.to_ast, fragment, merged)
           end
         end
       }
@@ -64,7 +64,7 @@ class ProgTuple
       end
       merged
     else
-      @prog.expr
+      @prog
     end
   end
 
@@ -75,11 +75,16 @@ class ProgTuple
     end
 
     intermediate = self
+    # puts intermediate
+    # TODO: ordering
     # BranchPruneStrategy.descendants.each { |strategy|
     #   intermediate = strategy.prune(intermediate)
     # }
     intermediate = BoolExprFold.prune(intermediate)
+    # puts intermediate
     intermediate = InverseBranchFold.prune(intermediate)
+    # puts intermediate
+    # puts "======="
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them
@@ -89,7 +94,7 @@ class ProgTuple
     if @prog.is_a? Array
       progs = "[#{@prog.map { |prog| prog.to_s }.join(", ")}]"
     else
-      progs = Unparser.unparse(@prog.expr)
+      progs = Unparser.unparse(@prog)
     end
     "{ prog: #{progs}, branch: #{Unparser.unparse(@branch.to_ast)} }"
   end
@@ -124,32 +129,31 @@ class ProgTuple
 
   def merge_impl(first, second)
     if first.prog == second.prog && first.branch.implies(second.branch)
-      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.envs, *second.envs], [*first.setups, *second.setups])]
+      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog == second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
       new_cond << first.branch
       new_cond << second.branch
       return [ProgTuple.new(@ctx, first.prog, new_cond,
-        [*first.envs, *second.envs], [*first.setups, *second.setups])]
+        [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog != second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
       new_cond << first.branch
       new_cond << second.branch
       return [ProgTuple.new(@ctx, [first, second], new_cond,
-        [*first.envs, *second.envs], [*first.setups, *second.setups])]
+        [*first.preconds, *second.preconds], [*first.args, *second.args])]
     else
-      # HACK: this is because synthesize is from a module, and needs @components variable
-      # @components is available in Synthesizer class but not here.
-      # TODO: refactor
-      @components = @ctx.components
-      @max_hash_size = @ctx.max_hash_size
-      @max_depth = @ctx.max_depth
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
-      output1 = (Array.new(first.envs.size, true) + Array.new(second.envs.size, false)).map { |item| Proc.new { |result| result == item }}
-      bsyn1 = synthesize(@ctx.max_depth, RDL::Globals.types[:bool], [*first.envs, *second.envs], output1, [*first.setups, *second.setups], @ctx.reset_fn)
-      output2 = (Array.new(first.envs.size, false) + Array.new(second.envs.size, true)).map { |item| Proc.new { |result| result == item }}
-      bsyn2 = synthesize(@ctx.max_depth, RDL::Globals.types[:bool], [*first.envs, *second.envs], output2, [*first.setups, *second.setups], @ctx.reset_fn)
+      output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
+      # bsyn1 = synthesize(@ctx.max_depth, RDL::Globals.types[:bool], [*first.envs, *second.envs], output1, [*first.setups, *second.setups], @ctx.reset_fn)
+      bsyn1 = generate(
+        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, true),
+        [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
+      output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
+      bsyn2 = generate(
+        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, true),
+        [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
       tuples = []
       bsyn1.each { |b1|
         bsyn2.each { |b2|
@@ -159,9 +163,9 @@ class ProgTuple
           cond1 << b1
           cond2 = BoolCond.new
           cond2 << b2
-          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.envs, first.setups),
-            ProgTuple.new(@ctx, second.prog, cond2, second.envs, second.setups)],
-            first.branch, [*first.envs, *second.envs], [*@setups, *second.setups])
+          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.preconds, first.args),
+            ProgTuple.new(@ctx, second.prog, cond2, second.preconds, second.args)],
+            first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])
         }
       }
       return tuples

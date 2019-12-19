@@ -13,32 +13,28 @@ class BoolExprFold < BranchPruneStrategy
     return progcond unless progcond.prog.is_a? Array
     # this strategy works only when the prog body is a boolean
     # all the children will be booleans is enforced during the merge process
-    return progcond unless progcond.prog[0].prog.type <= RDL::Globals.types[:bool]
+    return progcond unless progcond.prog[0].prog.ttype <= RDL::Globals.types[:bool]
 
     # the strategy works only for 2 branches
     return progcond unless progcond.prog.size == 2
 
     lbranch = progcond.prog[0].branch
-    lbody = progcond.prog[0].prog.expr
+    lbody = progcond.prog[0].prog
     rbranch = progcond.prog[1].branch
-    rbody = progcond.prog[1].prog.expr
+    rbody = progcond.prog[1].prog
 
     if lbranch.inverse?(rbranch)
       cond = BoolCond.new
       [*lbranch.conds, *rbranch.conds].each { |c|
-        cond << TypedAST.new(RDL::Globals.types[:bool], c)
+        cond << c
       }
 
       if lbody.type == :true && rbody.type == :false
-        return ProgTuple.new(progcond.ctx,
-          TypedAST.new(RDL::Globals.types[:bool], lbranch.to_ast),
-          cond,
-          progcond.envs, progcond.setups)
+        return ProgTuple.new(progcond.ctx, lbranch.to_ast, cond,
+          progcond.preconds, progcond.args)
       elsif lbody.type == :false && rbody.type == :true
-        return ProgTuple.new(progcond.ctx,
-          TypedAST.new(RDL::Globals.types[:bool], rbranch.to_ast),
-          cond,
-          progcond.envs, progcond.setups)
+        return ProgTuple.new(progcond.ctx, rbranch.to_ast, cond,
+          progcond.preconds, progcond.args)
       else
         return progcond
       end
@@ -56,14 +52,14 @@ class InverseBranchFold < BranchPruneStrategy
     return progcond unless progcond.prog.size == 2
 
     lbranch = progcond.prog[0].branch
-    lbody = progcond.prog[0].prog.expr
+    lbody = progcond.prog[0].prog
     rbranch = progcond.prog[1].branch
-    rbody = progcond.prog[1].prog.expr
+    rbody = progcond.prog[1].prog
 
     if lbranch.inverse?(rbranch)
       cond = BoolCond.new
       [*lbranch.conds, *rbranch.conds].each { |c|
-        cond << TypedAST.new(RDL::Globals.types[:bool], c)
+        cond << c
       }
 
       begin
@@ -74,14 +70,14 @@ class InverseBranchFold < BranchPruneStrategy
         if lbranch_bool != rbranch_bool
           if lbranch_bool
             return ProgTuple.new(progcond.ctx,
-              TypedAST.new(progcond.prog[0].prog.type, s(:if, lbranch.to_ast, lbody, rbody)),
+              s(progcond.prog[0].prog.ttype, :if, lbranch.to_ast, lbody, rbody),
               cond,
-              progcond.envs, progcond.setups)
+              progcond.preconds, progcond.args)
           else
             return ProgTuple.new(progcond.ctx,
-              TypedAST.new(progcond.prog[0].prog.type, s(:if, rbranch.to_ast, rbody, lbody)),
+              s(progcond.prog[0].prog.ttype, :if, rbranch.to_ast, rbody, lbody),
               cond,
-              progcond.envs, progcond.setups)
+              progcond.preconds, progcond.args)
           end
         else
           return progcond

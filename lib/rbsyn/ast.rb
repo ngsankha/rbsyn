@@ -1,37 +1,17 @@
-class TypedAST
-  attr_reader :type, :expr
-
-  def initialize(type, expr)
-    @type = type
-    @expr = expr
-  end
-
-  def to_s
-    "#{Unparser.unparse(@expr)} : #{@type}"
-  end
-
-  def eql?(other)
-    self == other
-  end
-
-  def ==(other)
-    @expr == other.expr
-  end
-end
-
 module AST
-  def s(type, *children)
-    Parser::AST::Node.new(type, children)
+  def s(ttype, type, *children)
+    TypedNode.new(ttype, type, *children)
   end
 
-  def eval_ast(ast, env, reset_fn, &setup)
+  def eval_ast(ctx, ast, arg, reset_fn, &precond)
+    max_args = ctx.args.map { |arg| arg.size }.max
     DBUtils.reset
     reset_fn.call unless reset_fn.nil?
-    setup.call unless setup.nil?
+    precond.call unless precond.nil?
     klass = Class.new
     bind = klass.class_eval { binding }
-    env.bindings.each { |b|
-      bind.local_variable_set(b, env[b].value)
+    max_args.times { |i|
+      bind.local_variable_set("arg#{i}".to_sym, arg[i])
     }
     bind.eval(Unparser.unparse(ast))
   end
