@@ -2,7 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "unstage user" do
-    define :unstage, "({ email: String, active: %bool, username: String, name: String}) -> User" do
+    define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> User" do
       spec "correctly unstages a user" do
         pre {
           staged = User.create(name: 'Staged User', username: 'staged1', active: true, email: 'staged@account.com')
@@ -16,6 +16,7 @@ describe "Synthesis Benchmark" do
           assert { user.name == 'Foo Bar' }
           assert { user.active == false }
           assert { user.email == 'staged@account.com' }
+          false
         }
       end
 

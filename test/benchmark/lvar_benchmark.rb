@@ -3,7 +3,7 @@ require "test_helper"
 describe "Synthesis Benchmark" do
   it "lvar" do
 
-    define :identity, "(String) -> String" do
+    define :identity, "(String) -> String", [User, UserEmail] do
 
       spec "returns same value" do
         identity 'hello'

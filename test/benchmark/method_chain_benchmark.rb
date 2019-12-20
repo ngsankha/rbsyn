@@ -3,7 +3,7 @@ require "test_helper"
 describe "Synthesis Benchmark" do
   it "method chains" do
 
-    define :username_available?, "(String) -> %bool" do
+    define :username_available?, "(String) -> %bool", [User, UserEmail] do
 
       spec "returns true when user doesn't exist" do
         username_available? 'bruce1'

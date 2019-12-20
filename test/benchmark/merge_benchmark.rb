@@ -3,7 +3,7 @@ require "test_helper"
 describe "Synthesis Benchmark" do
   it "fold branches" do
 
-    define :username_exists?, "(String, String) -> %bool" do
+    define :username_exists?, "(String, String) -> %bool", [User, UserEmail] do
 
       spec "returns true when user doesn't exist" do
         username_exists? 'bruce1', nil

@@ -5,13 +5,21 @@ ActiveRecord::Schema.define do
     t.string :username_lower
     t.string :password
     t.boolean :staged
-    t.string :email
   end
   create_table :user_emails, force: true do |t|
     t.string :email
     t.boolean :primary
     t.references :user
   end
+  # create_table :users, force: true do |t|
+  #   t.string :name
+  #   t.string :username
+  #   t.string :username_lower
+  #   t.string :password
+  #   t.boolean :staged
+  #   t.string :email
+  #   t.boolean :active
+  # end
 end
 
 class ApplicationRecord < ActiveRecord::Base

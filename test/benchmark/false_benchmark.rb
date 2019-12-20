@@ -3,7 +3,7 @@ require "test_helper"
 describe "Synthesis Benchmark" do
   it "false" do
 
-    define :just_false, "(String) -> %bool" do
+    define :just_false, "(String) -> %bool", [User, UserEmail] do
 
       spec "returns false" do
         just_false 'hello'

@@ -13,6 +13,10 @@ class SpecProxy
     @post_blk = blk
   end
 
+  def assert(&blk)
+    return false
+  end
+
   def method_missing(m, *args, &blk)
     raise RuntimeError, "unknown function #{m}, have #{@mth_name}" unless @mth_name == m
     @inputs = args
@@ -29,7 +33,7 @@ class SynthesizerProxy
   def initialize(mth_name, type, components)
     @ctx = Context.new
     @ctx.fn_call_depth = 5
-    @ctx.components = [*Rbsyn::ActiveRecord::Utils.models, *components]
+    @ctx.components = components
     @ctx.functype = RDL::Globals.parser.scan_str type
     raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
 
@@ -66,7 +70,7 @@ class SynthesizerProxy
 end
 
 module SpecDSL
-  def define(mth_name, type, components: [], &blk)
+  def define(mth_name, type, components, &blk)
     syn_proxy = SynthesizerProxy.new(mth_name, type, components)
     syn_proxy.instance_eval(&blk)
   end

@@ -15,7 +15,7 @@ describe "Synthesis Benchmark" do
     end
     RDL.type SiteSettings, 'self.reserved_username?', '(String) -> %bool', wrap: false
 
-    define :username_available?, "(String) -> %bool", components: [SiteSettings] do
+    define :username_available?, "(String) -> %bool", [User, UserEmail, SiteSettings] do
 
       reset {
         SiteSettings.reserved_usernames = []

@@ -16,6 +16,9 @@ module SynHelper
         pass2 = ExtractASTPass.new(selection)
         pass2.process(expanded)
       }
+
+      # puts generated_asts
+
       evaluable = generated_asts.reject { |ast| NoHolePass.has_hole? ast }
       evaluable.each { |ast|
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|

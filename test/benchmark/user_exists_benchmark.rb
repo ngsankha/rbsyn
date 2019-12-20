@@ -3,7 +3,7 @@ require "test_helper"
 describe "Synthesis Benchmark" do
   it "user exists" do
 
-    define :username_exists?, "(String) -> %bool" do
+    define :username_exists?, "(String) -> %bool", [User, UserEmail] do
 
       spec "returns false when user doesn't exist" do
         username_exists? 'bruce1'

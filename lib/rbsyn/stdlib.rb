@@ -24,7 +24,10 @@ def output_type(trec, targs)
     when RDL::Type::SingletonType
       trec.elts[targ.val]
     when RDL::Type::UnionType
-      RDL::Type::UnionType.new(*targ.types.map { |t| trec.elts[t.val] })
+      RDL::Type::UnionType.new(*targ.types.map { |t|
+        val = trec.elts[t.val]
+        val.is_a?(RDL::Type::OptionalType) ? val.type : val
+      })
     else
       raise RuntimeError, "unhandled type"
     end
