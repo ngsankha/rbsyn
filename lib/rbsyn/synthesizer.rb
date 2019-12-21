@@ -19,7 +19,7 @@ class Synthesizer
         s(@ctx.functype.ret, :hole, 0, @ctx.fn_call_depth, {}),
         [precond], [arg], [postcond], true)
       branches = generate(
-        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, {forbidden: [:bool_consts]}),
+        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, {bool_consts: false}),
         [precond], [arg], [TRUE_POSTCOND], true)
       progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch, [precond], [arg]) }
     }

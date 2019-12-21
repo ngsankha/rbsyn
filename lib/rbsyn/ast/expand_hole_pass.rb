@@ -12,13 +12,14 @@ class ExpandHolePass < ::AST::Processor
   def on_hole(node)
     depth = node.children[0]
     max_depth = node.children[1]
-    params = node.children[2]
-    no_bool_consts = false || (params.key?(:forbidden) && params[:forbidden].include?(:bool_consts))
+    @params = node.children[2]
+    @no_bool_consts = !@params.fetch(:bool_const, true)
+    @curr_hash_depth = @params.fetch(:hash_depth, 0)
     expanded = []
 
     if depth == 0
       # synthesize boolean constants
-      if node.ttype <= RDL::Globals.types[:bool] && !no_bool_consts
+      if node.ttype <= RDL::Globals.types[:bool] && !@no_bool_consts
         expanded.concat bool_const
       end
 
@@ -34,7 +35,7 @@ class ExpandHolePass < ::AST::Processor
       # synthesize variables in the environment
       expanded.concat lvar(node.ttype)
 
-      if node.ttype.is_a?(RDL::Type::FiniteHashType)
+      if node.ttype.is_a?(RDL::Type::FiniteHashType) && @curr_hash_depth < @ctx.max_hash_depth
         expanded.concat finite_hash(node.ttype)
       end
     else
@@ -46,7 +47,7 @@ class ExpandHolePass < ::AST::Processor
 
     if depth + 1 <= max_depth
       # synthesize a hole with higher depth
-      expanded << s(node.ttype, :hole, depth + 1, max_depth, {})
+      expanded << s(node.ttype, :hole, depth + 1, max_depth, {hash_depth: @curr_hash_depth})
     end
 
     @expand_map << expanded.size
@@ -88,9 +89,9 @@ class ExpandHolePass < ::AST::Processor
         targs = compute_targs(trecv, tmeth)
         tret = compute_tout(trecv, tmeth, targs)
         # allowing only lvars now
-        hole_args = targs.map { |targ| s(targ, :hole, 0, 0, {}) }
+        hole_args = targs.map { |targ| s(targ, :hole, 0, 0, {hash_depth: @curr_hash_depth}) }
         if accum.nil?
-          accum = s(tret, :send, s(trecv, :hole, 0, 0, {}),
+          accum = s(tret, :send, s(trecv, :hole, 0, 0, {hash_depth: @curr_hash_depth}),
             mth, *hole_args)
         else
           raise RuntimeError, "expected type" unless accum.ttype <= trecv
@@ -113,7 +114,7 @@ class ExpandHolePass < ::AST::Processor
       keyvals = thash.elts.map { |k, v|
         s(RDL::Globals.types[:top], :pair,
           s(RDL::Globals.types[:top], :sym, k),
-          s(v.type, :hole, 0, 0, {}))
+          s(v.type, :hole, 0, @ctx.max_arg_length, {hash_depth: @curr_hash_depth + 1}))
       }
       s(thash, :hash, *keyvals)
     }
