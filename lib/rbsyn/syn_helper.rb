@@ -21,9 +21,10 @@ module SynHelper
 
       evaluable = generated_asts.reject { |ast| NoHolePass.has_hole? ast }
       evaluable.each { |ast|
+        puts Unparser.unparse(ast)
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
-          res = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } rescue next
-          postcond.call(res)
+          res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } #rescue next
+          klass.instance_eval { postcond.call(res) } rescue next
         }
 
         if test_outputs.all?

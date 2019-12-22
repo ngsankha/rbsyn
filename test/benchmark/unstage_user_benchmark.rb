@@ -7,7 +7,7 @@ describe "Synthesis Benchmark" do
     [AnotherUser] do
       spec "correctly unstages a user" do
         pre {
-          @dummy = AnotherUser.create(name: 'Dummy User', username: 'staged1', active: true, email: 'staged@account.com')
+          @dummy = AnotherUser.create(name: 'Dummy User', username: 'dummy1', active: true, email: 'dummy@account.com')
           @staged = AnotherUser.create(name: 'Staged User', username: 'staged1', active: true, email: 'staged@account.com')
         }
 
