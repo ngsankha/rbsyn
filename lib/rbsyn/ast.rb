@@ -3,9 +3,10 @@ module AST
     TypedNode.new(ttype, type, *children)
   end
 
-  def eval_ast(ctx, ast, arg, reset_fn, &precond)
+  def eval_ast(ctx, ast, arg, reset_fn, precond)
     max_args = ctx.args.map { |arg| arg.size }.max
     klass = Class.new
+    klass.instance_eval { extend Assertions }
     bind = klass.instance_eval { binding }
     DBUtils.reset
     reset_fn.call unless reset_fn.nil?

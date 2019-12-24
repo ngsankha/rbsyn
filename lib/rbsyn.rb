@@ -8,6 +8,8 @@ require "minitest"
 
 require "rbsyn/version"
 require "rbsyn/type_ops"
+require "rbsyn/exceptions"
+require "rbsyn/assertions"
 require "rbsyn/ast"
 require "rbsyn/ast/node"
 require "rbsyn/ast/no_hole_pass"

@@ -1,6 +1,7 @@
 class Context
   attr_accessor :fn_call_depth, :components, :preconds, :args, :postconds,
-    :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth
+    :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length,
+    :max_hash_depth
 
   def initialize
     @fn_call_depth = 0

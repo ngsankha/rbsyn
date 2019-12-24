@@ -52,8 +52,14 @@ class Synthesizer
     completed.each { |progcond|
       ast = progcond.to_ast
       test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-        res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } rescue next
-        klass.instance_eval { postcond.call(res) }
+        res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func, postcond) #rescue next
+        begin
+          klass.instance_exec res, &postcond
+        rescue AssertionError => e
+          puts "TODO"
+        rescue Exception
+          nil
+        end
       }
       return ast if test_outputs.all?
     }
