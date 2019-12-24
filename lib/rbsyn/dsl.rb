@@ -14,6 +14,10 @@ class SpecProxy
   end
 
   def assert(&blk)
+    # run the block
+    # if assertion fails analyze side effect
+    # build programs using that write set
+    # run tests and iff it fails on same assert try next choice, otherwise start again
     return false
   end
 
