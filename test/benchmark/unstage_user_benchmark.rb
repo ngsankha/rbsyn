@@ -14,13 +14,12 @@ describe "Synthesis Benchmark" do
         user = unstage(email: 'staged@account.com', active: true, username: 'unstaged1', name: 'Foo Bar')
 
         post { |user|
+          puts user.name
           assert { user.id == @staged.id }
-          # assert { user.id == staged.id }
-          # assert { user.username == 'unstaged1' }
+          assert { user.username == 'unstaged1' }
           # assert { user.name == 'Foo Bar' }
           # assert { user.active == false }
           # assert { user.email == 'staged@account.com' }
-          # false
         }
       end
 

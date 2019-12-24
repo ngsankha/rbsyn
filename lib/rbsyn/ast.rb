@@ -6,7 +6,10 @@ module AST
   def eval_ast(ctx, ast, arg, reset_fn, precond)
     max_args = ctx.args.map { |arg| arg.size }.max
     klass = Class.new
-    klass.instance_eval { extend Assertions }
+    klass.instance_eval {
+      extend Assertions
+      @count = 0
+    }
     bind = klass.instance_eval { binding }
     DBUtils.reset
     reset_fn.call unless reset_fn.nil?

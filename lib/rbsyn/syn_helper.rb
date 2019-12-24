@@ -20,13 +20,16 @@ module SynHelper
       # puts generated_asts
 
       evaluable = generated_asts.reject { |ast| NoHolePass.has_hole? ast }
+      reasons = {}
       evaluable.each { |ast|
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
           res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func, precond) #rescue next
+          # puts Unparser.unparse(ast)
           begin
             klass.instance_exec res, &postcond
           rescue AssertionError => e
-            puts "TODO"
+            passed = klass.instance_eval { puts @count }
+            reasons[passed] = e
           rescue Exception
             nil
           end
@@ -37,6 +40,16 @@ module SynHelper
           return ast unless return_all
         end
       }
+
+      unless reasons.empty?
+        highest_pass = reasons.keys.max
+        # TODO: what to do with the programs where less assertions passed?
+        reason = reasons[highest_pass]
+
+        # read set of test becomes functions write set and vice versa
+        write_set = reason.read_set
+        read_set = reason.write_set
+      end
 
       remainder_holes = generated_asts.select { |ast| NoHolePass.has_hole? ast }
 
