@@ -146,7 +146,6 @@ class ProgTuple
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
       output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
-      # bsyn1 = synthesize(@ctx.max_depth, RDL::Globals.types[:bool], [*first.envs, *second.envs], output1, [*first.setups, *second.setups], @ctx.reset_fn)
       bsyn1 = generate(
         s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, {bool_consts: false}),
         [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
@@ -157,8 +156,6 @@ class ProgTuple
       tuples = []
       bsyn1.each { |b1|
         bsyn2.each { |b2|
-          # puts "branch 1: #{b1}"
-          # puts "branch 2: #{b2}"
           cond1 = BoolCond.new
           cond1 << b1
           cond2 = BoolCond.new

@@ -21,9 +21,8 @@ module SynHelper
 
       evaluable = generated_asts.reject { |ast| NoHolePass.has_hole? ast }
       evaluable.each { |ast|
-        puts Unparser.unparse(ast)
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
-          res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } #rescue next
+          res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } rescue next
           klass.instance_eval { postcond.call(res) } rescue next
         }
 
@@ -39,11 +38,11 @@ module SynHelper
       # always a just hole, with next possible call chain length. If the
       # work_list is empty and we have all correct programs that means we have
       # all correct programs up that length
-      if work_list.empty? && !correct_progs.empty? && return_all
+      if !correct_progs.empty? && return_all
         return correct_progs
       end
 
-      work_list = [*remainder_holes, *work_list]
+      work_list = [*work_list, *remainder_holes]
     end
     raise RuntimeError, "No candidates found"
   end

@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "unstage user" do
+    skip
     define :unstage,
     "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser",
     [AnotherUser] do

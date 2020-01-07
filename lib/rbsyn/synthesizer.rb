@@ -53,8 +53,9 @@ class Synthesizer
       ast = progcond.to_ast
       test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
         res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func) { precond.call unless precond.nil? } rescue next
-        klass.instance_eval { postcond.call(res) }
+        klass.instance_eval { postcond.call(res) } rescue next
       }
+
       return ast if test_outputs.all?
     }
     raise RuntimeError, "No candidates found"
