@@ -28,7 +28,7 @@ class SynthesizerProxy
 
   def initialize(mth_name, type, components)
     @ctx = Context.new
-    @ctx.fn_call_depth = 5
+    @ctx.max_prog_size = 5
     @ctx.components = components
     @ctx.functype = RDL::Globals.parser.scan_str type
     raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType

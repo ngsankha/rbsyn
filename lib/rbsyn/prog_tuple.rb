@@ -147,11 +147,11 @@ class ProgTuple
       # TODO: make a function that returns the post cond for booleans
       output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
       bsyn1 = generate(
-        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, {bool_consts: false}),
+        s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}),
         [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
       bsyn2 = generate(
-        s(RDL::Globals.types[:bool], :hole, 0, @ctx.fn_call_depth, {bool_consts: false}),
+        s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}),
         [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
       tuples = []
       bsyn1.each { |b1|

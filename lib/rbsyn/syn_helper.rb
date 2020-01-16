@@ -4,8 +4,6 @@ module SynHelper
   def generate(seed_hole, preconds, args, postconds, return_all=false)
     correct_progs = []
 
-    is_pc = seed_hole.children[2]
-
     work_list = [seed_hole]
     until work_list.empty?
       ast = work_list.shift
@@ -50,7 +48,9 @@ module SynHelper
         read_set = reason.write_set
       end
 
-      remainder_holes = generated_asts.select { |ast| NoHolePass.has_hole? ast }
+      remainder_holes = generated_asts.select { |ast|
+        NoHolePass.has_hole?(ast) &&
+        ProgSizePass.prog_size(ast) <= @ctx.max_prog_size }
 
       # Note: Invariant here is that the last candidate in the work list is
       # always a just hole, with next possible call chain length. If the

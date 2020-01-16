@@ -11,8 +11,7 @@ class ExpandHolePass < ::AST::Processor
 
   def on_hole(node)
     depth = node.children[0]
-    max_depth = node.children[1]
-    @params = node.children[2]
+    @params = node.children[1]
     @no_bool_consts = !@params.fetch(:bool_const, true)
     @curr_hash_depth = @params.fetch(:hash_depth, 0)
     expanded = []
@@ -45,10 +44,8 @@ class ExpandHolePass < ::AST::Processor
       expanded.concat paths.map { |path| fn_call(path) }
     end
 
-    if depth + 1 <= max_depth
-      # synthesize a hole with higher depth
-      expanded << s(node.ttype, :hole, depth + 1, max_depth, {hash_depth: @curr_hash_depth})
-    end
+    # synthesize a hole with higher depth
+    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth})
 
     @expand_map << expanded.size
     s(node.ttype, :filled_hole, *expanded)
@@ -89,9 +86,9 @@ class ExpandHolePass < ::AST::Processor
         targs = compute_targs(trecv, tmeth)
         tret = compute_tout(trecv, tmeth, targs)
         # allowing only lvars now
-        hole_args = targs.map { |targ| s(targ, :hole, 0, 0, {hash_depth: @curr_hash_depth}) }
+        hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth}) }
         if accum.nil?
-          accum = s(tret, :send, s(trecv, :hole, 0, 0, {hash_depth: @curr_hash_depth}),
+          accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth}),
             mth, *hole_args)
         else
           raise RuntimeError, "expected type" unless accum.ttype <= trecv
@@ -114,7 +111,7 @@ class ExpandHolePass < ::AST::Processor
       keyvals = thash.elts.map { |k, v|
         s(RDL::Globals.types[:top], :pair,
           s(RDL::Globals.types[:top], :sym, k),
-          s(v.type, :hole, 0, @ctx.max_arg_length, {hash_depth: @curr_hash_depth + 1}))
+          s(v.type, :hole, 0, {hash_depth: @curr_hash_depth + 1}))
       }
       s(thash, :hash, *keyvals)
     }
