@@ -1,15 +1,17 @@
 GIT
-  remote: https://github.com/ngsankha/ruby-minisat-1
-  revision: 685d9ae6cab8c42ae47cc97e8a8270117e221a64
-  specs:
-    minisat (0.1.0)
-
-PATH
-  remote: ../rdl
+  remote: https://github.com/ngsankha/rdl
+  revision: b51d9147e12a69451b556e655e966162e0cdc9de
+  branch: effects
   specs:
     rdl (2.1.0)
       parser (~> 2.3, >= 2.3.1.4)
       sql-parser (~> 0.0.2)
+
+GIT
+  remote: https://github.com/ngsankha/ruby-minisat
+  revision: 685d9ae6cab8c42ae47cc97e8a8270117e221a64
+  specs:
+    minisat (0.1.0)
 
 PATH
   remote: .
@@ -72,7 +74,7 @@ GEM
     pry-byebug (3.7.0)
       byebug (~> 11.0)
       pry (~> 0.10)
-    racc (1.4.15)
+    racc (1.4.16)
     rake (10.5.0)
     ruby-progressbar (1.10.1)
     sql-parser (0.0.2)
