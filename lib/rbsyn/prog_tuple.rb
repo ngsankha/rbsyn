@@ -80,11 +80,9 @@ class ProgTuple
     # BranchPruneStrategy.descendants.each { |strategy|
     #   intermediate = strategy.prune(intermediate)
     # }
+    intermediate = SpeculativeInverseBranchFold.prune(intermediate)
     intermediate = BoolExprFold.prune(intermediate)
-    # puts intermediate
     intermediate = InverseBranchFold.prune(intermediate)
-    # puts intermediate
-    # puts "======="
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them

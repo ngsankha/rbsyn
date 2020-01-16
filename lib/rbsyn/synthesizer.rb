@@ -51,7 +51,7 @@ class Synthesizer
     completed.each { |progcond|
       ast = progcond.to_ast
       test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-        res, klass = eval_ast(@ctx, ast, arg, @ctx.reset_func, precond) rescue next
+        res, klass = eval_ast(@ctx, ast, arg, precond) rescue next
         begin
           klass.instance_exec res, &postcond
         rescue AssertionError => e
