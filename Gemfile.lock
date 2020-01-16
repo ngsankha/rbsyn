@@ -5,12 +5,18 @@ GIT
     minisat (0.1.0)
 
 PATH
+  remote: ../rdl
+  specs:
+    rdl (2.1.0)
+      parser (~> 2.3, >= 2.3.1.4)
+      sql-parser (~> 0.0.2)
+
+PATH
   remote: .
   specs:
     rbsyn (0.1.0)
       activerecord
       parser
-      rdl
       sqlite3
       unparser
 
@@ -68,9 +74,6 @@ GEM
       pry (~> 0.10)
     racc (1.4.15)
     rake (10.5.0)
-    rdl (2.2.0)
-      parser (~> 2.3, >= 2.3.1.4)
-      sql-parser (~> 0.0.2)
     ruby-progressbar (1.10.1)
     sql-parser (0.0.2)
       racc
@@ -101,6 +104,7 @@ DEPENDENCIES
   pry-byebug
   rake (~> 10.0)
   rbsyn!
+  rdl!
 
 BUNDLED WITH
-   2.0.2
+   2.1.2

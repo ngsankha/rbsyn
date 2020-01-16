@@ -13,14 +13,6 @@ class SpecProxy
     @post_blk = blk
   end
 
-  def assert(&blk)
-    # run the block
-    # if assertion fails analyze side effect
-    # build programs using that write set
-    # run tests and iff it fails on same assert try next choice, otherwise start again
-    return false
-  end
-
   def method_missing(m, *args, &blk)
     raise RuntimeError, "unknown function #{m}, have #{@mth_name}" unless @mth_name == m
     @inputs = args
