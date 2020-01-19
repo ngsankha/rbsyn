@@ -18,17 +18,20 @@ module SynHelper
       # puts generated_asts
 
       evaluable = generated_asts.reject { |ast| NoHolePass.has_hole? ast }
-      reasons = {}
+
       evaluable.each { |ast|
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
           res, klass = eval_ast(@ctx, ast, arg, precond) rescue next
           begin
             klass.instance_exec res, &postcond
           rescue AssertionError => e
-            passed = klass.instance_eval { puts @count }
+            puts "TODO"
+            # passed = klass.instance_eval { puts @count }
+            read_set = e.read_set
+            write_set = e.write_set
             reasons[passed] = e
           rescue Exception
-            nil
+            next
           end
         }
 
