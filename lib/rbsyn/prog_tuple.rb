@@ -11,7 +11,7 @@ class ProgTuple
     else
       raise RuntimeError, "expected branch condition to be a %bool" unless branch.ttype <= RDL::Globals.types[:bool]
       @branch = BoolCond.new
-      @branch << branch
+      @branch << branch.to_ast
     end
     @prog = prog
     @preconds = preconds
@@ -30,7 +30,11 @@ class ProgTuple
 
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
+    begin
     raise RuntimeError, "both progs should be of same type" if other.prog.ttype != @prog.ttype
+  rescue
+    require "pry"; binding.pry
+  end
     # TODO: how to merge when ProgCond are composed of multiple programs
     raise RuntimeError, "unimplemented" if other.prog.is_a?(Array) || @prog.is_a?(Array)
     merge_impl(self, other)
@@ -64,7 +68,7 @@ class ProgTuple
       end
       merged
     else
-      @prog
+      @prog.to_ast
     end
   end
 
@@ -80,9 +84,13 @@ class ProgTuple
     # BranchPruneStrategy.descendants.each { |strategy|
     #   intermediate = strategy.prune(intermediate)
     # }
+    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     intermediate = SpeculativeInverseBranchFold.prune(intermediate)
+    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     intermediate = BoolExprFold.prune(intermediate)
+    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     intermediate = InverseBranchFold.prune(intermediate)
+    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them
@@ -92,7 +100,7 @@ class ProgTuple
     if @prog.is_a? Array
       progs = "[#{@prog.map { |prog| prog.to_s }.join(", ")}]"
     else
-      progs = Unparser.unparse(@prog)
+      progs = Unparser.unparse(@prog.to_ast)
     end
     "{ prog: #{progs}, branch: #{Unparser.unparse(@branch.to_ast)} }"
   end
@@ -130,34 +138,35 @@ class ProgTuple
       return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog == second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
-      new_cond << first.branch
-      new_cond << second.branch
+      new_cond << first.branch.to_ast
+      new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, first.prog, new_cond,
         [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog != second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
-      new_cond << first.branch
-      new_cond << second.branch
+      new_cond << first.branch.to_ast
+      new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, [first, second], new_cond,
         [*first.preconds, *second.preconds], [*first.args, *second.args])]
     else
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
       output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
-      bsyn1 = generate(
-        s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}),
-        [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed.look_for(:type, RDL::Globals.types[:bool])
+      bsyn1 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
+
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed.look_for(:type, RDL::Globals.types[:bool])
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
-      bsyn2 = generate(
-        s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}),
-        [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
+      bsyn2 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
       tuples = []
       bsyn1.each { |b1|
         bsyn2.each { |b2|
           cond1 = BoolCond.new
-          cond1 << b1
+          cond1 << b1.to_ast
           cond2 = BoolCond.new
-          cond2 << b2
+          cond2 << b2.to_ast
           tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.preconds, first.args),
             ProgTuple.new(@ctx, second.prog, cond2, second.preconds, second.args)],
             first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])

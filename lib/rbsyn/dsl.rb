@@ -60,7 +60,7 @@ class SynthesizerProxy
     fn = s(@ctx.functype, :def, @mth_name,
       s(RDL::Globals.types[:top], :args, *args.map { |arg|
         s(RDL::Globals.types[:top], :arg, arg)
-      }), prog)
+      }), prog.to_ast)
     Unparser.unparse(fn)
   end
 end

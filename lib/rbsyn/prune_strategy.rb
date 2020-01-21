@@ -29,11 +29,11 @@ class BoolExprFold < BranchPruneStrategy
         cond << c
       }
 
-      if lbody.type == :true && rbody.type == :false
-        return ProgTuple.new(progcond.ctx, lbranch.to_ast, cond,
+      if lbody.to_ast.type == :true && rbody.to_ast.type == :false
+        return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, lbranch.to_ast), cond,
           progcond.preconds, progcond.args)
-      elsif lbody.type == :false && rbody.type == :true
-        return ProgTuple.new(progcond.ctx, rbranch.to_ast, cond,
+      elsif lbody.to_ast.type == :false && rbody.to_ast.type == :true
+        return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, rbranch.to_ast), cond,
           progcond.preconds, progcond.args)
       else
         return progcond
@@ -69,7 +69,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
-             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].args)],
+             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, ProgWrapper.new(progcond.ctx, rbranch_guess), progcond.prog[1].preconds, progcond.prog[1].args)],
             branch,
             progcond.preconds, progcond.args)
         end
@@ -84,7 +84,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
-             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].args)],
+             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, ProgWrapper.new(progcond.ctx, rbranch_guess), progcond.prog[1].preconds, progcond.prog[1].args)],
             branch,
             progcond.preconds, progcond.args)
         end
@@ -105,7 +105,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch.conds[0]
           branch << lbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
-            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].args),
+            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, ProgWrapper.new(ctx, lbranch_guess), progcond.prog[0].preconds, progcond.prog[0].args),
              progcond.prog[1]],
             branch,
             progcond.preconds, progcond.args)
@@ -120,7 +120,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch.conds[0]
           branch << lbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
-            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].args),
+            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, ProgWrapper.new(ctx, lbranch_guess), progcond.prog[0].preconds, progcond.prog[0].args),
              progcond.prog[1]],
             branch,
             progcond.preconds, progcond.args)
@@ -145,9 +145,9 @@ class InverseBranchFold < BranchPruneStrategy
     return progcond unless progcond.prog.size == 2
 
     lbranch = progcond.prog[0].branch
-    lbody = progcond.prog[0].prog
+    lbody = progcond.prog[0].prog.to_ast
     rbranch = progcond.prog[1].branch
-    rbody = progcond.prog[1].prog
+    rbody = progcond.prog[1].prog.to_ast
 
     if lbranch.inverse?(rbranch)
       cond = BoolCond.new
@@ -163,12 +163,14 @@ class InverseBranchFold < BranchPruneStrategy
         if lbranch_bool != rbranch_bool
           if lbranch_bool
             return ProgTuple.new(progcond.ctx,
-              s(progcond.prog[0].prog.ttype, :if, lbranch.to_ast, lbody, rbody),
+              ProgWrapper.new(progcond.ctx,
+                s(progcond.prog[0].prog.ttype, :if, lbranch.to_ast, lbody, rbody)),
               cond,
               progcond.preconds, progcond.args)
           else
             return ProgTuple.new(progcond.ctx,
-              s(progcond.prog[0].prog.ttype, :if, rbranch.to_ast, rbody, lbody),
+              ProgWrapper.new(progcond.ctx,
+                s(progcond.prog[0].prog.ttype, :if, rbranch.to_ast, rbody, lbody)),
               cond,
               progcond.preconds, progcond.args)
           end

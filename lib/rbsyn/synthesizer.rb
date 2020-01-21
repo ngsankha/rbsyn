@@ -14,12 +14,13 @@ class Synthesizer
     @ctx.load_tenv!
 
     progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-      progs = generate(
-        s(@ctx.functype.ret, :hole, 0, {}),
-        [precond], [arg], [postcond], true)
-      branches = generate(
-        s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}),
-        [precond], [arg], [TRUE_POSTCOND], true)
+      seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :hole, 0, {}))
+      seed.look_for(:type, @ctx.functype.ret)
+      progs = generate(seed, [precond], [arg], [postcond], true)
+
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed.look_for(:type, RDL::Globals.types[:bool])
+      branches = generate(seed, [precond], [arg], [TRUE_POSTCOND], true)
       progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch, [precond], [arg]) }
     }
 
@@ -31,7 +32,10 @@ class Synthesizer
     completed = progconds.reduce { |merged_prog, progcond|
       results = []
       merged_prog.each { |mp|
+        puts mp
+        puts "======"
         progcond.each { |pp|
+          puts pp
           possible = (mp + pp)
           possible.each { |t| t.prune_branches }
           results.push(*possible)
