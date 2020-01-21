@@ -69,7 +69,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
-             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, ProgWrapper.new(progcond.ctx, rbranch_guess), progcond.prog[1].preconds, progcond.prog[1].args)],
+             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].args)],
             branch,
             progcond.preconds, progcond.args)
         end
@@ -84,7 +84,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
-             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, ProgWrapper.new(progcond.ctx, rbranch_guess), progcond.prog[1].preconds, progcond.prog[1].args)],
+             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].args)],
             branch,
             progcond.preconds, progcond.args)
         end
@@ -98,14 +98,14 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
       if rbranch.positive?
         lbranch_guess = s(RDL::Globals.types[:bool], :send, rbranch.conds[0], :!)
         results = progcond.prog[0].args.zip(progcond.prog[0].preconds).map { |arg, precond|
-          eval_ast(progcond.ctx, lbranch_guess, arg, precond)[0] #rescue nil
+          eval_ast(progcond.ctx, lbranch_guess, arg, precond)[0] rescue nil
         }
         if results.all?
           branch = BoolCond.new
           branch << rbranch.conds[0]
           branch << lbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
-            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, ProgWrapper.new(ctx, lbranch_guess), progcond.prog[0].preconds, progcond.prog[0].args),
+            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].args),
              progcond.prog[1]],
             branch,
             progcond.preconds, progcond.args)
@@ -120,7 +120,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch.conds[0]
           branch << lbranch_guess
           guessed = ProgTuple.new(progcond.ctx,
-            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, ProgWrapper.new(ctx, lbranch_guess), progcond.prog[0].preconds, progcond.prog[0].args),
+            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].args),
              progcond.prog[1]],
             branch,
             progcond.preconds, progcond.args)

@@ -21,23 +21,21 @@ class Synthesizer
       seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
       seed.look_for(:type, RDL::Globals.types[:bool])
       branches = generate(seed, [precond], [arg], [TRUE_POSTCOND], true)
-      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch, [precond], [arg]) }
+      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch.seed, [precond], [arg]) }
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
     return progconds[0][0].prog if progconds.size == 1
+
 
     # TODO: we need to merge only the program with different body
     # (same programs with different branch conditions are wasted work?)
     completed = progconds.reduce { |merged_prog, progcond|
       results = []
       merged_prog.each { |mp|
-        puts mp
-        puts "======"
         progcond.each { |pp|
-          puts pp
           possible = (mp + pp)
-          possible.each { |t| t.prune_branches }
+          possible.map &:prune_branches
           results.push(*possible)
         }
       }

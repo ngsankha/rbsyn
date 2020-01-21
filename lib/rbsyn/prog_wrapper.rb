@@ -1,4 +1,5 @@
 class ProgWrapper
+  attr_reader :seed
 
   def initialize(ctx, seed)
     @ctx = ctx
@@ -22,8 +23,8 @@ class ProgWrapper
     @seed
   end
 
-  def eql?(other)
-    @seed = other.seed
+  def ==(other)
+    @seed == other.seed
   end
 
   def build_candidates

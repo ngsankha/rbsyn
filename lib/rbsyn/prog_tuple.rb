@@ -9,16 +9,18 @@ class ProgTuple
     if branch.is_a? BoolCond
       @branch = branch
     else
+      raise RuntimeError, "expected a TypedNode" unless branch.is_a? TypedNode
       raise RuntimeError, "expected branch condition to be a %bool" unless branch.ttype <= RDL::Globals.types[:bool]
       @branch = BoolCond.new
       @branch << branch.to_ast
     end
+    raise RuntimeError, "expected ProgWrapper" unless prog.is_a?(Array) || prog.is_a?(ProgWrapper)
     @prog = prog
     @preconds = preconds
     @args = args
   end
 
-  def eql?(other)
+  def ==(other)
     return false unless other.is_a? ProgCond
 
     if @prog.is_a?(Array) && other.prog.is_a?(Array)
@@ -30,11 +32,14 @@ class ProgTuple
 
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
-    begin
+
+    ####### TODO ###########
+    # handle the other case
+    if @prog.is_a? Array
+      return @prog.map { |prg| prg + other }.flatten
+    end
     raise RuntimeError, "both progs should be of same type" if other.prog.ttype != @prog.ttype
-  rescue
-    require "pry"; binding.pry
-  end
+
     # TODO: how to merge when ProgCond are composed of multiple programs
     raise RuntimeError, "unimplemented" if other.prog.is_a?(Array) || @prog.is_a?(Array)
     merge_impl(self, other)
@@ -84,13 +89,9 @@ class ProgTuple
     # BranchPruneStrategy.descendants.each { |strategy|
     #   intermediate = strategy.prune(intermediate)
     # }
-    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     intermediate = SpeculativeInverseBranchFold.prune(intermediate)
-    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     intermediate = BoolExprFold.prune(intermediate)
-    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     intermediate = InverseBranchFold.prune(intermediate)
-    puts "#{Unparser.unparse(intermediate.to_ast)}\n===="
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them
@@ -138,14 +139,14 @@ class ProgTuple
       return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog == second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
-      new_cond << first.branch.to_ast
-      new_cond << second.branch.to_ast
+      new_cond << first.branch
+      new_cond << second.branch
       return [ProgTuple.new(@ctx, first.prog, new_cond,
         [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog != second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
-      new_cond << first.branch.to_ast
-      new_cond << second.branch.to_ast
+      new_cond << first.branch
+      new_cond << second.branch
       return [ProgTuple.new(@ctx, [first, second], new_cond,
         [*first.preconds, *second.preconds], [*first.args, *second.args])]
     else

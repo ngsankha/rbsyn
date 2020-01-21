@@ -12,7 +12,7 @@ class ExpandHolePass < ::AST::Processor
   def on_hole(node)
     depth = node.children[0]
     @params = node.children[1]
-    @no_bool_consts = !@params.fetch(:bool_const, true)
+    @no_bool_consts = !@params.fetch(:bool_consts, true)
     @curr_hash_depth = @params.fetch(:hash_depth, 0)
     expanded = []
 
