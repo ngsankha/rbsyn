@@ -33,15 +33,24 @@ class ProgTuple
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
 
-    ####### TODO ###########
-    # handle the other case
-    if @prog.is_a? Array
-      return @prog.map { |prg| prg + other }.flatten
+    if other.prog.is_a?(Array) || @prog.is_a?(Array)
+      first = if @prog.is_a? Array
+        @prog
+      else
+        [@prog]
+      end
+
+      second = if other.prog.is_a? Array
+        other.prog
+      else
+        [other.prog]
+      end
+
+      return first.product(second).map { |f, s| f + s }.flatten
     end
+
     raise RuntimeError, "both progs should be of same type" if other.prog.ttype != @prog.ttype
 
-    # TODO: how to merge when ProgCond are composed of multiple programs
-    raise RuntimeError, "unimplemented" if other.prog.is_a?(Array) || @prog.is_a?(Array)
     merge_impl(self, other)
   end
 
