@@ -1,4 +1,4 @@
-class UpdateTypesPass < ::AST::Processor
+class RefineTypesPass < ::AST::Processor
   include TypeOperations
 
   def on_send(node)

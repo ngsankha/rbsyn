@@ -28,7 +28,7 @@ class ProgWrapper
   end
 
   def build_candidates
-    update_types_pass = UpdateTypesPass.new
+    update_types_pass = RefineTypesPass.new
     case @looking_for
     when :type
       pass1 = ExpandHolePass.new @ctx
