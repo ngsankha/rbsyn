@@ -63,7 +63,7 @@ class Synthesizer
         end
       }
 
-      return ast if test_outputs.all?
+      return ast if test_outputs.all? true
     }
     raise RuntimeError, "No candidates found"
   end

@@ -29,7 +29,7 @@ module SynHelper
           end
         }
 
-        if test_outputs.all?
+        if test_outputs.all? true
           correct_progs << prog_wrap
           return prog_wrap unless return_all
         end

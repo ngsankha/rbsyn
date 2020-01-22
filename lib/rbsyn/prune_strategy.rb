@@ -63,7 +63,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           eval_ast(progcond.ctx, rbranch_guess, arg, precond)[0] rescue nil
         }
 
-        if results.all?
+        if results.all? true
           branch = BoolCond.new
           branch << lbranch.conds[0]
           branch << rbranch_guess
@@ -78,7 +78,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
         results = progcond.prog[1].args.zip(progcond.prog[1].preconds).map { |arg, precond|
           eval_ast(progcond.ctx, rbranch_guess, arg, precond)[0] rescue nil
         }
-        if results.all?
+        if results.all? true
           branch = BoolCond.new
           branch << lbranch.conds[0]
           branch << rbranch_guess
@@ -100,7 +100,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
         results = progcond.prog[0].args.zip(progcond.prog[0].preconds).map { |arg, precond|
           eval_ast(progcond.ctx, lbranch_guess, arg, precond)[0] rescue nil
         }
-        if results.all?
+        if results.all? true
           branch = BoolCond.new
           branch << rbranch.conds[0]
           branch << lbranch_guess
@@ -115,7 +115,7 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
         results = progcond.prog[0].args.zip(progcond.prog[0].preconds).map { |arg, precond|
           eval_ast(progcond.ctx, lbranch_guess, arg, precond)[0] rescue nil
         }
-        if results.all?
+        if results.all? true
           branch = BoolCond.new
           branch << rbranch.conds[0]
           branch << lbranch_guess
