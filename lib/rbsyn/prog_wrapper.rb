@@ -28,6 +28,7 @@ class ProgWrapper
   end
 
   def build_candidates
+    update_types_pass = UpdateTypesPass.new
     case @looking_for
     when :type
       pass1 = ExpandHolePass.new @ctx
@@ -35,7 +36,8 @@ class ProgWrapper
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
       generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
         pass2 = ExtractASTPass.new(selection)
-        prog_wrap = ProgWrapper.new(@ctx, pass2.process(expanded))
+        program = update_types_pass.process(pass2.process(expanded))
+        prog_wrap = ProgWrapper.new(@ctx, program)
         prog_wrap.look_for(:type, @target)
         prog_wrap
       }

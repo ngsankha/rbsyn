@@ -4,3 +4,4 @@ source "https://rubygems.org"
 gemspec
 gem "minisat", :git => "https://github.com/ngsankha/ruby-minisat"
 gem "rdl", :git => "https://github.com/ngsankha/rdl", :branch => "effects"
+# gem "rdl", :path => "../rdl"

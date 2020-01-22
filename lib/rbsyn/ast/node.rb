@@ -21,4 +21,8 @@ class TypedNode < Parser::AST::Node
       original_dup.send :initialize, @ttype, new_type, *new_children
     end
   end
+
+  def update_ttype(ttype)
+    original_dup.send :initialize, ttype, @type, *@children
+  end
 end
