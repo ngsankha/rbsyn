@@ -4,9 +4,10 @@ class ExpandHolePass < ::AST::Processor
 
   attr_reader :expand_map
 
-  def initialize(ctx)
+  def initialize(ctx, env)
     @expand_map = []
     @ctx = ctx
+    @env = env
   end
 
   def on_hole(node)
@@ -14,6 +15,7 @@ class ExpandHolePass < ::AST::Processor
     @params = node.children[1]
     @no_bool_consts = !@params.fetch(:bool_consts, true)
     @curr_hash_depth = @params.fetch(:hash_depth, 0)
+    @method_arg = @params.fetch(:method_arg, false)
     expanded = []
 
     if depth == 0
@@ -37,6 +39,8 @@ class ExpandHolePass < ::AST::Processor
       if node.ttype.is_a?(RDL::Type::FiniteHashType) && @curr_hash_depth < @ctx.max_hash_depth
         expanded.concat finite_hash(node.ttype)
       end
+
+      # TODO: lookup local environment
     else
       # synthesize function calls
       r = Reachability.new(@ctx.tenv)
@@ -48,7 +52,7 @@ class ExpandHolePass < ::AST::Processor
     expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth})
 
     @expand_map << expanded.size
-    s(node.ttype, :filled_hole, *expanded)
+    s(node.ttype, :filled_hole, *expanded, {method_arg: @method_arg})
   end
 
   def handler_missing(node)
@@ -70,7 +74,7 @@ class ExpandHolePass < ::AST::Processor
 
   def lvar(type)
     @ctx.tenv.select { |k, v| v <= type }
-      .map { |k, v| TypedNode.new(type, :lvar, k) }
+      .map { |k, v| s(type, :lvar, k) }
   end
 
   def fn_call(path)
@@ -86,7 +90,7 @@ class ExpandHolePass < ::AST::Processor
         targs = compute_targs(trecv, tmeth)
         tret = compute_tout(trecv, tmeth, targs)
         # allowing only lvars now
-        hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth}) }
+        hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth, method_arg: true}) }
         if accum.nil?
           accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth}),
             mth, *hole_args)

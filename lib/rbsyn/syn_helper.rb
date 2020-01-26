@@ -3,11 +3,11 @@ module SynHelper
 
   def generate(seed_hole, preconds, args, postconds, return_all=false)
     correct_progs = []
-    effect_needed = []
 
     work_list = [seed_hole]
     until work_list.empty?
       base = work_list.shift
+      effect_needed = []
       generated = base.build_candidates
       evaluable = generated.reject &:has_hole?
 
@@ -17,12 +17,7 @@ module SynHelper
           begin
             klass.instance_exec res, &postcond
           rescue AssertionError => e
-            puts "TODO"
-            # passed = klass.instance_eval { puts @count }
-            read_set = e.read_set
-            write_set = e.write_set
-            # TODO: update prog wrap to set looking for
-            # take care about size of the program
+            prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
           rescue Exception
             next
@@ -38,6 +33,7 @@ module SynHelper
       remainder_holes = generated.select { |prog_wrap|
         prog_wrap.has_hole? &&
         prog_wrap.prog_size <= @ctx.max_prog_size }
+      remainder_holes.push(*effect_needed)
 
       # Note: Invariant here is that the last candidate in the work list is
       # always a just hole, with next possible call chain length. If the
@@ -48,6 +44,8 @@ module SynHelper
       end
 
       work_list = [*work_list, *remainder_holes]
+
+      # TODO: sort the work list by some criterion?
     end
     raise RuntimeError, "No candidates found"
   end

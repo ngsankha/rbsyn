@@ -4,6 +4,8 @@ class ProgWrapper
   def initialize(ctx, seed)
     @ctx = ctx
     @seed = seed
+    @env = LocalEnvironment.new
+    @env.base_expr = seed
   end
 
   def look_for(kind, target)
@@ -13,7 +15,8 @@ class ProgWrapper
       @looking_for = :type
       @target = target
     when :effect
-      raise RuntimeError, "TODO"
+      @looking_for = :effect
+      @target = target
     else
       raise RuntimeError, "can look for types/effects only"
     end
@@ -42,7 +45,13 @@ class ProgWrapper
         prog_wrap
       }
     when :effect
-      raise RuntimeError, "TODO"
+      @target.each { |eff|
+        cls = eff[0]
+        field = eff[1]
+        if cls == AnotherUser && field == :id
+          raise RuntimeError, "TODO"
+        end
+      }
     else
       raise RuntimeError, "can look for types/effects only"
     end
