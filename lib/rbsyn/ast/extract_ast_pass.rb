@@ -7,8 +7,12 @@ class ExtractASTPass < ::AST::Processor
   def on_filled_hole(node)
     idx = @selection.shift
     method_arg = node.children.last.fetch(:method_arg, false)
-    @new_env.addnode.children[idx] if method_arg
-    node.children[idx]
+    if method_arg && node.type == :send
+      ref = @new_env.add_expr(node.children[idx])
+      s(node.ttype, :envref, ref)
+    else
+      node.children[idx]
+    end
   end
 
   def env

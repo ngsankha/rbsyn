@@ -14,11 +14,11 @@ class Synthesizer
     @ctx.load_tenv!
 
     progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-      seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :hole, 0, {}))
+      seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :hole, 0, {}), LocalEnvironment.new)
       seed.look_for(:type, @ctx.functype.ret)
       progs = generate(seed, [precond], [arg], [postcond], true)
 
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}), LocalEnvironment.new)
       seed.look_for(:type, RDL::Globals.types[:bool])
       branches = generate(seed, [precond], [arg], [TRUE_POSTCOND], true)
       progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch.seed, [precond], [arg]) }

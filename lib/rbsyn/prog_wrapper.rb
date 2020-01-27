@@ -1,11 +1,10 @@
 class ProgWrapper
-  attr_reader :seed
+  attr_reader :seed, :env
 
-  def initialize(ctx, seed)
+  def initialize(ctx, seed, env)
     @ctx = ctx
     @seed = seed
-    @env = LocalEnvironment.new
-    @env.base_expr = seed
+    @env = env
   end
 
   def look_for(kind, target)
@@ -34,13 +33,14 @@ class ProgWrapper
     update_types_pass = RefineTypesPass.new
     case @looking_for
     when :type
-      pass1 = ExpandHolePass.new @ctx
+      pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@seed)
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
       generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
-        pass2 = ExtractASTPass.new(selection)
+        pass2 = ExtractASTPass.new(selection, @env)
         program = update_types_pass.process(pass2.process(expanded))
-        prog_wrap = ProgWrapper.new(@ctx, program)
+        new_env = pass2.env
+        prog_wrap = ProgWrapper.new(@ctx, program, new_env)
         prog_wrap.look_for(:type, @target)
         prog_wrap
       }

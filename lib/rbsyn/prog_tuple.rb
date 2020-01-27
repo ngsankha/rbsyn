@@ -162,11 +162,11 @@ class ProgTuple
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
       output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}), LocalEnvironment.new)
       seed.look_for(:type, RDL::Globals.types[:bool])
       bsyn1 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
 
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}), LocalEnvironment.new)
       seed.look_for(:type, RDL::Globals.types[:bool])
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
       bsyn2 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)

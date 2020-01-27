@@ -29,11 +29,12 @@ class BoolExprFold < BranchPruneStrategy
         cond << c
       }
 
+      # LocalEnvironment.new is fine here because the program body is just true or false
       if lbody.to_ast.type == :true && rbody.to_ast.type == :false
-        return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, lbranch.to_ast), cond,
+        return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, lbranch.to_ast, LocalEnvironment.new), cond,
           progcond.preconds, progcond.args)
       elsif lbody.to_ast.type == :false && rbody.to_ast.type == :true
-        return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, rbranch.to_ast), cond,
+        return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, rbranch.to_ast, LocalEnvironment.new), cond,
           progcond.preconds, progcond.args)
       else
         return progcond
@@ -164,20 +165,21 @@ class InverseBranchFold < BranchPruneStrategy
           if lbranch_bool
             return ProgTuple.new(progcond.ctx,
               ProgWrapper.new(progcond.ctx,
-                s(progcond.prog[0].prog.ttype, :if, lbranch.to_ast, lbody, rbody)),
+                s(progcond.prog[0].prog.ttype, :if, lbranch.to_ast, lbody, rbody), progcond.prog[0].prog.env + progcond.prog[1].prog.env),
               cond,
               progcond.preconds, progcond.args)
           else
             return ProgTuple.new(progcond.ctx,
               ProgWrapper.new(progcond.ctx,
-                s(progcond.prog[0].prog.ttype, :if, rbranch.to_ast, rbody, lbody)),
+                s(progcond.prog[0].prog.ttype, :if, rbranch.to_ast, rbody, lbody), progcond.prog[0].prog.env + progcond.prog[1].prog.env),
               cond,
               progcond.preconds, progcond.args)
           end
         else
           return progcond
         end
-      rescue
+      rescue Exception => e
+        puts e
         return progcond
       end
     else
