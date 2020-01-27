@@ -7,6 +7,7 @@ class ExpandHolePass < ::AST::Processor
   def initialize(ctx, env)
     @expand_map = []
     @ctx = ctx
+    raise RuntimeError, "expected LocalEnvironment" unless env.is_a? LocalEnvironment
     @env = env
   end
 
@@ -19,28 +20,32 @@ class ExpandHolePass < ::AST::Processor
     expanded = []
 
     if depth == 0
-      # synthesize boolean constants
+      # boolean constants
       if node.ttype <= RDL::Globals.types[:bool] && !@no_bool_consts
         expanded.concat bool_const
       end
 
+      # symbols
       if node.ttype.is_a?(RDL::Type::SingletonType) && node.ttype.val.is_a?(Symbol)
         expanded.concat symbols([node.ttype])
       end
 
+      # union of symbols
       if node.ttype.is_a?(RDL::Type::UnionType) &&
         node.ttype.types.all? { |t| t.is_a?(RDL::Type::SingletonType) && t.val.is_a?(Symbol) }
         expanded.concat symbols(node.ttype.types)
       end
 
-      # synthesize variables in the environment
+      # real program variables in the environment
       expanded.concat lvar(node.ttype)
 
+      # hashes
       if node.ttype.is_a?(RDL::Type::FiniteHashType) && @curr_hash_depth < @ctx.max_hash_depth
         expanded.concat finite_hash(node.ttype)
       end
 
-      # TODO: lookup local environment
+      # possibly reusable subexpressions
+      expanded.concat envref(node.ttype)
     else
       # synthesize function calls
       r = Reachability.new(@ctx.tenv)
@@ -49,7 +54,7 @@ class ExpandHolePass < ::AST::Processor
     end
 
     # synthesize a hole with higher depth
-    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth})
+    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg})
 
     @expand_map << expanded.size
     s(node.ttype, :filled_hole, *expanded, {method_arg: @method_arg})
@@ -77,6 +82,10 @@ class ExpandHolePass < ::AST::Processor
       .map { |k, v| s(type, :lvar, k) }
   end
 
+  def envref(type)
+    @env.exprs_with_type(type).map { |ref| s(type, :envref, ref) }
+  end
+
   def fn_call(path)
     tokens = path.path.to_enum
     accum = nil
@@ -89,7 +98,6 @@ class ExpandHolePass < ::AST::Processor
         tmeth = info[:type]
         targs = compute_targs(trecv, tmeth)
         tret = compute_tout(trecv, tmeth, targs)
-        # allowing only lvars now
         hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth, method_arg: true}) }
         if accum.nil?
           accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth}),

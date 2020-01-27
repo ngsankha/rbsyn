@@ -1,14 +1,13 @@
 class ExtractASTPass < ::AST::Processor
   def initialize(selection, old_env)
     @selection = selection
-    @old_env = old_env
-    @new_env = @old_env.dup
+    @new_env = Marshal.load(Marshal.dump(old_env))
   end
 
   def on_filled_hole(node)
     idx = @selection.shift
     method_arg = node.children.last.fetch(:method_arg, false)
-    @new_env.add_expr()
+    @new_env.addnode.children[idx] if method_arg
     node.children[idx]
   end
 
