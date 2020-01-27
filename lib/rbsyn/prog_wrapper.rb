@@ -49,11 +49,34 @@ class ProgWrapper
         cls = eff[0]
         field = eff[1]
         if cls == AnotherUser && field == :id
+          methds = methods_with_write_effect(eff)
           raise RuntimeError, "TODO"
         end
       }
     else
       raise RuntimeError, "can look for types/effects only"
+    end
+  end
+
+  def methods_with_write_effect(eff)
+    if eff.size == 1
+      raise RuntimeError, "TODO"
+    elsif eff.size == 2
+      klass = eff[0]
+      field = eff[1]
+      effect_causing = []
+      # TODO: take care between nominal and singleton types
+      # right now singleton types are not being handled
+      RDL::Globals.info.info.each { |cls, v1|
+        v1.each { |meth, v2|
+          v2.fetch(:write, []).each { |weff|
+            effect_causing << [cls, meth] if (weff[0] == klass && weff[1] == field)
+          }
+        }
+      }
+      return effect_causing
+    else
+      raise RuntimeError, "don't know how to handle"
     end
   end
 
