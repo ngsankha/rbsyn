@@ -4,12 +4,14 @@ module Assertions
     @count += 1
     ans = yield
     if !!ans
+      @passed_count += 1
       ans
     else
       # TODO: change this
       if @count == 1
-        read_set = [[AnotherUser, :id]]
-        write_set = []
+        # read_set = [[AnotherUser, :id]]
+        # write_set = []
+        return true
       elsif @count == 2
         read_set = [[AnotherUser, :username]]
         write_set = []

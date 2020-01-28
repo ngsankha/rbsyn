@@ -9,6 +9,7 @@ module AST
     klass.instance_eval {
       extend Assertions
       @count = 0
+      @passed_count = 0
     }
     bind = klass.instance_eval { binding }
     DBUtils.reset

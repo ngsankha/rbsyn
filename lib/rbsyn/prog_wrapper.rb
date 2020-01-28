@@ -2,12 +2,14 @@ class ProgWrapper
   include AST
 
   attr_reader :seed, :env, :exprs
+  attr_accessor :passed_asserts
 
   def initialize(ctx, seed, env, exprs=[])
     @ctx = ctx
     @seed = seed
     @env = env
     @exprs = exprs
+    @passed_asserts = 0
   end
 
   def look_for(kind, target)
@@ -71,7 +73,6 @@ class ProgWrapper
         puts "I am here"
         # we are filling a side effect expression
         expanded = pass1.process(@exprs.last)
-        puts expanded
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
         generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
           pass2 = ExtractASTPass.new(selection, @env)
@@ -101,10 +102,6 @@ class ProgWrapper
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
           prog_wrap.look_for(:type, RDL::Globals.types[:top])
-          lol = FlattenProgramPass.new(@env)
-          puts lol.process(prog_wrap.seed)
-          puts prog_wrap.exprs
-          puts "-------"
           prog_wrap
         }
       }.flatten
