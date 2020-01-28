@@ -148,25 +148,29 @@ class ProgTuple
       return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog == second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
-      new_cond << first.branch
-      new_cond << second.branch
+      new_cond << first.branch.to_ast
+      new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, first.prog, new_cond,
         [*first.preconds, *second.preconds], [*first.args, *second.args])]
     elsif first.prog != second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
-      new_cond << first.branch
-      new_cond << second.branch
+      new_cond << first.branch.to_ast
+      new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, [first, second], new_cond,
         [*first.preconds, *second.preconds], [*first.args, *second.args])]
     else
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
       output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}), LocalEnvironment.new)
+      env = LocalEnvironment.new
+      b1_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, b1_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
       bsyn1 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
 
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}), LocalEnvironment.new)
+      env = LocalEnvironment.new
+      b2_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, b2_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
       bsyn2 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)

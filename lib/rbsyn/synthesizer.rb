@@ -14,19 +14,22 @@ class Synthesizer
     @ctx.load_tenv!
 
     progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-      seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :hole, 0, {}), LocalEnvironment.new)
+      env = LocalEnvironment.new
+      prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {}))
+      seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
       seed.look_for(:type, @ctx.functype.ret)
       progs = generate(seed, [precond], [arg], [postcond], true)
 
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}), LocalEnvironment.new)
+      env = LocalEnvironment.new
+      branch_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, branch_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
       branches = generate(seed, [precond], [arg], [TRUE_POSTCOND], true)
-      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch.seed, [precond], [arg]) }
+      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch.to_ast, [precond], [arg]) }
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
     return progconds[0][0].prog if progconds.size == 1
-
 
     # TODO: we need to merge only the program with different body
     # (same programs with different branch conditions are wasted work?)

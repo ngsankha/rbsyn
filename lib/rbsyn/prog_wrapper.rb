@@ -22,11 +22,12 @@ class ProgWrapper
   end
 
   def to_ast
-    @seed
+    pass = FlattenProgramPass.new(@env)
+    pass.process(@seed)
   end
 
   def ==(other)
-    @seed == other.seed
+    to_ast == other.to_ast
   end
 
   def build_candidates
@@ -81,11 +82,11 @@ class ProgWrapper
   end
 
   def has_hole?
-    NoHolePass.has_hole? to_ast
+    NoHolePass.has_hole? @seed, @env
   end
 
   def prog_size
-    ProgSizePass.prog_size to_ast
+    ProgSizePass.prog_size @seed, @env
   end
 
   def ttype

@@ -4,6 +4,12 @@ class ExtractASTPass < ::AST::Processor
     @new_env = Marshal.load(Marshal.dump(old_env))
   end
 
+  def on_envref(node)
+    subexpr = @new_env.get_expr(node.ttype, node.children[0])
+    subexpr[:expr] = process(subexpr[:expr])
+    nil
+  end
+
   def on_filled_hole(node)
     idx = @selection.shift
     method_arg = node.children.last.fetch(:method_arg, false)

@@ -6,9 +6,18 @@ class ExpandHolePass < ::AST::Processor
 
   def initialize(ctx, env)
     @expand_map = []
+    @visited_envrefs = Set.new
     @ctx = ctx
     raise RuntimeError, "expected LocalEnvironment" unless env.is_a? LocalEnvironment
     @env = env
+  end
+
+  def on_envref(node)
+    ref = node.children[0]
+    @visited_envrefs.add(ref)
+    info = @env.get_expr(node.ttype, ref)
+    info[:expr] = process(info[:expr])
+    node
   end
 
   def on_hole(node)
@@ -83,7 +92,9 @@ class ExpandHolePass < ::AST::Processor
   end
 
   def envref(type)
-    @env.exprs_with_type(type).map { |ref| s(type, :envref, ref) }
+    @env.exprs_with_type(type)
+      .reject { |ref| @visited_envrefs.include? ref }
+      .map { |ref| s(type, :envref, ref) }
   end
 
   def fn_call(path)

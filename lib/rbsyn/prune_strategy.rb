@@ -26,7 +26,7 @@ class BoolExprFold < BranchPruneStrategy
     if lbranch.inverse?(rbranch)
       cond = BoolCond.new
       [*lbranch.conds, *rbranch.conds].each { |c|
-        cond << c
+        cond << c.to_ast
       }
 
       # LocalEnvironment.new is fine here because the program body is just true or false
@@ -66,8 +66,8 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
 
         if results.all? true
           branch = BoolCond.new
-          branch << lbranch.conds[0]
-          branch << rbranch_guess
+          branch << lbranch.conds[0].to_ast
+          branch << rbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
              ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].args)],
@@ -81,8 +81,8 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
         }
         if results.all? true
           branch = BoolCond.new
-          branch << lbranch.conds[0]
-          branch << rbranch_guess
+          branch << lbranch.conds[0].to_ast
+          branch << rbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
              ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].args)],
@@ -103,8 +103,8 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
         }
         if results.all? true
           branch = BoolCond.new
-          branch << rbranch.conds[0]
-          branch << lbranch_guess
+          branch << rbranch.conds[0].to_ast
+          branch << lbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
             [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].args),
              progcond.prog[1]],
@@ -118,8 +118,8 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
         }
         if results.all? true
           branch = BoolCond.new
-          branch << rbranch.conds[0]
-          branch << lbranch_guess
+          branch << rbranch.conds[0].to_ast
+          branch << lbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
             [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].args),
              progcond.prog[1]],

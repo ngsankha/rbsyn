@@ -9,12 +9,13 @@ class BoolCond
 
   def <<(cond)
     raise RuntimeError, "expected TypedAST, got #{cond}" unless cond.is_a? TypedNode
+    # raise RuntimeError, "don't expect holes" if cond.has_hole?
     @conds << cond
   end
 
   def positive?
     raise RuntimeError, "works for only 1 condition" if @conds.size > 1
-    stripepd, nots = strip_not(@conds[0])
+    stripped, nots = strip_not(@conds[0])
     nots % 2 == 0
   end
 

@@ -1,14 +1,19 @@
 class NoHolePass < ::AST::Processor
   attr_reader :has_holes
 
-  def self.has_hole?(node)
-    visitor = NoHolePass.new
+  def self.has_hole?(node, env)
+    visitor = NoHolePass.new(env)
     visitor.process(node)
     visitor.has_holes
   end
 
-  def initialize
+  def initialize(env)
     @has_holes = false
+    @env = env
+  end
+
+  def on_envref(node)
+    process(@env.get_expr(node.ttype, node.children[0])[:expr])
   end
 
   def on_hole(node)

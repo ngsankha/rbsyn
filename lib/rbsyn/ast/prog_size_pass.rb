@@ -1,14 +1,15 @@
 class ProgSizePass < ::AST::Processor
   attr_reader :size
 
-  def self.prog_size(node)
-    visitor = ProgSizePass.new
+  def self.prog_size(node, env)
+    visitor = ProgSizePass.new(env)
     visitor.process(node)
     visitor.size
   end
 
-  def initialize
+  def initialize(env)
     @size = 0
+    @env = env
   end
 
   def on_hole(node)
@@ -20,6 +21,11 @@ class ProgSizePass < ::AST::Processor
     @size += 1
     handler_missing(node)
     node
+  end
+
+  def on_envref(node)
+    process(@env.get_expr(node.ttype, node.children[0])[:expr])
+    nil
   end
 
   def handler_missing(node)
