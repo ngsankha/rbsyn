@@ -54,6 +54,7 @@ class Reachability
         mthds.each { |mthd, info|
           tmeth = info[:type]
           targs = compute_targs(trecv, tmeth)
+          next if targs.any? { |t| t.is_a? RDL::Type::BotType }
           tout = compute_tout(trecv, tmeth, targs)
           # convert :self types to actual object
           tout = trecv if tout.is_a?(RDL::Type::VarType) && tout.name == :self

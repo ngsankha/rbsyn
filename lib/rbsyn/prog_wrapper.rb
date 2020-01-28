@@ -1,10 +1,13 @@
 class ProgWrapper
-  attr_reader :seed, :env
+  include AST
 
-  def initialize(ctx, seed, env)
+  attr_reader :seed, :env, :exprs
+
+  def initialize(ctx, seed, env, exprs=[])
     @ctx = ctx
     @seed = seed
     @env = env
+    @exprs = exprs
   end
 
   def look_for(kind, target)
@@ -23,11 +26,21 @@ class ProgWrapper
 
   def to_ast
     pass = FlattenProgramPass.new(@env)
-    pass.process(@seed)
+    ast = pass.process(@seed)
+    return ast if @exprs.empty?
+
+    s(ast.ttype, :begin, *[
+      ast,
+      *exprs.map { |e| pass.process(e) }
+    ])
   end
 
   def ==(other)
     to_ast == other.to_ast
+  end
+
+  def add_side_effect_expr(expr)
+    @exprs << expr
   end
 
   def build_candidates
@@ -35,25 +48,53 @@ class ProgWrapper
     case @looking_for
     when :type
       pass1 = ExpandHolePass.new(@ctx, @env)
-      expanded = pass1.process(@seed)
-      expand_map = pass1.expand_map.map { |i| i.times.to_a }
-      generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
-        pass2 = ExtractASTPass.new(selection, @env)
-        program = update_types_pass.process(pass2.process(expanded))
-        new_env = pass2.env
-        prog_wrap = ProgWrapper.new(@ctx, program, new_env)
-        prog_wrap.look_for(:type, @target)
-        prog_wrap
-      }
+      if @exprs.empty?
+        # no side effected expressions yet
+        expanded = pass1.process(@seed)
+        expand_map = pass1.expand_map.map { |i| i.times.to_a }
+        generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+          pass2 = ExtractASTPass.new(selection, @env)
+          program = update_types_pass.process(pass2.process(expanded))
+          new_env = pass2.env
+          prog_wrap = ProgWrapper.new(@ctx, program, new_env)
+          prog_wrap.look_for(:type, @target)
+          prog_wrap
+        }
+      else
+        # we are filling a side effect expression
+        expanded = pass1.process(@exprs.last)
+        expand_map = pass1.expand_map.map { |i| i.times.to_a }
+        generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+          pass2 = ExtractASTPass.new(selection, @env)
+          program = update_types_pass.process(pass2.process(expanded))
+          new_env = pass2.env
+          new_exprs = @exprs.dup
+          new_exprs[-1] = program
+          prog_wrap = ProgWrapper.new(@ctx, program, new_env, new_exprs)
+          prog_wrap.look_for(:type, @target)
+          prog_wrap
+        }
+      end
     when :effect
-      @target.each { |eff|
-        cls = eff[0]
-        field = eff[1]
-        if cls == AnotherUser && field == :id
-          methds = methods_with_write_effect(eff)
-          raise RuntimeError, "TODO"
-        end
-      }
+      # TODO: ordering can be done better to build candidates programs with
+      # method calls that can satisfy multiple effects at once
+      @target.map { |eff|
+        methds = methods_with_write_effect(eff)
+        eff_hole = s(RDL::Globals.types[:top], :hole, 1, {effect: true})
+        pass1 = ExpandHolePass.new(@ctx, @env)
+        pass1.effect_methds = methds
+        expanded = pass1.process(eff_hole)
+        expand_map = pass1.expand_map.map { |i| i.times.to_a }
+        generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+          pass2 = ExtractASTPass.new(selection, @env)
+          program = update_types_pass.process(pass2.process(expanded))
+          new_env = pass2.env
+          prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
+          prog_wrap.add_side_effect_expr(program)
+          prog_wrap.look_for(:type, RDL::Globals.types[:top])
+          prog_wrap
+        }
+      }.flatten
     else
       raise RuntimeError, "can look for types/effects only"
     end
@@ -82,11 +123,11 @@ class ProgWrapper
   end
 
   def has_hole?
-    NoHolePass.has_hole? @seed, @env
+    [@seed, *@exprs].any? { |prog| NoHolePass.has_hole? prog, @env }
   end
 
   def prog_size
-    ProgSizePass.prog_size @seed, @env
+    [@seed, *@exprs].map { |prog| ProgSizePass.prog_size prog, @env }.sum
   end
 
   def ttype

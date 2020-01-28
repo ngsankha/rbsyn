@@ -3,6 +3,7 @@ class ExpandHolePass < ::AST::Processor
   include TypeOperations
 
   attr_reader :expand_map
+  attr_writer :effect_methds
 
   def initialize(ctx, env)
     @expand_map = []
@@ -26,6 +27,7 @@ class ExpandHolePass < ::AST::Processor
     @no_bool_consts = !@params.fetch(:bool_consts, true)
     @curr_hash_depth = @params.fetch(:hash_depth, 0)
     @method_arg = @params.fetch(:method_arg, false)
+    @effect = @params.fetch(:effect, false)
     expanded = []
 
     if depth == 0
@@ -55,15 +57,21 @@ class ExpandHolePass < ::AST::Processor
 
       # possibly reusable subexpressions
       expanded.concat envref(node.ttype)
-    else
+    elsif depth > 0 && !@effect
       # synthesize function calls
       r = Reachability.new(@ctx.tenv)
       paths = r.paths_to_type(node.ttype, depth)
       expanded.concat paths.map { |path| fn_call(path) }
+    elsif depth == 1 && @effect
+      expanded.concat effects
+    else
+      raise RuntimeError, "unexpected"
     end
 
     # synthesize a hole with higher depth
-    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg})
+    # TODO: we don't do this if we are synthesizing for effects, will do after
+    # effect reachability graph is implemented
+    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg}) unless @effect
 
     @expand_map << expanded.size
     s(node.ttype, :filled_hole, *expanded, {method_arg: @method_arg})
@@ -76,6 +84,16 @@ class ExpandHolePass < ::AST::Processor
   end
 
   private
+  def effects
+    @effect_methds.map { |klass, methd|
+      # TODO: Only nominal types for now, add singleton types too
+      trecv = RDL::Type::NominalType.new(klass)
+      # the %top type here doesn't matter
+      path = CallChain.new([trecv, methd, RDL::Globals.types[:top]], @ctx.tenv)
+      fn_call(path)
+    }
+  end
+
   def bool_const
     [s(RDL::Globals.types[:bool], :true),
     s(RDL::Globals.types[:bool], :false)]
