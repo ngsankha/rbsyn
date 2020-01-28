@@ -12,6 +12,17 @@ class LocalEnvironment
     ans
   end
 
+  def bump_count(ref)
+    @info.each { |k, v|
+      v.each { |entry|
+        if entry[:ref] == ref
+          entry[:count] = entry[:count] + 1
+          return
+        end
+      }
+    }
+  end
+
   def get_expr(type, ref)
     @info[type].find { |i| i[:ref] == ref }
   end

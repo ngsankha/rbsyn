@@ -17,7 +17,9 @@ class ExtractASTPass < ::AST::Processor
       ref = @new_env.add_expr(node.children[idx])
       s(node.ttype, :envref, ref)
     else
-      node.children[idx]
+      selected = node.children[idx]
+      @new_env.bump_count(selected.children[0]) if selected.type == :envref
+      selected
     end
   end
 

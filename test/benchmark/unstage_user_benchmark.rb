@@ -4,7 +4,7 @@ describe "Synthesis Benchmark" do
   it "unstage user" do
     define :unstage,
     "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser",
-    [AnotherUser] do
+    [AnotherUser], prog_size: 10 do
       spec "correctly unstages a user" do
         pre {
           @dummy = AnotherUser.create(name: 'Dummy User', username: 'dummy1', active: true, email: 'dummy@account.com')

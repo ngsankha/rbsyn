@@ -29,10 +29,17 @@ class ProgWrapper
     ast = pass.process(@seed)
     return ast if @exprs.empty?
 
-    s(ast.ttype, :begin, *[
-      ast,
-      *exprs.map { |e| pass.process(e) }
+    effect_exprs = @exprs.map { |e| pass.process(e) }
+    assigns = var_expr.map { |id, e|
+      s(RDL::Globals.type[:top], :lvasgn, "#{VAR_PREFIX}#{id}".to_sym, e)
+    }
+
+    final = s(ast.ttype, :begin, *[
+      *assigns,
+      *ast,
+      *effect_exprs
     ])
+    final
   end
 
   def ==(other)
@@ -61,8 +68,10 @@ class ProgWrapper
           prog_wrap
         }
       else
+        puts "I am here"
         # we are filling a side effect expression
         expanded = pass1.process(@exprs.last)
+        puts expanded
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
         generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
           pass2 = ExtractASTPass.new(selection, @env)
@@ -92,6 +101,10 @@ class ProgWrapper
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
           prog_wrap.look_for(:type, RDL::Globals.types[:top])
+          lol = FlattenProgramPass.new(@env)
+          puts lol.process(prog_wrap.seed)
+          puts prog_wrap.exprs
+          puts "-------"
           prog_wrap
         }
       }.flatten
