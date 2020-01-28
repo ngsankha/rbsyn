@@ -116,33 +116,6 @@ class ProgTuple
   end
 
   private
-  # def make_or(first, second)
-  #   raise RuntimeError, "expected parser nodes" unless first.is_a?(Parser::AST::Node) && second.is_a?(Parser::AST::Node)
-  #   if first.type == :or
-  #     children1 = first.children
-  #   else
-  #     children1 = [first]
-  #   end
-
-  #   if second.type == :or
-  #     children2 = second.children
-  #   else
-  #     children2 = [second]
-  #   end
-
-  #   s(:or, *children1, *children2)
-  # end
-
-  # def equiv(first, second)
-  #   raise "cannot handle both or now" if first.expr.type == :or && second.expr.type == :or
-  #   first, second = second, first if second.expr.type == :or
-  #   if first.expr.type == :or
-  #     first.expr.children.include? second.expr
-  #   else
-  #     first == second
-  #   end
-  # end
-
   def merge_impl(first, second)
     if first.prog == second.prog && first.branch.implies(second.branch)
       return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])]
