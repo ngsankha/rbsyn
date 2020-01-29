@@ -1,4 +1,4 @@
-# Rbsyn
+# Rbsyn ![](https://github.com/ngsankha/rbsyn/workflows/Rbsyn%20Build/badge.svg)
 
 Program synthesis for Ruby.
 
