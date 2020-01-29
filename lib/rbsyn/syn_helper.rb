@@ -14,10 +14,10 @@ module SynHelper
       evaluable.each { |prog_wrap|
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
           res, klass = eval_ast(@ctx, prog_wrap.to_ast, arg, precond) rescue next
-          prog_wrap.passed_asserts = klass.instance_eval { @passed_count }
           begin
             klass.instance_exec res, &postcond
           rescue AssertionError => e
+            prog_wrap.passed_asserts = e.passed_count
             prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
           rescue Exception
@@ -45,8 +45,6 @@ module SynHelper
       end
 
       work_list = [*work_list, *remainder_holes].sort { |a, b| comparator(a, b) }
-
-      # TODO: sort the work list by some criterion?
     end
     raise RuntimeError, "No candidates found"
   end

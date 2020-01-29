@@ -9,14 +9,16 @@ module Assertions
     else
       # TODO: change this
       if @count == 1
-        # read_set = [[AnotherUser, :id]]
-        # write_set = []
-        return true
+        read_set = [[AnotherUser, :id]]
+        write_set = []
       elsif @count == 2
         read_set = [[AnotherUser, :username]]
         write_set = []
+      elsif @count == 3
+        read_set = [[AnotherUser, :name]]
+        write_set = []
       end
-      raise AssertionError.new(read_set, write_set), "testing"
+      raise AssertionError.new(@passed_count, read_set, write_set), "testing"
     end
   end
 end

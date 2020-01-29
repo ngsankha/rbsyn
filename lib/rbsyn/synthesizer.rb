@@ -13,6 +13,7 @@ class Synthesizer
   def run
     @ctx.load_tenv!
 
+    update_types_pass = RefineTypesPass.new
     progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
       env = LocalEnvironment.new
       prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {}))
@@ -25,7 +26,8 @@ class Synthesizer
       seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, branch_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
       branches = generate(seed, [precond], [arg], [TRUE_POSTCOND], true)
-      progs.product(branches).map { |prog, branch| ProgTuple.new(@ctx, prog, branch.to_ast, [precond], [arg]) }
+      progs.product(branches).map { |prog, branch|
+        ProgTuple.new(@ctx, prog, update_types_pass.process(branch.to_ast), [precond], [arg]) }
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program

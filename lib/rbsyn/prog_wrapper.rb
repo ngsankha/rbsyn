@@ -32,16 +32,15 @@ class ProgWrapper
     return ast if @exprs.empty?
 
     effect_exprs = @exprs.map { |e| pass.process(e) }
-    assigns = var_expr.map { |id, e|
-      s(RDL::Globals.type[:top], :lvasgn, "#{VAR_PREFIX}#{id}".to_sym, e)
+    assigns = pass.var_expr.map { |id, e|
+      s(RDL::Globals.types[:top], :lvasgn, "#{VAR_PREFIX}#{id}".to_sym, e)
     }
 
-    final = s(ast.ttype, :begin, *[
+    s(ast.ttype, :begin, *[
       *assigns,
-      *ast,
-      *effect_exprs
+      *effect_exprs,
+      ast # this is a hack, we can populate the return expression in a type driven way
     ])
-    final
   end
 
   def ==(other)
@@ -67,21 +66,22 @@ class ProgWrapper
           new_env = pass2.env
           prog_wrap = ProgWrapper.new(@ctx, program, new_env)
           prog_wrap.look_for(:type, @target)
+          prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
       else
-        puts "I am here"
         # we are filling a side effect expression
         expanded = pass1.process(@exprs.last)
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
         generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
           pass2 = ExtractASTPass.new(selection, @env)
-          program = update_types_pass.process(pass2.process(expanded))
+          program = pass2.process(expanded)
           new_env = pass2.env
           new_exprs = @exprs.dup
           new_exprs[-1] = program
-          prog_wrap = ProgWrapper.new(@ctx, program, new_env, new_exprs)
+          prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, new_exprs)
           prog_wrap.look_for(:type, @target)
+          prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
       end
@@ -102,6 +102,7 @@ class ProgWrapper
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
           prog_wrap.look_for(:type, RDL::Globals.types[:top])
+          prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
       }.flatten

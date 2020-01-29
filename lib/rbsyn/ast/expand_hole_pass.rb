@@ -28,6 +28,7 @@ class ExpandHolePass < ::AST::Processor
     @curr_hash_depth = @params.fetch(:hash_depth, 0)
     @method_arg = @params.fetch(:method_arg, false)
     @effect = @params.fetch(:effect, false)
+    @limit_depth = @params.fetch(:limit_depth, false)
     expanded = []
 
     if depth == 0
@@ -71,7 +72,7 @@ class ExpandHolePass < ::AST::Processor
     # synthesize a hole with higher depth
     # TODO: we don't do this if we are synthesizing for effects, will do after
     # effect reachability graph is implemented
-    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg}) unless @effect
+    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg}) unless (@effect || @limit_depth)
 
     @expand_map << expanded.size
     s(node.ttype, :filled_hole, *expanded, {method_arg: @method_arg})
@@ -89,7 +90,7 @@ class ExpandHolePass < ::AST::Processor
       # TODO: Only nominal types for now, add singleton types too
       trecv = RDL::Type::NominalType.new(klass)
       # the %top type here doesn't matter
-      path = CallChain.new([trecv, methd, RDL::Globals.types[:top]], @ctx.tenv)
+      path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
       fn_call(path)
     }
   end
@@ -129,7 +130,7 @@ class ExpandHolePass < ::AST::Processor
         tret = compute_tout(trecv, tmeth, targs)
         hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth, method_arg: true}) }
         if accum.nil?
-          accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth}),
+          accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth, limit_depth: true}),
             mth, *hole_args)
         else
           raise RuntimeError, "expected type" unless accum.ttype <= trecv
