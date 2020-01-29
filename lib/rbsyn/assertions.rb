@@ -17,6 +17,12 @@ module Assertions
       elsif @count == 3
         read_set = [[AnotherUser, :name]]
         write_set = []
+      elsif @count == 4
+        read_set = [[AnotherUser, :active]]
+        write_set = []
+      elsif @count == 5
+        read_set = [[AnotherUser, :email]]
+        write_set = []
       end
       raise AssertionError.new(@passed_count, read_set, write_set), "testing"
     end
