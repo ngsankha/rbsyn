@@ -16,7 +16,7 @@ class Synthesizer
     update_types_pass = RefineTypesPass.new
     progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
       env = LocalEnvironment.new
-      prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {}))
+      prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
       seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
       seed.look_for(:type, @ctx.functype.ret)
       progs = generate(seed, [precond], [arg], [postcond], true)

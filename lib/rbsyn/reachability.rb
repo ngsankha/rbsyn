@@ -40,7 +40,7 @@ class Reachability
     @initial_tenv = initial_tenv
   end
 
-  def paths_to_type(target, depth)
+  def paths_to_type(target, depth, variance=COVARIANT)
     curr_depth = 0
     types = types_from_tenv(@initial_tenv)
     queue = types.map { |t| CallChain.new([t], types) }
@@ -65,13 +65,20 @@ class Reachability
       queue = new_queue
       curr_depth += 1
     end
-    chains_with_type(queue, target)
+    chains_with_type(queue, target, variance)
   end
 
   private
-  def chains_with_type(chains, type)
+  def chains_with_type(chains, type, variance)
     chains.filter { |chain|
-      type <= chain.last
+      case variance
+      when COVARIANT
+        type <= chain.last
+      when CONTRAVARIANT
+        chain.last <= type
+      else
+        raise RuntimeError, "unexpected variance"
+      end
     }
   end
 

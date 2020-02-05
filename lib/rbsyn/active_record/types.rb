@@ -25,6 +25,7 @@ class ActiveRecord_Relation
 
   type :exists?, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false
   type :first, "() -> ``DBTypes.rec_to_nominal(trec)``", wrap: false
+  type :empty?, "() -> %bool", wrap: false
 end
 
 class DBTypes

@@ -29,6 +29,7 @@ class ExpandHolePass < ::AST::Processor
     @method_arg = @params.fetch(:method_arg, false)
     @effect = @params.fetch(:effect, false)
     @limit_depth = @params.fetch(:limit_depth, false)
+    @variance = @params.fetch(:variance, COVARIANT)
     expanded = []
 
     if depth == 0
@@ -61,7 +62,7 @@ class ExpandHolePass < ::AST::Processor
     elsif depth > 0 && !@effect
       # synthesize function calls
       r = Reachability.new(@ctx.tenv)
-      paths = r.paths_to_type(node.ttype, depth)
+      paths = r.paths_to_type(node.ttype, depth, @variance)
       expanded.concat paths.map { |path| fn_call(path) }
     elsif depth == 1 && @effect
       expanded.concat effects
@@ -72,7 +73,7 @@ class ExpandHolePass < ::AST::Processor
     # synthesize a hole with higher depth
     # TODO: we don't do this if we are synthesizing for effects, will do after
     # effect reachability graph is implemented
-    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg}) unless (@effect || @limit_depth)
+    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg, variance: @variance}) unless (@effect || @limit_depth)
 
     @expand_map << expanded.size
     s(node.ttype, :filled_hole, *expanded, {method_arg: @method_arg})
@@ -93,6 +94,10 @@ class ExpandHolePass < ::AST::Processor
       path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
       fn_call(path)
     }
+  end
+
+  def nil_const
+    s(RDL::Globals.types[:nil], :nil)
   end
 
   def bool_const
