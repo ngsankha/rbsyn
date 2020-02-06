@@ -7,24 +7,30 @@ module Assertions
       @passed_count += 1
       ans
     else
-      # TODO: change this
-      if @count == 1
-        read_set = [[AnotherUser, :id]]
-        write_set = []
-      elsif @count == 2
-        read_set = [[AnotherUser, :username]]
-        write_set = []
-      elsif @count == 3
-        read_set = [[AnotherUser, :name]]
-        write_set = []
-      elsif @count == 4
-        read_set = [[AnotherUser, :active]]
-        write_set = []
-      elsif @count == 5
-        read_set = [[AnotherUser, :email]]
-        write_set = []
-      end
-      raise AssertionError.new(@passed_count, read_set, write_set), "testing"
+      ret = @ctx.functype.ret
+      raise RuntimeError, "expected only one parameter" unless @params.size == 1
+      type_env = {}
+      type_env[@params[0].to_sym] = ret
+
+      # Ugly hack! See https://github.com/whitequark/parser/issues/343
+      header = "#{@params[0]} = nil\n"
+      ast = Parser::CurrentRuby.parse(header + blk.source)
+      # AST looks something like
+      # (begin
+      #   (lvasgn :user
+      #     (nil))
+      #   (block
+      #     (send nil :assert)
+      #     (args)
+      #     (send
+      #       (send
+      #         (lvar :user) :id) :==
+      #       (send
+      #         (ivar :@staged) :id))))
+
+      read_set = EffectAnalysis.effect_of(ast.children.last.children.last, type_env, :read)
+      write_set = EffectAnalysis.effect_of(ast.children.last.children.last, type_env, :write)
+      raise AssertionError.new(@passed_count, read_set, write_set)
     end
   end
 end

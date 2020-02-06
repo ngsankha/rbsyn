@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/ngsankha/rdl
-  revision: a65b15448397324cb3e280443a0cd036f6cb1032
+  revision: 7fe91dc8e0112178775d5ca2d69b8cbc40086a0b
   branch: effects
   specs:
     rdl (2.1.0)

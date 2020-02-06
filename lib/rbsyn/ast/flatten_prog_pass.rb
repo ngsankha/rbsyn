@@ -20,10 +20,6 @@ class FlattenProgramPass < ::AST::Processor
     end
   end
 
-  def on_hole(node)
-    raise RuntimeError, "unable to flatten program"
-  end
-
   def handler_missing(node)
     node.updated(nil, node.children.map { |k|
       k.is_a?(TypedNode) ? process(k) : k

@@ -23,6 +23,12 @@ class ProgSizePass < ::AST::Processor
     node
   end
 
+  def on_hash(node)
+    @size += 1
+    node.children.each { |c| process(c) }
+    nil
+  end
+
   def on_envref(node)
     process(@env.get_expr(node.ttype, node.children[0])[:expr])
     nil

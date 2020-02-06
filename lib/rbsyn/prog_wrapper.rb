@@ -21,6 +21,9 @@ class ProgWrapper
     when :effect
       @looking_for = :effect
       @target = target
+    when :teffect
+      @looking_for = :teffect
+      @target = target
     else
       raise RuntimeError, "can look for types/effects only"
     end
@@ -56,35 +59,17 @@ class ProgWrapper
     case @looking_for
     when :type
       pass1 = ExpandHolePass.new(@ctx, @env)
-      if @exprs.empty?
-        # no side effected expressions yet
-        expanded = pass1.process(@seed)
-        expand_map = pass1.expand_map.map { |i| i.times.to_a }
-        generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
-          pass2 = ExtractASTPass.new(selection, @env)
-          program = update_types_pass.process(pass2.process(expanded))
-          new_env = pass2.env
-          prog_wrap = ProgWrapper.new(@ctx, program, new_env)
-          prog_wrap.look_for(:type, @target)
-          prog_wrap.passed_asserts = @passed_asserts
-          prog_wrap
-        }
-      else
-        # we are filling a side effect expression
-        expanded = pass1.process(@exprs.last)
-        expand_map = pass1.expand_map.map { |i| i.times.to_a }
-        generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
-          pass2 = ExtractASTPass.new(selection, @env)
-          program = pass2.process(expanded)
-          new_env = pass2.env
-          new_exprs = @exprs.dup
-          new_exprs[-1] = program
-          prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, new_exprs)
-          prog_wrap.look_for(:type, @target)
-          prog_wrap.passed_asserts = @passed_asserts
-          prog_wrap
-        }
-      end
+      expanded = pass1.process(@seed)
+      expand_map = pass1.expand_map.map { |i| i.times.to_a }
+      generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+        pass2 = ExtractASTPass.new(selection, @env)
+        program = update_types_pass.process(pass2.process(expanded))
+        new_env = pass2.env
+        prog_wrap = ProgWrapper.new(@ctx, program, new_env)
+        prog_wrap.look_for(:type, @target)
+        prog_wrap.passed_asserts = @passed_asserts
+        prog_wrap
+      }
     when :effect
       # TODO: ordering can be done better to build candidates programs with
       # method calls that can satisfy multiple effects at once
@@ -101,29 +86,42 @@ class ProgWrapper
           new_env = pass2.env
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
-          prog_wrap.look_for(:type, RDL::Globals.types[:top])
+          prog_wrap.look_for(:teffect, eff)
           prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
       }.flatten
+    when :teffect
+      pass1 = ExpandHolePass.new(@ctx, @env)
+      expanded = pass1.process(@exprs.last)
+      expand_map = pass1.expand_map.map { |i| i.times.to_a }
+      generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+        pass2 = ExtractASTPass.new(selection, @env)
+        program = pass2.process(expanded)
+        new_env = pass2.env
+        new_exprs = @exprs.dup
+        new_exprs[-1] = program
+        prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, new_exprs)
+        prog_wrap.look_for(:teffect, @target)
+        prog_wrap.passed_asserts = @passed_asserts
+        prog_wrap
+      }
     else
       raise RuntimeError, "can look for types/effects only"
     end
   end
 
   def methods_with_write_effect(eff)
-    if eff.size == 1
+    if eff.split('.').size == 1
       raise RuntimeError, "TODO"
-    elsif eff.size == 2
-      klass = eff[0]
-      field = eff[1]
+    elsif eff.split('.').size == 2
       effect_causing = []
       # TODO: take care between nominal and singleton types
       # right now singleton types are not being handled
       RDL::Globals.info.info.each { |cls, v1|
         v1.each { |meth, v2|
-          v2.fetch(:write, []).each { |weff|
-            effect_causing << [cls, meth] if (weff[0] == klass && weff[1] == field)
+          v2.fetch(:write, ['']).each { |weff|
+            effect_causing << [cls, meth] if EffectAnalysis.effect_leq(eff, weff)
           }
         }
       }

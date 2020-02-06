@@ -7,9 +7,10 @@ module AST
     max_args = ctx.args.map { |arg| arg.size }.max
     klass = Class.new
     klass.instance_eval {
-      extend Assertions
       @count = 0
       @passed_count = 0
+      @ctx = ctx
+      extend Assertions
     }
     bind = klass.instance_eval { binding }
     DBUtils.reset

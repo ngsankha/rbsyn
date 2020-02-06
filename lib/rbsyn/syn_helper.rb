@@ -15,12 +15,16 @@ module SynHelper
         test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
           res, klass = eval_ast(@ctx, prog_wrap.to_ast, arg, precond) rescue next
           begin
+            klass.instance_eval {
+              @params = postcond.parameters.map &:last
+            }
             klass.instance_exec res, &postcond
           rescue AssertionError => e
             prog_wrap.passed_asserts = e.passed_count
             prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
-          rescue Exception
+          rescue Exception => e
+            # puts e
             next
           end
         }

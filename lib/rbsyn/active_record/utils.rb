@@ -35,8 +35,8 @@ module Rbsyn::ActiveRecord
           else
             schema[k] = RDL::Type::NominalType.new(tname)
           end
-          RDL.type model, "#{k}=".to_sym, "(#{tname}) -> #{tname}", wrap: false, write: [[model, k.to_sym]]
-          RDL.type model, k.to_s,         "() -> #{tname}", wrap: false, read: [[model, k.to_sym]]
+          RDL.type model, "#{k}=".to_sym, "(#{tname}) -> #{tname}", wrap: false, write: ["#{model}.#{k}"]
+          RDL.type model, k.to_s,         "() -> #{tname}", wrap: false, read: ["#{model}.#{k}"]
         }
         schema = schema.transform_keys { |k| k.to_sym }
         assoc = {}
