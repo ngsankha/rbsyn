@@ -9,7 +9,7 @@ describe "Synthesis Benchmark" do
         just_false 'hello'
 
         post { |result|
-          result == false
+          assert { result == false }
         }
       end
 

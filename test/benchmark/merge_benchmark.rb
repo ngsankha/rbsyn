@@ -9,7 +9,7 @@ describe "Synthesis Benchmark" do
         username_exists? 'bruce1', nil
 
         post { |result|
-          result == true
+          assert { result == true }
         }
       end
 
@@ -21,7 +21,7 @@ describe "Synthesis Benchmark" do
         username_exists? 'bruce1', 'bruce@wayne.com'
 
         post { |result|
-          result == true
+          assert { result == true }
         }
       end
 
@@ -34,7 +34,7 @@ describe "Synthesis Benchmark" do
         username_exists? 'bruce1', 'bruce@wayne.com'
 
         post { |result|
-          result == false
+          assert { result == false }
         }
       end
 

@@ -9,7 +9,7 @@ describe "Synthesis Benchmark" do
         identity 'hello'
 
         post { |result|
-          result == 'hello'
+          assert { result == 'hello' }
         }
       end
 

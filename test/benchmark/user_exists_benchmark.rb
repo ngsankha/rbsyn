@@ -9,7 +9,7 @@ describe "Synthesis Benchmark" do
         username_exists? 'bruce1'
 
         post { |result|
-          result == false
+          assert { result == false }
         }
       end
 
@@ -22,7 +22,7 @@ describe "Synthesis Benchmark" do
         username_exists? 'bruce1'
 
         post { |result|
-          result == true
+          assert { result == true }
         }
       end
 
