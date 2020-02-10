@@ -4,16 +4,20 @@ require "test_helper"
 describe "Synthesis Benchmark" do
   it "overview example" do
     define :update_post, "(String, String, {created_by: ?String, title: ?String, slug: ?String}) -> Post", [Post, DemoUser], prog_size: 30, max_hash_size: 2 do
+      class Shared
+        def self.seed_db
+        DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
+        DemoUser.create(name: 'Admin', username: 'admin', admin: true)
+        DemoUser.create(name: 'Author', username: 'author', admin: false)
+        Post.create(created_by: 'dummy', slug: 'dummy-seed', title: 'Dummy Seed Post')
+        Post.create(created_by: 'admin', slug: 'admin-seed', title: 'Admin Seed Post')
+        Post.create(created_by: 'author', slug: 'author-seed', title: 'Author Seed Post')
+        end
+      end
+
       spec "author can only change titles" do
         pre {
-          @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
-          @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
-          @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
-          @fake_post = Post.create(created_by: 'dummy', slug: 'fake-post', title: 'Fake Post')
-          @fake_post2 = Post.create(created_by: 'dummy', slug: 'fake-post2', title: 'Fake Post 2')
-          @admin_post = Post.create(created_by: 'admin', slug: 'admin-post', title: 'Admin Post')
-          @admin_post2 = Post.create(created_by: 'admin', slug: 'admin-post2', title: 'Admin Post 2')
-          @post2 = Post.create(created_by: 'author', slug: 'hello-world2', title: 'Hello World 2')
+          Shared.seed_db
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
         }
 
@@ -29,14 +33,7 @@ describe "Synthesis Benchmark" do
 
       spec "unrelated users cannot change anything" do
         pre {
-          @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
-          @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
-          @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
-          @fake_post = Post.create(created_by: 'dummy', slug: 'fake-post', title: 'Fake Post')
-          @fake_post2 = Post.create(created_by: 'dummy', slug: 'fake-post2', title: 'Fake Post 2')
-          @admin_post = Post.create(created_by: 'admin', slug: 'admin-post', title: 'Admin Post')
-          @admin_post2 = Post.create(created_by: 'admin', slug: 'admin-post2', title: 'Admin Post 2')
-          @post2 = Post.create(created_by: 'author', slug: 'hello-world2', title: 'Hello World 2')
+          Shared.seed_db
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
         }
 
@@ -52,14 +49,7 @@ describe "Synthesis Benchmark" do
 
       spec "admin can takeover any post" do
         pre {
-          @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
-          @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
-          @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
-          @fake_post = Post.create(created_by: 'dummy', slug: 'fake-post', title: 'Fake Post')
-          @fake_post2 = Post.create(created_by: 'dummy', slug: 'fake-post2', title: 'Fake Post 2')
-          @admin_post = Post.create(created_by: 'admin', slug: 'admin-post', title: 'Admin Post')
-          @admin_post2 = Post.create(created_by: 'admin', slug: 'admin-post2', title: 'Admin Post 2')
-          @post2 = Post.create(created_by: 'author', slug: 'hello-world2', title: 'Hello World 2')
+          Shared.seed_db
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
         }
 
