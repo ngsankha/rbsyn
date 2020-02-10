@@ -21,13 +21,21 @@ class ProgTuple
   end
 
   def ==(other)
-    return false unless other.is_a? ProgCond
+    return false unless other.is_a? ProgTuple
 
     if @prog.is_a?(Array) && other.prog.is_a?(Array)
       @prog.all? { |prg| other.prog.include? prg }
     else
       @prog == other.prog
     end
+  end
+
+  def eql?(other)
+    hash == other.hash
+  end
+
+  def hash
+    to_ast.hash
   end
 
   def +(other)
@@ -143,8 +151,7 @@ class ProgTuple
 
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
       opp_branch = speculate_opposite_branch(bsyn1, [*first.preconds, *second.preconds], [*first.args, *second.args], output2)
-      binding.pry
-      unless opp_branch.empty?
+      if !opp_branch.empty? && ctx.branch_guess
         bsyn2 = opp_branch
       else
         env = LocalEnvironment.new
@@ -175,9 +182,8 @@ class ProgTuple
     guessed.select{ |b|
       preconds.zip(args, postconds).map { |precond, arg, postcond|
         res, klass = eval_ast(@ctx, b.to_ast, arg, precond) rescue next
-        !klass.instance_exec res, &postcond
+        klass.instance_exec res, &postcond
       }.all?
     }
   end
 end
-

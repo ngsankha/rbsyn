@@ -30,6 +30,7 @@ class ExpandHolePass < ::AST::Processor
     @effect = @params.fetch(:effect, false)
     @limit_depth = @params.fetch(:limit_depth, false)
     @variance = @params.fetch(:variance, COVARIANT)
+    @recv = @params.fetch(:recv, false)
     expanded = []
 
     if depth == 0
@@ -53,7 +54,8 @@ class ExpandHolePass < ::AST::Processor
       expanded.concat lvar(node.ttype)
 
       # hashes
-      if node.ttype.is_a?(RDL::Type::FiniteHashType) && @curr_hash_depth < @ctx.max_hash_depth
+      # receivers are not hashes for now
+      if node.ttype.is_a?(RDL::Type::FiniteHashType) && @curr_hash_depth < @ctx.max_hash_depth && !@recv
         expanded.concat finite_hash(node.ttype)
       end
 
@@ -135,7 +137,7 @@ class ExpandHolePass < ::AST::Processor
         tret = compute_tout(trecv, tmeth, targs)
         hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth, method_arg: true}) }
         if accum.nil?
-          accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth, limit_depth: true}),
+          accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth, limit_depth: true, recv: true}),
             mth, *hole_args)
         else
           raise RuntimeError, "expected type" unless accum.ttype <= trecv

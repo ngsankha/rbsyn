@@ -50,6 +50,10 @@ class ProgWrapper
     to_ast == other.to_ast
   end
 
+  def hash
+    to_ast.hash
+  end
+
   def add_side_effect_expr(expr)
     @exprs << expr
   end

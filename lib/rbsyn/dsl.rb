@@ -26,11 +26,13 @@ class SynthesizerProxy
 
   attr_accessor :assertions
 
-  def initialize(mth_name, type, components, prog_size)
+  def initialize(mth_name, type, components, prog_size, max_hash_size, branch_guess)
     @ctx = Context.new
     @ctx.max_prog_size = prog_size
     @ctx.components = components
     @ctx.functype = RDL::Globals.parser.scan_str type
+    @ctx.max_hash_size = max_hash_size
+    @ctx.branch_guess = branch_guess
     raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
 
     @mth_name = mth_name.to_sym
@@ -66,8 +68,8 @@ class SynthesizerProxy
 end
 
 module SpecDSL
-  def define(mth_name, type, components, prog_size: 5, &blk)
-    syn_proxy = SynthesizerProxy.new(mth_name, type, components, prog_size)
+  def define(mth_name, type, components, prog_size: 5, max_hash_size: 1, branch_guess: false, &blk)
+    syn_proxy = SynthesizerProxy.new(mth_name, type, components, prog_size, max_hash_size, branch_guess)
     syn_proxy.instance_eval(&blk)
   end
 end

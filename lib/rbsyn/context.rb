@@ -1,6 +1,7 @@
 class Context
   attr_accessor :max_prog_size, :components, :preconds, :args, :postconds,
-    :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth
+    :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth,
+    :branch_guess
 
   def initialize
     @max_prog_size = 0
@@ -11,9 +12,10 @@ class Context
     @tenv = {}
     @reset_func = nil
     @functype = nil
-    @max_hash_size = 2
+    @max_hash_size = 1
     @max_arg_length = 1
     @max_hash_depth = 1
+    @branch_guess = false
   end
 
   def add_example(precond, arg, postcond)
