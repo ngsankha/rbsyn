@@ -141,12 +141,19 @@ class ProgTuple
       seed.look_for(:type, RDL::Globals.types[:bool])
       bsyn1 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
 
-      env = LocalEnvironment.new
-      b2_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, b2_ref), env)
-      seed.look_for(:type, RDL::Globals.types[:bool])
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
-      bsyn2 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
+      opp_branch = speculate_opposite_branch(bsyn1, [*first.preconds, *second.preconds], [*first.args, *second.args], output2)
+      binding.pry
+      unless opp_branch.empty?
+        bsyn2 = opp_branch
+      else
+        env = LocalEnvironment.new
+        b2_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
+        seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, b2_ref), env)
+        seed.look_for(:type, RDL::Globals.types[:bool])
+        bsyn2 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
+      end
+
       tuples = []
       bsyn1.each { |b1|
         bsyn2.each { |b2|
@@ -162,4 +169,15 @@ class ProgTuple
       return tuples
     end
   end
+
+  def speculate_opposite_branch(branches, preconds, args, postconds)
+    guessed = branches.map { |b| ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :send, b.seed, :!), b.env) }
+    guessed.select{ |b|
+      preconds.zip(args, postconds).map { |precond, arg, postcond|
+        res, klass = eval_ast(@ctx, b.to_ast, arg, precond) rescue next
+        !klass.instance_exec res, &postcond
+      }.all?
+    }
+  end
 end
+

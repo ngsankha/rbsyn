@@ -19,6 +19,7 @@ module AST
     max_args.times { |i|
       bind.local_variable_set("arg#{i}".to_sym, arg[i])
     }
+    puts Unparser.unparse(ast)
     result = bind.eval(Unparser.unparse(ast))
     [result, klass]
   end

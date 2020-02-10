@@ -1,30 +1,67 @@
+# synthetic: true
 require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "experiment" do
-    skip
+    define :update_post, "(String, String, {created_by: ?String, title: ?String, slug: ?String}) -> Post", [Post, DemoUser], prog_size: 40 do
+      # spec "admin can takeover any post" do
+      #   pre {
+      #     @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
+      #     @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
+      #     @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
+      #     @fake_post = Post.create(created_by: 'dummy', slug:'fake-post', title: 'Fake Post')
+      #     @post = Post.create(created_by: 'author', slug:'hello-world', title: 'Hello World')
+      #   }
 
-  # bench_performance_constant "search branch conditions during program merge 2" do
-  #   DBUtils.reset
-  #   syn = Synthesizer.new(components: Rbsyn::ActiveRecord::Utils.models)
+      #   updated = update_post('admin', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
 
-  #   syn.add_example(['bruce1', nil], true)
+      #   post { |updated|
+      #     assert { updated.id == @post.id }
+      #     assert { updated.created_by == "dummy" }
+      #     assert { updated.title == "Foo Bar" }
+      #     assert { updated.slug == 'foo-bar' }
+      #   }
+      # end
 
-  #   syn.add_example(['bruce1', nil], false) {
-  #     u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
-  #     u.emails.create(email: 'bruce1@wayne.com', primary: false)
-  #   }
+      spec "author can only change titles" do
+        pre {
+          @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
+          @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
+          @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
+          @fake_post = Post.create(created_by: 'dummy', slug:'fake-post', title: 'Fake Post')
+          @post = Post.create(created_by: 'author', slug:'hello-world', title: 'Hello World')
+        }
 
-  #   syn.add_example(['bruce2', 'bruce2@wayne.com'], false) {
-  #     staged = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool', staged: true)
-  #     staged.emails.create(email: 'bruce1@wayne.com', primary: true)
+        updated = update_post('author', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
 
-  #     user = User.create(name: 'Bruce Wayne', username: 'bruce2', password: 'coolcool', staged: false)
-  #     user.emails.create(email: 'bruce2@wayne.com', primary: true)
-  #   }
+        post { |updated|
+          assert { updated.id == @post.id }
+          assert { updated.created_by == "author" }
+          assert { updated.title == "Foo Bar" }
+          assert { updated.slug == 'hello-world' }
+        }
+      end
 
-  #   prog = Unparser.unparse(syn.run)
-  #   assert_equal prog, "!User.joins(:emails).exists?(username: arg0)"
-  # end
+      spec "unrelated users cannot change anything" do
+        pre {
+          @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)
+          @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
+          @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
+          @fake_post = Post.create(created_by: 'dummy', slug:'fake-post', title: 'Fake Post')
+          @post = Post.create(created_by: 'author', slug:'hello-world', title: 'Hello World')
+        }
+
+        updated = update_post('dummy', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
+
+        post { |updated|
+          assert { updated.id == @post.id }
+          assert { updated.created_by == "author" }
+          assert { updated.title == "Hello World" }
+          assert { updated.slug == 'hello-world' }
+        }
+      end
+
+      puts generate_program
+    end
   end
 end

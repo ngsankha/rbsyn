@@ -11,7 +11,7 @@ class Context
     @tenv = {}
     @reset_func = nil
     @functype = nil
-    @max_hash_size = 1
+    @max_hash_size = 2
     @max_arg_length = 1
     @max_hash_depth = 1
   end

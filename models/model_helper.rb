@@ -20,6 +20,16 @@ ActiveRecord::Schema.define do
     t.string :email
     t.boolean :active
   end
+  create_table :posts, force: true do |t|
+    t.string :created_by
+    t.string :slug
+    t.string :title
+  end
+  create_table :demo_users, force: true do |t|
+    t.string :name
+    t.string :username
+    t.boolean :admin
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base
@@ -29,3 +39,5 @@ end
 require_relative "user"
 require_relative "user_email"
 require_relative "another_user"
+require_relative "post"
+require_relative "demo_user"

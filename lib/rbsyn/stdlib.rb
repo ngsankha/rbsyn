@@ -1,6 +1,7 @@
 RDL.nowrap :BasicObject
 
 RDL.type :BasicObject, :!, '() -> %bool', effect: [:+, :+]
+# RDL.type :BasicObject, :==, '(self) -> %bool', effect: [:+, :+]
 
 RDL.nowrap :Hash
 

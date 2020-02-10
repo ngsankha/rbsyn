@@ -1,0 +1,2 @@
+class DemoUser < ApplicationRecord
+end
