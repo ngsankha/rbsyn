@@ -3,7 +3,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "overview example" do
-    define :update_post, "(String, String, {created_by: ?String, title: ?String, slug: ?String}) -> Post", [Post, DemoUser], prog_size: 30, max_hash_size: 2, branch_guess: true do
+    define :update_post, "(String, String, {created_by: ?String, title: ?String, slug: ?String}) -> Post", [Post, DemoUser], prog_size: 30, max_hash_size: 2 do
       spec "author can only change titles" do
         pre {
           @dummy = DemoUser.create(name: 'Dummy', username: 'dummy', admin: false)

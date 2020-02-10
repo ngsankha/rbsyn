@@ -151,7 +151,7 @@ class ProgTuple
 
       output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
       opp_branch = speculate_opposite_branch(bsyn1, [*first.preconds, *second.preconds], [*first.args, *second.args], output2)
-      if !opp_branch.empty? && ctx.branch_guess
+      unless opp_branch.empty?
         bsyn2 = opp_branch
       else
         env = LocalEnvironment.new
@@ -178,7 +178,13 @@ class ProgTuple
   end
 
   def speculate_opposite_branch(branches, preconds, args, postconds)
-    guessed = branches.map { |b| ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :send, b.seed, :!), b.env) }
+    guessed = branches.map { |b|
+      if b.to_ast.type == :send && b.to_ast.children[1] == :!
+        ProgWrapper.new(@ctx, b.to_ast.children[0], b.env)
+      else
+        ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :send, b.seed, :!), b.env)
+      end
+    }
     guessed.select{ |b|
       preconds.zip(args, postconds).map { |precond, arg, postcond|
         res, klass = eval_ast(@ctx, b.to_ast, arg, precond) rescue next
