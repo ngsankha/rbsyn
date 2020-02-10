@@ -10,8 +10,11 @@ describe "Synthesis Benchmark" do
           @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
           @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
           @fake_post = Post.create(created_by: 'dummy', slug: 'fake-post', title: 'Fake Post')
+          @fake_post2 = Post.create(created_by: 'dummy', slug: 'fake-post2', title: 'Fake Post 2')
           @admin_post = Post.create(created_by: 'admin', slug: 'admin-post', title: 'Admin Post')
+          @admin_post2 = Post.create(created_by: 'admin', slug: 'admin-post2', title: 'Admin Post 2')
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
+          @post2 = Post.create(created_by: 'author', slug: 'hello-world2', title: 'Hello World 2')
         }
 
         updated = update_post('author', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
@@ -30,8 +33,11 @@ describe "Synthesis Benchmark" do
           @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
           @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
           @fake_post = Post.create(created_by: 'dummy', slug: 'fake-post', title: 'Fake Post')
+          @fake_post2 = Post.create(created_by: 'dummy', slug: 'fake-post2', title: 'Fake Post 2')
           @admin_post = Post.create(created_by: 'admin', slug: 'admin-post', title: 'Admin Post')
+          @admin_post2 = Post.create(created_by: 'admin', slug: 'admin-post2', title: 'Admin Post 2')
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
+          @post2 = Post.create(created_by: 'author', slug: 'hello-world2', title: 'Hello World 2')
         }
 
         updated = update_post('dummy', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
@@ -50,8 +56,11 @@ describe "Synthesis Benchmark" do
           @admin = DemoUser.create(name: 'Admin', username: 'admin', admin: true)
           @author = DemoUser.create(name: 'Author', username: 'author', admin: false)
           @fake_post = Post.create(created_by: 'dummy', slug: 'fake-post', title: 'Fake Post')
+          @fake_post2 = Post.create(created_by: 'dummy', slug: 'fake-post2', title: 'Fake Post 2')
           @admin_post = Post.create(created_by: 'admin', slug: 'admin-post', title: 'Admin Post')
+          @admin_post2 = Post.create(created_by: 'admin', slug: 'admin-post2', title: 'Admin Post 2')
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
+          @post2 = Post.create(created_by: 'author', slug: 'hello-world2', title: 'Hello World 2')
         }
 
         updated = update_post('admin', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
