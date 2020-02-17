@@ -33,7 +33,7 @@ class BoolCond
 
   def true?
     @solver = MiniSat::Solver.new
-    @intermediates = {}
+    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>', force: true)
     vars = bool_vars(@conds)
     vars.each { |var| @solver << [-var] }
     !@solver.satisfied?
@@ -41,7 +41,7 @@ class BoolCond
 
   def inverse?(other)
     @solver = MiniSat::Solver.new
-    @intermediates = {}
+    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>', force: true)
     a = bool_vars(@conds)
     b = bool_vars(other.conds)
     @solver << a
@@ -51,21 +51,25 @@ class BoolCond
 
   def implies(other)
     @solver = MiniSat::Solver.new
-    @intermediates = {}
+    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>', force: true)
     # self => other means check !a || b
     a = bool_vars(@conds)
     b = bool_vars(other.conds)
     # MiniSAT's crude API means we have to juggle all sorts of booleans expressions
     # a is a list of boolean ORs, which we negate
-    a_negated = a.map(&:-@)
+
+    # the following cannot be checked by RDL so not used
+    # a_negated = a.map(&:-@)
+
+    a_negated = a.map { |t| -t }
     and_exprs = a_negated.map { |aneg| [aneg, *b] }
     and_exprs.each { |expr| @solver << expr }
-    @solver.solve # returns model if implies otherwise false
+    !!@solver.solve # returns model if implies otherwise false
   end
 
   private
   def bool_vars(conds)
-    constructed = []
+    constructed = RDL.type_cast([], 'Array<MiniSat::Var>', force: true)
     conds.each { |cond|
       stripped, nots = strip_not cond
       negate = nots % 2 == 1
