@@ -6,7 +6,9 @@ describe "Synthesis Benchmark" do
     define :identity, "(String) -> String", [User, UserEmail] do
 
       spec "returns same value" do
-        identity 'hello'
+        pre {
+          identity 'hello'
+        }
 
         post { |result|
           assert { result == 'hello' }

@@ -1,24 +1,23 @@
 class Context
-  attr_accessor :max_prog_size, :components, :preconds, :args, :postconds,
+  attr_accessor :max_prog_size, :components, :preconds, :postconds, :mth_name,
     :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth
 
   def initialize
     @max_prog_size = 0
     @components = []
     @preconds = []
-    @args = []
     @postconds = []
     @tenv = {}
     @reset_func = nil
     @functype = nil
+    @mth_name = ""
     @max_hash_size = 1
     @max_arg_length = 1
     @max_hash_depth = 1
   end
 
-  def add_example(precond, arg, postcond)
+  def add_example(precond, postcond)
     @preconds << precond
-    @args << arg
     @postconds << postcond
   end
 

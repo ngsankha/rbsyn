@@ -1,5 +1,5 @@
 class SpecProxy
-  attr_reader :pre_blk, :post_blk, :inputs
+  attr_reader :pre_blk, :post_blk
 
   def initialize(mth_name)
     @mth_name = mth_name
@@ -11,11 +11,6 @@ class SpecProxy
 
   def post(&blk)
     @post_blk = blk
-  end
-
-  def method_missing(m, *args, &blk)
-    raise RuntimeError, "unknown function #{m}, have #{@mth_name}" unless @mth_name == m
-    @inputs = args
   end
 end
 
@@ -35,6 +30,7 @@ class SynthesizerProxy
     raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
 
     @mth_name = mth_name.to_sym
+    @ctx.mth_name = @mth_name
     @specs = []
     @assertions = 0
   end
@@ -51,10 +47,10 @@ class SynthesizerProxy
 
   def generate_program
     @specs.each { |spec|
-      @ctx.add_example(spec.pre_blk, spec.inputs, spec.post_blk)
+      @ctx.add_example(spec.pre_blk, spec.post_blk)
     }
     syn = Synthesizer.new(@ctx)
-    max_args = @specs.map { |spec| spec.inputs.size }.max
+    max_args = @ctx.functype.args.size
     args = max_args.times.map { |t| "arg#{t}".to_sym }
     prog = syn.run
     # TODO: these types can be made more precise

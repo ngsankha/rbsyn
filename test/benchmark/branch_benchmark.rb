@@ -22,7 +22,9 @@ describe "Synthesis Benchmark" do
       }
 
       spec "returns true when user doesn't exist" do
-        username_available? 'bruce1'
+        pre {
+          username_available? 'bruce1'
+        }
 
         post { |result|
           assert { result == true }
@@ -33,9 +35,8 @@ describe "Synthesis Benchmark" do
         pre {
           u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
           u.emails.create(email: 'bruce1@wayne.com')
+          username_available? 'bruce1'
         }
-
-        username_available? 'bruce1'
 
         post { |result|
           assert { result == false }
@@ -45,9 +46,8 @@ describe "Synthesis Benchmark" do
       spec "returns false when username is reserved" do
         pre {
           SiteSettings.reserved_usernames = ['apple', 'dog']
+          username_available? 'apple'
         }
-
-        username_available? 'apple'
 
         post { |result|
           assert { result == false }

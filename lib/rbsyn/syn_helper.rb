@@ -1,7 +1,7 @@
 module SynHelper
   include TypeOperations
 
-  def generate(seed_hole, preconds, args, postconds, return_all=false)
+  def generate(seed_hole, preconds, postconds, return_all=false)
     correct_progs = []
 
     work_list = [seed_hole]
@@ -12,8 +12,8 @@ module SynHelper
       evaluable = generated.reject &:has_hole?
 
       evaluable.each { |prog_wrap|
-        test_outputs = preconds.zip(args, postconds).map { |precond, arg, postcond|
-          res, klass = eval_ast(@ctx, prog_wrap.to_ast, arg, precond) rescue next
+        test_outputs = preconds.zip(postconds).map { |precond, postcond|
+          res, klass = eval_ast(@ctx, prog_wrap.to_ast, precond) rescue next
           begin
             klass.instance_eval {
               @params = postcond.parameters.map &:last

@@ -14,24 +14,26 @@ class Synthesizer
     @ctx.load_tenv!
 
     update_types_pass = RefineTypesPass.new
-    progconds = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
+    progconds = @ctx.preconds.zip(@ctx.postconds).map { |precond, postcond|
       env = LocalEnvironment.new
       prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
       seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
       seed.look_for(:type, @ctx.functype.ret)
-      progs = generate(seed, [precond], [arg], [postcond], true)
+      progs = generate(seed, [precond], [postcond], true)
 
       env = LocalEnvironment.new
       branch_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
       seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, branch_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
-      branches = generate(seed, [precond], [arg], [TRUE_POSTCOND], true)
+      branches = generate(seed, [precond], [TRUE_POSTCOND], true)
       progs.product(branches).map { |prog, branch|
-        ProgTuple.new(@ctx, prog, update_types_pass.process(branch.to_ast), [precond], [arg]) }
+        ProgTuple.new(@ctx, prog, update_types_pass.process(branch.to_ast), [precond]) }
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
     return progconds[0][0].prog if progconds.size == 1
+
+    binding.pry
 
     # TODO: we need to merge only the program with different body
     # (same programs with different branch conditions are wasted work?)
@@ -58,8 +60,8 @@ class Synthesizer
 
     completed.each { |progcond|
       ast = progcond.to_ast
-      test_outputs = @ctx.preconds.zip(@ctx.args, @ctx.postconds).map { |precond, arg, postcond|
-        res, klass = eval_ast(@ctx, ast, arg, precond) rescue next
+      test_outputs = @ctx.preconds.zip(@ctx.postconds).map { |precond, postcond|
+        res, klass = eval_ast(@ctx, ast, precond) rescue next
         begin
           klass.instance_exec res, &postcond
         rescue AssertionError => e

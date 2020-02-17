@@ -63,7 +63,7 @@ class BoolCond
     @solver.solve # returns model if implies otherwise false
   end
 
-  private
+  # private
   def bool_vars(conds)
     constructed = []
     conds.each { |cond|

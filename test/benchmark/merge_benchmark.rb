@@ -6,7 +6,9 @@ describe "Synthesis Benchmark" do
     define :username_exists?, "(String, String) -> %bool", [User, UserEmail] do
 
       spec "returns true when user doesn't exist" do
-        username_exists? 'bruce1', nil
+        pre {
+          username_exists? 'bruce1', nil
+        }
 
         post { |result|
           assert { result == true }
@@ -16,9 +18,8 @@ describe "Synthesis Benchmark" do
       spec "returns true when username exists without email" do
         pre {
           User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
+          username_exists? 'bruce1', 'bruce@wayne.com'
         }
-
-        username_exists? 'bruce1', 'bruce@wayne.com'
 
         post { |result|
           assert { result == true }
@@ -29,9 +30,8 @@ describe "Synthesis Benchmark" do
         pre {
           u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
           u.emails.create(email: 'bruce1@wayne.com')
+          username_exists? 'bruce1', 'bruce@wayne.com'
         }
-
-        username_exists? 'bruce1', 'bruce@wayne.com'
 
         post { |result|
           assert { result == false }

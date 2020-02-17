@@ -6,7 +6,9 @@ describe "Synthesis Benchmark" do
     define :just_false, "(String) -> %bool", [User, UserEmail] do
 
       spec "returns false" do
-        just_false 'hello'
+        pre {
+          just_false 'hello'
+        }
 
         post { |result|
           assert { result == false }

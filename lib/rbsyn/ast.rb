@@ -3,8 +3,9 @@ module AST
     TypedNode.new(ttype, type, *children)
   end
 
-  def eval_ast(ctx, ast, arg, precond)
-    max_args = ctx.args.map { |arg| arg.size }.max
+  def eval_ast(ctx, ast, precond)
+    max_args = ctx.functype.args.size
+    args = max_args.times.map { |i| "arg#{i}".to_sym }
     klass = Class.new
     klass.instance_eval {
       @count = 0
@@ -15,11 +16,12 @@ module AST
     bind = klass.instance_eval { binding }
     DBUtils.reset
     ctx.reset_func.call unless ctx.reset_func.nil?
-    klass.instance_eval &precond unless precond.nil?
-    max_args.times { |i|
-      bind.local_variable_set("arg#{i}".to_sym, arg[i])
-    }
-    result = bind.eval(Unparser.unparse(ast))
+    func = s(@ctx.functype, :def, @ctx.mth_name,
+      s(RDL::Globals.types[:top], :args, *args.map { |arg|
+        s(RDL::Globals.types[:top], :arg, arg)
+      }), ast)
+    klass.instance_eval Unparser.unparse(func)
+    result = klass.instance_eval &precond unless precond.nil?
     [result, klass]
   end
 end

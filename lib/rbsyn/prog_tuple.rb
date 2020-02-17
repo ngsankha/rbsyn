@@ -2,9 +2,9 @@ class ProgTuple
   include AST
   include SynHelper
 
-  attr_reader :ctx, :branch, :prog, :preconds, :args
+  attr_reader :ctx, :branch, :prog, :preconds
 
-  def initialize(ctx, prog, branch, preconds, args)
+  def initialize(ctx, prog, branch, preconds)
     @ctx = ctx
     if branch.is_a? BoolCond
       @branch = branch
@@ -17,7 +17,6 @@ class ProgTuple
     raise RuntimeError, "expected ProgWrapper" unless prog.is_a?(Array) || prog.is_a?(ProgWrapper)
     @prog = prog
     @preconds = preconds
-    @args = args
   end
 
   def ==(other)
@@ -126,31 +125,31 @@ class ProgTuple
   private
   def merge_impl(first, second)
     if first.prog == second.prog && first.branch.implies(second.branch)
-      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])]
+      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds])]
     elsif first.prog == second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
       new_cond << first.branch.to_ast
       new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, first.prog, new_cond,
-        [*first.preconds, *second.preconds], [*first.args, *second.args])]
+        [*first.preconds, *second.preconds])]
     elsif first.prog != second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
       new_cond << first.branch.to_ast
       new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, [first, second], new_cond,
-        [*first.preconds, *second.preconds], [*first.args, *second.args])]
+        [*first.preconds, *second.preconds])]
     else
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
-      output1 = (Array.new(first.args.size, true) + Array.new(second.args.size, false)).map { |item| Proc.new { |result| result == item }}
+      output1 = (Array.new(first.preconds.size, true) + Array.new(second.preconds.size, false)).map { |item| Proc.new { |result| result == item }}
       env = LocalEnvironment.new
       b1_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
       seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, b1_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
-      bsyn1 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output1, true)
+      bsyn1 = generate(seed, [*first.preconds, *second.preconds], output1, true)
 
-      output2 = (Array.new(first.args.size, false) + Array.new(second.args.size, true)).map { |item| Proc.new { |result| result == item }}
-      opp_branch = speculate_opposite_branch(bsyn1, [*first.preconds, *second.preconds], [*first.args, *second.args], output2)
+      output2 = (Array.new(first.preconds.size, false) + Array.new(second.preconds.size, true)).map { |item| Proc.new { |result| result == item }}
+      opp_branch = speculate_opposite_branch(bsyn1, [*first.preconds, *second.preconds], output2)
       unless opp_branch.empty?
         bsyn2 = opp_branch
       else
@@ -158,7 +157,7 @@ class ProgTuple
         b2_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
         seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, b2_ref), env)
         seed.look_for(:type, RDL::Globals.types[:bool])
-        bsyn2 = generate(seed, [*first.preconds, *second.preconds], [*first.args, *second.args], output2, true)
+        bsyn2 = generate(seed, [*first.preconds, *second.preconds], output2, true)
       end
 
       tuples = []
@@ -168,16 +167,16 @@ class ProgTuple
           cond1 << b1.to_ast
           cond2 = BoolCond.new
           cond2 << b2.to_ast
-          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.preconds, first.args),
-            ProgTuple.new(@ctx, second.prog, cond2, second.preconds, second.args)],
-            first.branch, [*first.preconds, *second.preconds], [*first.args, *second.args])
+          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.preconds),
+            ProgTuple.new(@ctx, second.prog, cond2, second.preconds)],
+            first.branch, [*first.preconds, *second.preconds])
         }
       }
       return tuples
     end
   end
 
-  def speculate_opposite_branch(branches, preconds, args, postconds)
+  def speculate_opposite_branch(branches, preconds, postconds)
     guessed = branches.map { |b|
       if b.to_ast.type == :send && b.to_ast.children[1] == :!
         ProgWrapper.new(@ctx, b.to_ast.children[0], b.env)
@@ -186,8 +185,8 @@ class ProgTuple
       end
     }
     guessed.select{ |b|
-      preconds.zip(args, postconds).map { |precond, arg, postcond|
-        res, klass = eval_ast(@ctx, b.to_ast, arg, precond) rescue next
+      preconds.zip(postconds).map { |precond, postcond|
+        res, klass = eval_ast(@ctx, b.to_ast, precond) #rescue next
         klass.instance_exec res, &postcond
       }.all?
     }
