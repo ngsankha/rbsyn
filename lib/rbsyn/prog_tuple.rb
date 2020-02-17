@@ -186,7 +186,7 @@ class ProgTuple
     }
     guessed.select{ |b|
       preconds.zip(postconds).map { |precond, postcond|
-        res, klass = eval_ast(@ctx, b.to_ast, precond) #rescue next
+        res, klass = eval_ast(@ctx, b.to_ast, precond) rescue next
         klass.instance_exec res, &postcond
       }.all?
     }

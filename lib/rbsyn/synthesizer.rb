@@ -33,8 +33,6 @@ class Synthesizer
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
     return progconds[0][0].prog if progconds.size == 1
 
-    binding.pry
-
     # TODO: we need to merge only the program with different body
     # (same programs with different branch conditions are wasted work?)
     completed = progconds.reduce { |merged_prog, progcond|
