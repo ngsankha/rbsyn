@@ -29,7 +29,9 @@ class LocalEnvironment
 
   def add_expr(expr)
     type = expr.ttype
-    @info[type] = [] unless @info.key?(type)
+    @info[type] = RDL.type_cast([],
+        'Array<{ expr: TypedNode, count: Integer, ref: Integer }>',
+        force: true) unless @info.key?(type)
     ref = next_ref
     exprs_with_type = @info[type] << {
       expr: expr,
@@ -40,15 +42,18 @@ class LocalEnvironment
   end
 
   def exprs_with_type(type)
-    @info.select { |k, v| v if k <= type }
-      .values.flatten.map { |v| v[:ref] }
+    RDL.type_cast(@info.select { |k, v| k <= type }
+      .values.flatten, 'Array<{ expr: TypedNode, count: Integer, ref: Integer }>', force: true)
+      .map { |v| v[:ref] }
   end
 
   def +(other)
     result = LocalEnvironment.new
     [@info, other.info].each { |info|
       info.each { |type, v|
-        result.info[type] = [] unless result.info.key?(type)
+        result.info[type] = RDL.type_cast([],
+        'Array<{ expr: TypedNode, count: Integer, ref: Integer }>',
+        force: true) unless result.info.key?(type)
         result.info[type].push(*v)
       }
     }

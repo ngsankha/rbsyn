@@ -1,4 +1,5 @@
 RDL.type RDL::Globals, 'self.types', '() -> Hash<Symbol, RDL::Type::Type>'
+RDL.type RDL::Type::Type, :<=, '(RDL::Type::Type) -> %bool'
 RDL.type MiniSat::Var, :-@, '() -> MiniSat::Var'
 RDL.type MiniSat::Var, :initialize, '(MiniSat::Solver) -> MiniSat::Var'
 RDL.type MiniSat::Solver, :<<, '(Array<MiniSat::Var>) -> %bot'
@@ -7,6 +8,7 @@ RDL.type MiniSat::Solver, :solve, '() -> MiniSat::Model or false'
 
 RDL.type AST, :s, '(RDL::Type::Type, Symbol, *TypedNode) -> TypedNode'
 RDL.type TypedNode, :type, '() -> Symbol'
+RDL.type TypedNode, :ttype, '() -> RDL::Type::Type'
 RDL.type TypedNode, :children, '() -> Array<TypedNode>'
 RDL.type TypedNode, :to_sym, '() -> Symbol'
 
@@ -35,5 +37,16 @@ RDL.type EffectAnalysis, 'self.has_self?', '(Array<String>) -> %bool', typecheck
 RDL.type BranchCountElimination, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>', typecheck: :later, wrap: false
 RDL.type BranchCountElimination, 'self.count_branches', '(ProgTuple) -> Integer', typecheck: :later, wrap: false
 RDL.type DuplicateElimiation, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>', typecheck: :later, wrap: false
+
+RDL.var_type LocalEnvironment, :@@ref, 'Integer'
+RDL.var_type LocalEnvironment, :@info, 'Hash<RDL::Type::Type, Array<{ expr: TypedNode, count: Integer, ref: Integer }>>'
+RDL.type LocalEnvironment, :info, '() -> Hash<RDL::Type::Type, Array<{ expr: TypedNode, count: Integer, ref: Integer }>>'
+
+RDL.type LocalEnvironment, :next_ref, '() -> Integer', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :bump_count, '(Integer) -> %any', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :get_expr, '(RDL::Type::Type, Integer) -> { expr: TypedNode, count: Integer, ref: Integer }', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :add_expr, '(TypedNode) -> %any', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :exprs_with_type, '(RDL::Type::Type) -> Array<Integer>', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :+, '(LocalEnvironment) -> LocalEnvironment', typecheck: :later, wrap: false
 
 RDL.type ProgTuple, :prog, '() -> Array<ProgTuple>'
