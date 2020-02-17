@@ -9,9 +9,8 @@ describe "Synthesis Benchmark" do
         pre {
           @dummy = AnotherUser.create(name: 'Dummy User', username: 'dummy1', active: true, email: 'dummy@account.com')
           @staged = AnotherUser.create(name: 'Staged User', username: 'staged1', active: true, email: 'staged@account.com')
+          unstage(email: 'staged@account.com', active: true, username: 'unstaged1', name: 'Foo Bar')
         }
-
-        user = unstage(email: 'staged@account.com', active: true, username: 'unstaged1', name: 'Foo Bar')
 
         post { |user|
           assert { user.id == @staged.id }

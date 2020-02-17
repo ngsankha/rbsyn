@@ -19,9 +19,8 @@ describe "Synthesis Benchmark" do
         pre {
           Shared.seed_db
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
+          update_post('author', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
         }
-
-        updated = update_post('author', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
 
         post { |updated|
           assert { updated.id == @post.id }
@@ -35,9 +34,8 @@ describe "Synthesis Benchmark" do
         pre {
           Shared.seed_db
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
+          update_post('dummy', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
         }
-
-        updated = update_post('dummy', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
 
         post { |updated|
           assert { updated.id == @post.id }
@@ -51,9 +49,8 @@ describe "Synthesis Benchmark" do
         pre {
           Shared.seed_db
           @post = Post.create(created_by: 'author', slug: 'hello-world', title: 'Hello World')
+          update_post('admin', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
         }
-
-        updated = update_post('admin', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
 
         post { |updated|
           assert { updated.id == @post.id }
