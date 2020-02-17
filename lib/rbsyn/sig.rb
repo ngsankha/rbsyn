@@ -8,6 +8,7 @@ RDL.type MiniSat::Solver, :solve, '() -> MiniSat::Model or false'
 RDL.type AST, :s, '(RDL::Type::Type, Symbol, *TypedNode) -> TypedNode'
 RDL.type TypedNode, :type, '() -> Symbol'
 RDL.type TypedNode, :children, '() -> Array<TypedNode>'
+RDL.type TypedNode, :to_sym, '() -> Symbol'
 
 RDL.var_type BoolCond, :@conds, 'Array<TypedNode>'
 RDL.var_type BoolCond, :@solver, 'MiniSat::Solver'
@@ -23,3 +24,10 @@ RDL.type BoolCond, :inverse?, '(BoolCond) -> %bool', typecheck: :later, wrap: fa
 RDL.type BoolCond, :implies, '(BoolCond) -> %bool', typecheck: :later, wrap: false
 RDL.type BoolCond, :strip_not, '(TypedNode) -> [TypedNode, Integer]', typecheck: :later, wrap: false
 RDL.type BoolCond, :bool_vars, '(Array<TypedNode>) -> Array<MiniSat::Var>', typecheck: :later, wrap: false
+
+RDL.type EffectAnalysis, 'self.effect_of', '(TypedNode, Hash<Symbol, RDL::Type::Type>, :read or :write) -> Array<String>'
+RDL.type EffectAnalysis, 'self.type_of', '(TypedNode, Hash<Symbol, RDL::Type::Type>) -> RDL::Type::Type'
+
+RDL.type EffectAnalysis, 'self.effect_leq', '(String, String) -> %bool', typecheck: :later, wrap: false
+RDL.type EffectAnalysis, 'self.replace_self', '(Array<String>, String) -> Array<String>', typecheck: :later, wrap: false
+RDL.type EffectAnalysis, 'self.has_self?', '(Array<String>) -> %bool', typecheck: :later, wrap: false

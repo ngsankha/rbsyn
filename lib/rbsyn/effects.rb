@@ -60,7 +60,7 @@ class EffectAnalysis
   end
 
   def self.effect_of(ast, env, kind)
-    return [] if ast.nil?
+    return RDL.type_cast([], 'Array<String>', force: true) if ast.nil?
 
     case ast.type
     when :send
@@ -83,7 +83,7 @@ class EffectAnalysis
   def self.type_of(ast, env)
     case ast.type
     when :ivar, :lvar
-      return env[ast.children[0]] if env.key? ast.children[0].to_sym
+      return env[ast.children[0].to_sym] if env.key? ast.children[0].to_sym
       return RDL::Globals.types[:bot]
     when :send
       klass = self.type_of(ast.children[0], env)
