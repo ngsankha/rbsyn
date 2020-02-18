@@ -69,7 +69,7 @@ class BoolCond
 
   private
   def bool_vars(conds)
-    constructed = RDL.type_cast([], 'Array<MiniSat::Var>')
+    constructed = RDL.type_cast([], 'Array<MiniSat::Var>', force: true)
     conds.each { |cond|
       stripped, nots = strip_not cond
       negate = nots % 2 == 1

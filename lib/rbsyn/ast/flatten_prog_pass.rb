@@ -5,7 +5,8 @@ class FlattenProgramPass < ::AST::Processor
 
   attr_reader :var_expr
 
-  def initialize(env)
+  def initialize(ctx, env)
+    @ctx = ctx
     @env = env
     @var_expr = {}
   end
@@ -15,8 +16,9 @@ class FlattenProgramPass < ::AST::Processor
     if subexpr[:count] == 1
       subexpr[:expr]
     else
-      @var_expr[subexpr[:count]] = subexpr[:expr]
-      s(subexpr[:expr].ttype, :lvar, "#{VAR_PREFIX}#{subexpr[:count]}".to_sym)
+      ref = @ctx.to_ctx_ref(subexpr[:ref])
+      @var_expr[ref] = subexpr[:expr]
+      s(subexpr[:expr].ttype, :lvar, "#{VAR_PREFIX}#{ref}".to_sym)
     end
   end
 

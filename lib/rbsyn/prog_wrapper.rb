@@ -4,7 +4,7 @@ class ProgWrapper
   attr_reader :seed, :env, :exprs
   attr_accessor :passed_asserts
 
-  def initialize(ctx, seed, env, exprs=[])
+  def initialize(ctx, seed, env, exprs=RDL.type_cast([], 'Array<TypedNode>', force: true))
     @ctx = ctx
     @seed = seed
     @env = env
@@ -30,7 +30,7 @@ class ProgWrapper
   end
 
   def to_ast
-    pass = FlattenProgramPass.new(@env)
+    pass = FlattenProgramPass.new(@ctx, @env)
     ast = pass.process(@seed)
     return ast if @exprs.empty?
 
@@ -65,7 +65,7 @@ class ProgWrapper
       pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@seed)
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
-      generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+      generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
         pass2 = ExtractASTPass.new(selection, @env)
         program = update_types_pass.process(pass2.process(expanded))
         new_env = pass2.env
@@ -77,20 +77,20 @@ class ProgWrapper
     when :effect
       # TODO: ordering can be done better to build candidates programs with
       # method calls that can satisfy multiple effects at once
-      @target.map { |eff|
+      RDL.type_cast(@target, 'Array<String>', force: true).map { |eff|
         methds = methods_with_write_effect(eff)
         eff_hole = s(RDL::Globals.types[:top], :hole, 1, {effect: true})
         pass1 = ExpandHolePass.new(@ctx, @env)
         pass1.effect_methds = methds
         expanded = pass1.process(eff_hole)
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
-        generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+        generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
           pass2 = ExtractASTPass.new(selection, @env)
           program = update_types_pass.process(pass2.process(expanded))
           new_env = pass2.env
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
-          prog_wrap.look_for(:teffect, eff)
+          prog_wrap.look_for(:teffect, [eff])
           prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
@@ -99,7 +99,7 @@ class ProgWrapper
       pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@exprs.last)
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
-      generated_asts = expand_map[0].product(*expand_map[1..]).map { |selection|
+      generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
         pass2 = ExtractASTPass.new(selection, @env)
         program = pass2.process(expanded)
         new_env = pass2.env

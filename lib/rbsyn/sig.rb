@@ -12,6 +12,7 @@ RDL.type AST, :s, '(RDL::Type::Type, Symbol, *TypedNode) -> TypedNode'
 RDL.type AST, :s, '(RDL::Type::Type, :hole, Integer, %any) -> TypedNode'
 RDL.type AST, :s, '(RDL::Type::Type, :envref, Integer) -> TypedNode'
 RDL.type AST, :s, '(RDL::Type::Type, :send, TypedNode, Symbol, *TypedNode) -> TypedNode'
+RDL.type AST, :s, '(RDL::Type::Type, :lvasgn, Symbol, *TypedNode) -> TypedNode'
 RDL.type AST, :eval_ast, '(Context, TypedNode, Proc) -> [%any, Class]'
 RDL.type TypedNode, :type, '() -> Symbol'
 RDL.type TypedNode, :ttype, '() -> RDL::Type::Type'
@@ -76,11 +77,29 @@ RDL.type ProgTuple, :merge_impl, '(ProgTuple, ProgTuple) -> Array<ProgTuple>', t
 RDL.var_type ProgWrapper, :@env, 'LocalEnvironment'
 RDL.var_type ProgWrapper, :@seed, 'TypedNode'
 RDL.var_type ProgWrapper, :@exprs, 'Array<TypedNode>'
+RDL.var_type ProgWrapper, :@ctx, 'Context'
+RDL.var_type ProgWrapper, :@passed_asserts, 'Integer'
+RDL.var_type ProgWrapper, :@looking_for, ':type or :effect or :teffect'
+RDL.var_type ProgWrapper, :@target, 'RDL::Type::Type or Array<String>'
 RDL.type ProgWrapper, :ttype, '() -> RDL::Type::Type'
-RDL.type ProgWrapper, :to_ast, '() -> TypedNode'
-RDL.type ProgWrapper, :initialize, '(Context, TypedNode, LocalEnvironment) -> self'
-RDL.type ProgWrapper, :look_for, '(:type or :effect or :teffect, RDL::Type::Type or Array<String>) -> %any'
+RDL.type ProgWrapper, :passed_asserts=, '(Integer) -> Integer'
+RDL.type ProgWrapper, :methods_with_write_effect, '(String) -> Array<[String, Symbol]>'
+
+RDL.type ProgWrapper, :initialize, '(Context, TypedNode, LocalEnvironment, ?Array<TypedNode>) -> self', typecheck: :later, wrap: false
+RDL.type ProgWrapper, :look_for, '(:type or :effect or :teffect, RDL::Type::Type or Array<String>) -> %any', typecheck: :later, wrap: false
+RDL.type ProgWrapper, :to_ast, '() -> TypedNode', typecheck: :later, wrap: false
+RDL.type ProgWrapper, :hash, '() -> Integer', typecheck: :later, wrap: false
+RDL.type ProgWrapper, :add_side_effect_expr, '(TypedNode) -> %any', typecheck: :later, wrap: false
+RDL.type ProgWrapper, :build_candidates, '() -> %any', typecheck: :later, wrap: false
 
 RDL.type SynHelper, :generate, '(ProgWrapper, Array<Proc>, Array<Proc>, %bool) -> Array<TypedNode>'
 
-RDL.type FlattenProgramPass, :initialize, '(LocalEnvironment) -> self'
+RDL.type FlattenProgramPass, :initialize, '(Context, LocalEnvironment) -> self'
+RDL.type FlattenProgramPass, :var_expr, '() -> Hash<Integer, TypedNode>'
+
+RDL.type ExpandHolePass, :initialize, '(Context, LocalEnvironment) -> self'
+RDL.type ExpandHolePass, :expand_map, '() -> Array<Integer>'
+RDL.type ExpandHolePass, :effect_methds=, '(Array<[String, Symbol]>) -> Array<[String, Symbol]>'
+
+RDL.type ExtractASTPass, :initialize, '(Array<Integer>, LocalEnvironment) -> self'
+RDL.type ExtractASTPass, :env, '() -> LocalEnvironment'

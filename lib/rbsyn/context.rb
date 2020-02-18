@@ -14,6 +14,8 @@ class Context
     @max_hash_size = 1
     @max_arg_length = 1
     @max_hash_depth = 1
+    @next_ref = 0
+    @ref_map = {}
   end
 
   def add_example(precond, postcond)
@@ -28,5 +30,16 @@ class Context
     @components.each { |component|
       @tenv[component] = RDL::Type::SingletonType.new(component)
     }
+  end
+
+  def to_ctx_ref(ref)
+    if @ref_map.key? ref
+      @ref_map[ref]
+    else
+      old_ref = @next_ref
+      @next_ref += 1
+      @ref_map[ref] = old_ref
+      old_ref
+    end
   end
 end

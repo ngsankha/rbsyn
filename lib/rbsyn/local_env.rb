@@ -43,7 +43,7 @@ class LocalEnvironment
 
   def exprs_with_type(type)
     RDL.type_cast(@info.select { |k, v| k <= type }
-      .values.flatten, 'Array<{ expr: TypedNode, count: Integer, ref: Integer }>')
+      .values.flatten, 'Array<{ expr: TypedNode, count: Integer, ref: Integer }>', force: true)
       .map { |v| v[:ref] }
   end
 

@@ -23,11 +23,11 @@ describe "Synthesis Benchmark" do
 
       assert_equal generate_program, %{
 def unstage(arg0)
-  t4 = AnotherUser.where(email: arg0.[](:email)).first
-  t4.username=arg0.[](:username)
-  t4.name=arg0.[](:name)
-  t4.active=false
-  t4
+  t0 = AnotherUser.where(email: arg0.[](:email)).first
+  t0.username=arg0.[](:username)
+  t0.name=arg0.[](:name)
+  t0.active=false
+  t0
 end
 }.strip
     end

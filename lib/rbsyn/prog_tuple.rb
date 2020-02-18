@@ -162,7 +162,7 @@ class ProgTuple
         bsyn2 = generate(seed, [*first.preconds, *second.preconds], output2, true)
       end
 
-      tuples = RDL.type_cast([], 'Array<ProgTuple>')
+      tuples = RDL.type_cast([], 'Array<ProgTuple>', force: true)
       bsyn1.each { |b1|
         bsyn2.each { |b2|
           cond1 = BoolCond.new
