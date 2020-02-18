@@ -60,7 +60,7 @@ class EffectAnalysis
   end
 
   def self.effect_of(ast, env, kind)
-    return RDL.type_cast([], 'Array<String>', force: true) if ast.nil?
+    return RDL.type_cast([], 'Array<String>') if ast.nil?
 
     case ast.type
     when :send

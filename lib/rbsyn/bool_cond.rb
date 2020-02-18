@@ -33,7 +33,7 @@ class BoolCond
 
   def true?
     @solver = MiniSat::Solver.new
-    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>', force: true)
+    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>')
     vars = bool_vars(@conds)
     vars.each { |var| @solver << [-var] }
     !@solver.satisfied?
@@ -41,7 +41,7 @@ class BoolCond
 
   def inverse?(other)
     @solver = MiniSat::Solver.new
-    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>', force: true)
+    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>')
     a = bool_vars(@conds)
     b = bool_vars(other.conds)
     @solver << a
@@ -51,7 +51,7 @@ class BoolCond
 
   def implies(other)
     @solver = MiniSat::Solver.new
-    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>', force: true)
+    @intermediates = RDL.type_cast({}, 'Hash<TypedNode, MiniSat::Var>')
     # self => other means check !a || b
     a = bool_vars(@conds)
     b = bool_vars(other.conds)
@@ -69,7 +69,7 @@ class BoolCond
 
   private
   def bool_vars(conds)
-    constructed = RDL.type_cast([], 'Array<MiniSat::Var>', force: true)
+    constructed = RDL.type_cast([], 'Array<MiniSat::Var>')
     conds.each { |cond|
       stripped, nots = strip_not cond
       negate = nots % 2 == 1

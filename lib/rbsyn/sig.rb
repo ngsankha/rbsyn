@@ -1,3 +1,4 @@
+RDL.type Proc, :initialize, '() { (%any) -> %any } -> Proc'
 RDL.type RDL::Globals, 'self.types', '() -> Hash<Symbol, RDL::Type::Type>'
 RDL.type RDL::Type::Type, :<=, '(RDL::Type::Type) -> %bool'
 RDL.type MiniSat::Var, :-@, '() -> MiniSat::Var'
@@ -5,12 +6,18 @@ RDL.type MiniSat::Var, :initialize, '(MiniSat::Solver) -> MiniSat::Var'
 RDL.type MiniSat::Solver, :<<, '(Array<MiniSat::Var>) -> %bot'
 RDL.type MiniSat::Solver, :satisfied?, '() -> %bool'
 RDL.type MiniSat::Solver, :solve, '() -> MiniSat::Model or false'
+RDL.type ::AST::Processor, :process, '(TypedNode) -> TypedNode'
 
 RDL.type AST, :s, '(RDL::Type::Type, Symbol, *TypedNode) -> TypedNode'
+RDL.type AST, :s, '(RDL::Type::Type, :hole, Integer, %any) -> TypedNode'
+RDL.type AST, :s, '(RDL::Type::Type, :envref, Integer) -> TypedNode'
+RDL.type AST, :s, '(RDL::Type::Type, :send, TypedNode, Symbol, *TypedNode) -> TypedNode'
+RDL.type AST, :eval_ast, '(Context, TypedNode, Proc) -> [%any, Class]'
 RDL.type TypedNode, :type, '() -> Symbol'
 RDL.type TypedNode, :ttype, '() -> RDL::Type::Type'
 RDL.type TypedNode, :children, '() -> Array<TypedNode>'
 RDL.type TypedNode, :to_sym, '() -> Symbol'
+RDL.type TypedNode, :to_ast, '() -> TypedNode'
 
 RDL.var_type BoolCond, :@conds, 'Array<TypedNode>'
 RDL.var_type BoolCond, :@solver, 'MiniSat::Solver'
@@ -45,8 +52,35 @@ RDL.type LocalEnvironment, :info, '() -> Hash<RDL::Type::Type, Array<{ expr: Typ
 RDL.type LocalEnvironment, :next_ref, '() -> Integer', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :bump_count, '(Integer) -> %any', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :get_expr, '(RDL::Type::Type, Integer) -> { expr: TypedNode, count: Integer, ref: Integer }', typecheck: :later, wrap: false
-RDL.type LocalEnvironment, :add_expr, '(TypedNode) -> %any', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :add_expr, '(TypedNode) -> Integer', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :exprs_with_type, '(RDL::Type::Type) -> Array<Integer>', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :+, '(LocalEnvironment) -> LocalEnvironment', typecheck: :later, wrap: false
 
-RDL.type ProgTuple, :prog, '() -> Array<ProgTuple>'
+RDL.var_type ProgTuple, :@ctx, 'Context'
+RDL.var_type ProgTuple, :@branch, 'BoolCond'
+RDL.var_type ProgTuple, :@prog, 'ProgWrapper or Array<ProgTuple>'
+RDL.var_type ProgTuple, :@preconds, 'Array<Proc>'
+RDL.type ProgTuple, :prog, '() -> ProgWrapper or Array<ProgTuple>'
+RDL.type ProgTuple, :branch, '() -> BoolCond'
+RDL.type ProgTuple, :preconds, '() -> Array<Proc>'
+RDL.type ProgTuple, :speculate_opposite_branch, '(Array<TypedNode>, Array<Proc>, Array<Proc>) -> Array<TypedNode>'
+
+RDL.type ProgTuple, :initialize, '(Context, ProgWrapper or Array<ProgTuple>, BoolCond or TypedNode, Array<Proc>) -> self', typecheck: :later, wrap: false
+RDL.type ProgTuple, :==, '(ProgTuple) -> %bool', typecheck: :later, wrap: false
+RDL.type ProgTuple, :eql?, '(ProgTuple) -> %bool', typecheck: :later, wrap: false
+RDL.type ProgTuple, :hash, '() -> Integer', typecheck: :later, wrap: false
+RDL.type ProgTuple, :+, '(ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
+RDL.type ProgTuple, :to_ast, '() -> TypedNode', typecheck: :later, wrap: false
+RDL.type ProgTuple, :merge_impl, '(ProgTuple, ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
+
+RDL.var_type ProgWrapper, :@env, 'LocalEnvironment'
+RDL.var_type ProgWrapper, :@seed, 'TypedNode'
+RDL.var_type ProgWrapper, :@exprs, 'Array<TypedNode>'
+RDL.type ProgWrapper, :ttype, '() -> RDL::Type::Type'
+RDL.type ProgWrapper, :to_ast, '() -> TypedNode'
+RDL.type ProgWrapper, :initialize, '(Context, TypedNode, LocalEnvironment) -> self'
+RDL.type ProgWrapper, :look_for, '(:type or :effect or :teffect, RDL::Type::Type or Array<String>) -> %any'
+
+RDL.type SynHelper, :generate, '(ProgWrapper, Array<Proc>, Array<Proc>, %bool) -> Array<TypedNode>'
+
+RDL.type FlattenProgramPass, :initialize, '(LocalEnvironment) -> self'
