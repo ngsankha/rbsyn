@@ -18,7 +18,7 @@ class BranchCountElimination < EliminationStrategy
   def self.count_branches(prog)
     count = 1
     if prog.prog.is_a? Array
-      RDL.type_cast(prog.prog, 'Array<ProgTuple>')
+      RDL.type_cast(prog.prog, 'Array<ProgTuple>', force: true)
         .each { |subprog|
           count += count_branches(subprog)
       }

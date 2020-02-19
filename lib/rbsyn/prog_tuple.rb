@@ -59,7 +59,7 @@ class ProgTuple
 
   def to_ast
     if @prog.is_a? Array
-      prog_cast = RDL.type_cast(@prog, 'Array<ProgTuple>')
+      prog_cast = RDL.type_cast(@prog, 'Array<ProgTuple>', force: true)
       raise RuntimeError, "expected >1 subtrees" unless prog_cast.size > 1
       fragments = prog_cast.map { |t| t.to_ast }
       branches = prog_cast.map { |program| program.branch }
@@ -150,7 +150,7 @@ class ProgTuple
       bsyn1 = generate(seed, [*first.preconds, *second.preconds], output1, true)
 
       output2 = (Array.new(first.preconds.size, false) + Array.new(second.preconds.size, true)).map { |item|
-        Proc.new { |result| RDL.type_cast(result, '%bool') == item }}
+        Proc.new { |result| RDL.type_cast(result, '%bool', force: true) == item }}
       opp_branch = speculate_opposite_branch(bsyn1, [*first.preconds, *second.preconds], output2)
       unless opp_branch.empty?
         bsyn2 = opp_branch
