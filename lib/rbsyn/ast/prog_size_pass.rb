@@ -30,7 +30,7 @@ class ProgSizePass < ::AST::Processor
   # end
 
   def on_envref(node)
-    process(@env.get_expr(node.ttype, node.children[0])[:expr])
+    process(@env.get_expr(node.children[0])[:expr])
     nil
   end
 

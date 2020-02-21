@@ -12,7 +12,7 @@ class FlattenProgramPass < ::AST::Processor
   end
 
   def on_envref(node)
-    subexpr = @env.get_expr(node.ttype, node.children[0])
+    subexpr = @env.get_expr(node.children[0])
     if subexpr[:count] == 1
       subexpr[:expr]
     else

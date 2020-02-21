@@ -16,7 +16,7 @@ class ExpandHolePass < ::AST::Processor
   def on_envref(node)
     ref = node.children[0]
     @visited_envrefs.add(ref)
-    info = @env.get_expr(node.ttype, ref)
+    info = @env.get_expr(ref)
     info[:expr] = process(info[:expr])
     node
   end

@@ -47,12 +47,13 @@ RDL.type BranchCountElimination, 'self.count_branches', '(ProgTuple) -> Integer'
 RDL.type DuplicateElimiation, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>', typecheck: :later, wrap: false
 
 RDL.var_type LocalEnvironment, :@@ref, 'Integer'
-RDL.var_type LocalEnvironment, :@info, 'Hash<RDL::Type::Type, Array<{ expr: TypedNode, count: Integer, ref: Integer }>>'
-RDL.type LocalEnvironment, :info, '() -> Hash<RDL::Type::Type, Array<{ expr: TypedNode, count: Integer, ref: Integer }>>'
+RDL.var_type LocalEnvironment, :@info, 'Hash<Integer, { expr: TypedNode, count: Integer, ref: Integer }>'
+RDL.type LocalEnvironment, :info, '() -> Hash<Integer, { expr: TypedNode, count: Integer, ref: Integer }>'
+RDL.type LocalEnvironment, :info=, '(Hash<Integer, { expr: TypedNode, count: Integer, ref: Integer }>) -> Hash<Integer, { expr: TypedNode, count: Integer, ref: Integer }>'
 
 RDL.type LocalEnvironment, :next_ref, '() -> Integer', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :bump_count, '(Integer) -> %any', typecheck: :later, wrap: false
-RDL.type LocalEnvironment, :get_expr, '(RDL::Type::Type, Integer) -> { expr: TypedNode, count: Integer, ref: Integer }', typecheck: :later, wrap: false
+RDL.type LocalEnvironment, :get_expr, '(Integer) -> { expr: TypedNode, count: Integer, ref: Integer }', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :add_expr, '(TypedNode) -> Integer', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :exprs_with_type, '(RDL::Type::Type) -> Array<Integer>', typecheck: :later, wrap: false
 RDL.type LocalEnvironment, :+, '(LocalEnvironment) -> LocalEnvironment', typecheck: :later, wrap: false

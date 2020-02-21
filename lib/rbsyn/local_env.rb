@@ -13,27 +13,17 @@ class LocalEnvironment
   end
 
   def bump_count(ref)
-    @info.each { |k, v|
-      v.each { |entry|
-        if entry[:ref] == ref
-          entry[:count] = entry[:count] + 1
-          return
-        end
-      }
-    }
+    item = @info[ref]
+    item[:count] = item[:count] + 1
   end
 
-  def get_expr(type, ref)
-    @info[type].find { |i| i[:ref] == ref }
+  def get_expr(ref)
+    @info[ref]
   end
 
   def add_expr(expr)
-    type = expr.ttype
-    @info[type] = RDL.type_cast([],
-        'Array<{ expr: TypedNode, count: Integer, ref: Integer }>',
-        force: true) unless @info.key?(type)
     ref = next_ref
-    exprs_with_type = @info[type] << {
+    @info[ref] = {
       expr: expr,
       count: 1,
       ref: ref
@@ -42,21 +32,12 @@ class LocalEnvironment
   end
 
   def exprs_with_type(type)
-    RDL.type_cast(@info.select { |k, v| k <= type }
-      .values.flatten, 'Array<{ expr: TypedNode, count: Integer, ref: Integer }>', force: true)
-      .map { |v| v[:ref] }
+    @info.select { |k, v| v[:expr].ttype <= type }.keys
   end
 
   def +(other)
     result = LocalEnvironment.new
-    [@info, other.info].each { |info|
-      info.each { |type, v|
-        result.info[type] = RDL.type_cast([],
-        'Array<{ expr: TypedNode, count: Integer, ref: Integer }>',
-        force: true) unless result.info.key?(type)
-        result.info[type].push(*v)
-      }
-    }
+    result.info = @info.merge(other.info)
     result
   end
 end
