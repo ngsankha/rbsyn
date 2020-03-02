@@ -17,8 +17,9 @@ describe "Synthesis Benchmark" do
 
       spec "returns true when username exists without email" do
         pre {
-          User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
-          username_exists? 'bruce1', 'bruce@wayne.com'
+          u = Fabricate(:user)
+          Fabricate(:email, email: 'bruce@wayne.com')
+          username_exists? u.username, 'bruce@wayne.com'
         }
 
         post { |result|
@@ -28,9 +29,9 @@ describe "Synthesis Benchmark" do
 
       spec "returns false when username exists with email" do
         pre {
-          u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
-          u.emails.create(email: 'bruce1@wayne.com')
-          username_exists? 'bruce1', 'bruce@wayne.com'
+          u = Fabricate(:user)
+          u.emails.create(email: 'bruce@wayne.com')
+          username_exists? u.username, 'bruce@wayne.com'
         }
 
         post { |result|
@@ -40,23 +41,9 @@ describe "Synthesis Benchmark" do
 
       assert_equal generate_program, %{
 def username_exists?(arg0, arg1)
-  if User.joins(:emails).exists?(username: arg0)
-    false
-  else
-    if (!UserEmail.joins(:user).first)
-      true
-    end
-  end
+  !UserEmail.joins(:user).exists?(email: arg1)
 end
 }.strip
-
-# ! REGRESSION !
-#       assert_equal generate_program, %{
-# def username_exists?(arg0, arg1)
-#   !User.joins(:emails).exists?(username: arg0)
-# end
-# }.strip
-
     end
   end
 end

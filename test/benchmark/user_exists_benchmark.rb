@@ -17,9 +17,8 @@ describe "Synthesis Benchmark" do
 
       spec "returns true when user exists" do
         pre {
-          u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
-          u.emails.create(email: 'bruce1@wayne.com')
-          username_exists? 'bruce1'
+          u = Fabricate(:user)
+          username_exists? u.username
         }
 
         post { |result|

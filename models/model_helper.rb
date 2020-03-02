@@ -2,7 +2,6 @@ ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
     t.string :name
     t.string :username
-    t.string :username_lower
     t.string :password
     t.boolean :staged
   end
@@ -14,7 +13,6 @@ ActiveRecord::Schema.define do
   create_table :another_users, force: true do |t|
     t.string :name
     t.string :username
-    t.string :username_lower
     t.string :password
     t.boolean :staged
     t.string :email

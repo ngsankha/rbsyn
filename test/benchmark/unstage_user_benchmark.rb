@@ -7,8 +7,8 @@ describe "Synthesis Benchmark" do
     [AnotherUser], prog_size: 20 do
       spec "correctly unstages a user" do
         pre {
-          @dummy = AnotherUser.create(name: 'Dummy User', username: 'dummy1', active: true, email: 'dummy@account.com')
-          @staged = AnotherUser.create(name: 'Staged User', username: 'staged1', active: true, email: 'staged@account.com')
+          @dummy = Fabricate(:another_user)
+          @staged = Fabricate(:another_user, email: 'staged@account.com')
           unstage(email: 'staged@account.com', active: true, username: 'unstaged1', name: 'Foo Bar')
         }
 
