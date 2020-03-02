@@ -6,6 +6,7 @@ require "active_record"
 require "pry"
 require "minisat"
 require "minitest"
+require "timeout"
 
 require "rbsyn/version"
 require "rbsyn/type_ops"

@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "fold branches" do
-    skip
 
     define :username_exists?, "(String, String) -> %bool", [User, UserEmail] do
 
@@ -41,9 +40,22 @@ describe "Synthesis Benchmark" do
 
       assert_equal generate_program, %{
 def username_exists?(arg0, arg1)
-  !User.joins(:emails).exists?(username: arg0)
+  if User.joins(:emails).exists?(username: arg0)
+    false
+  else
+    if (!UserEmail.joins(:user).first)
+      true
+    end
+  end
 end
 }.strip
+
+# ! REGRESSION !
+#       assert_equal generate_program, %{
+# def username_exists?(arg0, arg1)
+#   !User.joins(:emails).exists?(username: arg0)
+# end
+# }.strip
 
     end
   end

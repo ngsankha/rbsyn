@@ -46,19 +46,21 @@ class SynthesizerProxy
   end
 
   def generate_program
-    @specs.each { |spec|
-      @ctx.add_example(spec.pre_blk, spec.post_blk)
+    Timeout::timeout(60) {
+      @specs.each { |spec|
+        @ctx.add_example(spec.pre_blk, spec.post_blk)
+      }
+      syn = Synthesizer.new(@ctx)
+      max_args = @ctx.functype.args.size
+      args = max_args.times.map { |t| "arg#{t}".to_sym }
+      prog = syn.run
+      # TODO: these types can be made more precise
+      fn = s(@ctx.functype, :def, @mth_name,
+        s(RDL::Globals.types[:top], :args, *args.map { |arg|
+          s(RDL::Globals.types[:top], :arg, arg)
+        }), prog.to_ast)
+      Unparser.unparse(fn)
     }
-    syn = Synthesizer.new(@ctx)
-    max_args = @ctx.functype.args.size
-    args = max_args.times.map { |t| "arg#{t}".to_sym }
-    prog = syn.run
-    # TODO: these types can be made more precise
-    fn = s(@ctx.functype, :def, @mth_name,
-      s(RDL::Globals.types[:top], :args, *args.map { |arg|
-        s(RDL::Globals.types[:top], :arg, arg)
-      }), prog.to_ast)
-    Unparser.unparse(fn)
   end
 end
 
