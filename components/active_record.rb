@@ -11,6 +11,8 @@ class DBTypes
     when RDL::Type::SingletonType
       trec = trec.val
       schema = table_name_to_schema_hash(trec.name.to_sym)
+    when RDL::Type::NominalType
+      schema = table_name_to_schema_hash(trec.name.to_sym)
     when RDL::Type::VarType
       raise RuntimeError, "expected only Symbol" unless trec.name.is_a? Symbol
       schema = table_name_to_schema_hash(trec.name)
@@ -43,6 +45,8 @@ class DBTypes
       else
         raise RuntimeError, "unknown: #{param.inspect}"
       end
+    when RDL::Type::UnionType
+      return RDL::Type::UnionType.new(*trec.types.map { |t| schema_type(t) }).canonical
     else
       raise RuntimeError
     end
@@ -72,8 +76,13 @@ class DBTypes
     case trec
     when RDL::Type::SingletonType
       RDL::Type::GenericType.new(RDL::Type::NominalType.new(ActiveRecord_Relation), RDL::Type::NominalType.new(trec.val))
+    when RDL::Type::NominalType
+      RDL::Type::GenericType.new(RDL::Type::NominalType.new(ActiveRecord_Relation), trec)
+    when RDL::Type::GenericType
+      raise RuntimeError, "expected only ActiveRecord_Relation" if trec.base.name != "ActiveRecord_Relation"
+      array_schema(trec.params[0])
     else
-      raise RuntimeError, "unexpected type"
+      raise RuntimeError, "unexpected type #{trec}"
     end
   end
 

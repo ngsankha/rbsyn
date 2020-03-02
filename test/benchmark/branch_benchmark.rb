@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "branching" do
+    load_typedefs :stdlib, :active_record
 
     class SiteSettings
       class << self

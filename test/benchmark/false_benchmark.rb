@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "false" do
+    load_typedefs :stdlib, :active_record
 
     define :just_false, "(String) -> %bool", [User, UserEmail] do
 

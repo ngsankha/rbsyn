@@ -2,9 +2,9 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "unstage user" do
-    define :unstage,
-    "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser",
-    [AnotherUser], prog_size: 20 do
+    load_typedefs :stdlib, :active_record
+
+    define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser", [AnotherUser], prog_size: 20 do
       spec "correctly unstages a user" do
         pre {
           @dummy = Fabricate(:another_user)

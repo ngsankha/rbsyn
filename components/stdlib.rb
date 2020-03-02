@@ -1,13 +1,3 @@
-RDL.nowrap :BasicObject
-
-RDL.type :BasicObject, :!, '() -> %bool', effect: [:+, :+]
-# RDL.type :BasicObject, :==, '(self) -> %bool', effect: [:+, :+]
-
-RDL.nowrap :Hash
-
-RDL.type_params :Hash, [:k, :v], :all?
-RDL.type :Hash, :[], '(``any_or_k(trec)``) -> ``output_type(trec, targs)``', effect: [:+, :+]
-
 def any_or_k(trec)
   case trec
   when RDL::Type::FiniteHashType

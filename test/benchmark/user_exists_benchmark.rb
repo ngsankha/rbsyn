@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "user exists" do
+    load_typedefs :stdlib, :active_record
 
     define :username_exists?, "(String) -> %bool", [User, UserEmail] do
 

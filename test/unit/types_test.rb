@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "TableTypes" do
   it "type checks table methods" do
+    skip
     class Foo
       def bar1
         User.exists?(username: "bar")
@@ -12,6 +13,7 @@ describe "TableTypes" do
   end
 
   it "type checks joins" do
+    skip
     class Foo
       def bar2
         User.joins(:emails)
@@ -22,6 +24,7 @@ describe "TableTypes" do
   end
 
   it "type checks joins followed by exists" do
+    skip
     class Foo
       def bar3
         User.joins(:emails).exists?(username: "bar", emails: { email: "bar@foo.com" })

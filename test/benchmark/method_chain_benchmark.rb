@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "method chains" do
+    load_typedefs :stdlib, :active_record
 
     define :username_available?, "(String) -> %bool", [User, UserEmail] do
 

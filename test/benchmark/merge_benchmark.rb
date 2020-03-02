@@ -2,6 +2,7 @@ require "test_helper"
 
 describe "Synthesis Benchmark" do
   it "fold branches" do
+    load_typedefs :stdlib, :active_record
 
     define :username_exists?, "(String, String) -> %bool", [User, UserEmail] do
 
