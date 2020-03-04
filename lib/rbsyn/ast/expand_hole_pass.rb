@@ -89,13 +89,48 @@ class ExpandHolePass < ::AST::Processor
 
   private
   def effects
-    @effect_methds.map { |klass, methd|
-      # TODO: Only nominal types for now, add singleton types too
-      trecv = RDL::Type::NominalType.new(klass)
-      # the %top type here doesn't matter
-      path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
-      fn_call(path)
+    types = Set[*(@ctx.functype.args +
+      @env.info.values.map { |v| v[:expr].ttype } +
+      @ctx.components.map { |c| RDL::Type::SingletonType.new(c) })]
+    exprs = []
+
+    @effect_methds.each { |klass, methd|
+      types.each { |type|
+        case type
+        when RDL::Globals.types[:bool], RDL::Globals.types[:bot]
+          # ignore
+          next
+        when RDL::Type::SingletonType
+          next if RDL::Util.has_singleton_marker(klass).nil?
+          klass_qual = RDL::Util.to_class(RDL::Util.remove_singleton_marker(klass))
+          recv_qual = RDL::Util.to_class(type.val)
+          if recv_qual.ancestors.include? klass_qual
+            trecv = type
+            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+            exprs << fn_call(path)
+          end
+        when RDL::Type::NominalType
+          klass_qual = RDL::Util.to_class(klass)
+          recv_qual = RDL::Util.to_class(type.name)
+          if recv_qual.ancestors.include? klass_qual
+            trecv = type
+            # the %top type here doesn't matter
+            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+            exprs << fn_call(path)
+          end
+        when RDL::Type::FiniteHashType
+          if klass == Hash
+            trecv = type
+            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+            exprs << fn_call(path)
+          end
+        else
+          raise RuntimeError, "unhandled type #{type}"
+        end
+      }
     }
+
+    exprs
   end
 
   def nil_const
@@ -114,7 +149,7 @@ class ExpandHolePass < ::AST::Processor
 
   def lvar(type)
     @ctx.tenv.select { |k, v| v <= type }
-      .map { |k, v| s(type, :lvar, k) }
+      .map { |k, v| s(v, :lvar, k) }
   end
 
   def envref(type)

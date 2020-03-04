@@ -4,10 +4,18 @@ ActiveRecord::Schema.define do
     t.string :username
     t.string :password
     t.boolean :staged
+    t.boolean :active
   end
   create_table :user_emails, force: true do |t|
     t.string :email
     t.boolean :primary
+    t.references :user
+  end
+  create_table :email_tokens, force: true do |t|
+    t.string :email
+    t.string :token
+    t.boolean :confirmed
+    t.boolean :expired
     t.references :user
   end
   create_table :another_users, force: true do |t|
@@ -36,6 +44,7 @@ end
 
 require_relative "user"
 require_relative "user_email"
+require_relative "email_token"
 require_relative "another_user"
 require_relative "post"
 require_relative "demo_user"

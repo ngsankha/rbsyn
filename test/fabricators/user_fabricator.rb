@@ -10,3 +10,20 @@ Fabricator(:email, class_name: UserEmail) do
   # primary { true }
   email { sequence(:email) { |i| "user#{i}@example.com" } }
 end
+
+Fabricator(:inactive_user, from: :user) do
+  active { false }
+  emails(count: 1) { |attrs, i| Fabricate(:inactive_user_email) }
+  email_tokens(count: 1) { |attrs, i| Fabricate(:email_token, email: attrs[:emails].first.email) }
+end
+
+Fabricator(:inactive_user_email, from: :email) do
+  primary { true }
+end
+
+Fabricator(:email_token, class_name: EmailToken) do
+  expired { false }
+  confirmed { false }
+  token { sequence(:token) { |i| "token#{i}" } }
+  email { |attrs| attrs[:email] }
+end

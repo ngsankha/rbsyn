@@ -12,14 +12,22 @@ class Synthesizer
 
   def run
     @ctx.load_tenv!
+    prog_cache = ProgCache.new @ctx
 
     update_types_pass = RefineTypesPass.new
     progconds = @ctx.preconds.zip(@ctx.postconds).map { |precond, postcond|
-      env = LocalEnvironment.new
-      prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
-      seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
-      seed.look_for(:type, @ctx.functype.ret)
-      progs = generate(seed, [precond], [postcond], true)
+      cached = prog_cache.find_prog([precond], [postcond])
+      unless cached.nil?
+        progs = [cached]
+      else
+        env = LocalEnvironment.new
+        prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
+        seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
+        seed.look_for(:type, @ctx.functype.ret)
+        progs = generate(seed, [precond], [postcond], true)
+        # add to cache for future use
+        progs.each { |prog| prog_cache.add(prog) }
+      end
 
       env = LocalEnvironment.new
       branch_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))

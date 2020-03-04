@@ -50,6 +50,10 @@ class ProgWrapper
     to_ast == other.to_ast
   end
 
+  def eql?(other)
+    self == other
+  end
+
   def hash
     to_ast.hash
   end
@@ -116,22 +120,59 @@ class ProgWrapper
   end
 
   def methods_with_write_effect(eff)
-    if eff.split('.').size == 1
-      raise RuntimeError, "TODO"
-    elsif eff.split('.').size == 2
+    # if eff.split('.').size == 1
+    #   effect_causing = []
+    #   klass = RDL::Util.to_class(eff)
+    #   RDL::Globals.info.info.each { |cls, v1|
+    #     v1.each { |meth, v2|
+    #       v2.fetch(:write, ['']).each { |weff|
+    #         cls_qual = RDL::Util.to_class(cls)
+    #         cls_qual = RDL::Util.singleton_class_to_class(cls_qual) if cls_qual.singleton_class?
+    #         override_class = false
+    #         if weff.include? 'self'
+    #           if (klass.ancestors.include?(cls_qual) || (cls_qual == ActiveRecord_Relation && klass.ancestors.include?(ActiveRecord::Base)))
+    #             weff = weff.gsub('self', klass.name)
+    #           end
+    #         end
+    #         effect_causing << [cls, meth] if EffectAnalysis.effect_leq(eff, weff)
+    #       }
+    #     }
+    #   }
+    #   return effect_causing
+    if eff.split('.').size <= 2
       effect_causing = []
-      # TODO: take care between nominal and singleton types
-      # right now singleton types are not being handled
+      klass = RDL::Util.to_class(eff.split('.')[0])
+      # klass = RDL::Util.singleton_class_to_class(klass) if klass.singleton_class?
+
       RDL::Globals.info.info.each { |cls, v1|
         v1.each { |meth, v2|
           v2.fetch(:write, ['']).each { |weff|
-            effect_causing << [cls, meth] if EffectAnalysis.effect_leq(eff, weff)
+            cls_qual = RDL::Util.to_class(cls)
+            cls_qual = RDL::Util.singleton_class_to_class(cls_qual) if cls_qual.singleton_class?
+            override_class = false
+            if weff.include? 'self'
+              if (klass.ancestors.include?(cls_qual) || (cls_qual == ActiveRecord_Relation && klass.ancestors.include?(ActiveRecord::Base)))
+                weff = weff.gsub('self', klass.name)
+              end
+            end
+            if EffectAnalysis.effect_leq(eff, weff)
+              if klass.ancestors.include? cls_qual
+                if RDL::Util.to_class(cls).singleton_class?
+                  kls = RDL::Util.add_singleton_marker(eff.split('.')[0])
+                else
+                  kls = eff.split('.')[0]
+                end
+                effect_causing << [kls, meth]
+              else
+                effect_causing << [cls, meth]
+              end
+            end
           }
         }
       }
       return effect_causing
     else
-      raise RuntimeError, "don't know how to handle"
+      raise RuntimeError, "don't know how to handle #{eff.inspect}"
     end
   end
 

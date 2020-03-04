@@ -25,7 +25,7 @@ class EffectAnalysis
       elsif e2.split('.').size == 1
         e1 == e2
       elsif e2.split('.').size == 2
-        e1 != e2.split('.')[0]
+        e1 == e2.split('.')[0]
       else
         raise RuntimeError, "unexpected effect format"
       end
@@ -72,6 +72,14 @@ class EffectAnalysis
       args = ast.children[2..].map { |arg| effect_of(arg, env, kind) }
       my_eff = RDL::Globals.info.get(klass, meth, kind)
       my_eff ||= []
+      my_eff.map! { |eff|
+        case klass
+        when RDL::Type::NominalType
+          eff.gsub('self', klass.name)
+        else
+          raise RuntimeError, "unhandled type"
+        end
+      }
       effect_union(*([klass_eff, my_eff, args].flatten))
     when :ivar, :lvar, :str, :true, :false
       ['']
@@ -83,7 +91,8 @@ class EffectAnalysis
   def self.type_of(ast, env)
     case ast.type
     when :ivar, :lvar
-      return env[ast.children[0].to_sym] if env.key? ast.children[0].to_sym
+      var_name = ast.children[0].to_sym
+      return env[var_name] if env.key? var_name
       return RDL::Globals.types[:bot]
     when :send
       klass = self.type_of(ast.children[0], env)

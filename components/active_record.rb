@@ -55,6 +55,8 @@ class DBTypes
 
   def self.rec_to_nominal(trec)
     case trec
+    when RDL::Type::UnionType
+      return RDL::Type::UnionType.new(*trec.types.map { |t| rec_to_nominal(t) }).canonical
     when RDL::Type::GenericType
       raise RuntimeError, "got unexpected type #{trec}" unless trec.base.klass == ActiveRecord_Relation
       param = trec.params[0]
@@ -95,12 +97,18 @@ class DBTypes
   end
 
   def self.joins_output_type(trec, targs)
-    raise RuntimeError, "Expected only argument that is a singleton" if targs.size > 1 || !targs[0].is_a?(RDL::Type::SingletonType)
-    trec = trec.val
-    tjoined = DBUtils.get_schema(trec.name.to_sym).params[0].elts[:__associations].elts[targs[0].val.to_s]
-    raise RuntimeError, "Association doesn't exist" if tjoined.nil?
-    tjoin = RDL::Type::NominalType.new(tjoined.val)
-    jt = RDL::Type::GenericType.new(RDL::Type::NominalType.new(JoinTable), RDL::Type::NominalType.new(trec), tjoin)
-    RDL::Type::GenericType.new(RDL::Type::NominalType.new(ActiveRecord_Relation), jt)
+    case targs[0]
+    when RDL::Type::UnionType
+      RDL::Type::UnionType.new(*targs[0].types.map { |t| joins_output_type(trec, [t]) }).canonical
+    when RDL::Type::SingletonType
+      trec = trec.val
+      tjoined = DBUtils.get_schema(trec.name.to_sym).params[0].elts[:__associations].elts[targs[0].val.to_s]
+      raise RuntimeError, "Association doesn't exist" if tjoined.nil?
+      tjoin = RDL::Type::NominalType.new(tjoined.val)
+      jt = RDL::Type::GenericType.new(RDL::Type::NominalType.new(JoinTable), RDL::Type::NominalType.new(trec), tjoin)
+      RDL::Type::GenericType.new(RDL::Type::NominalType.new(ActiveRecord_Relation), jt)
+    else
+      raise RuntimeError, "can handle only singletons"
+    end
   end
 end

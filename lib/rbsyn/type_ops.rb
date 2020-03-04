@@ -25,6 +25,9 @@ module TypeOperations
       bind.local_variable_set(:trec, trec)
       bind.local_variable_set(:targs, targs)
       tret.compute(bind)
+    when RDL::Type::VarType
+      raise RuntimeError, "unexpected" unless tret.name == :self
+      trec
     else
       tret
     end
@@ -45,11 +48,19 @@ module TypeOperations
     when RDL::Type::UnionType
       trecv.types.map { |type| parents_of type }.flatten
     when RDL::Type::GenericType
-      parents_of trecv.base
+      if trecv.base.name == 'ActiveRecord_Relation'
+        parents_of(trecv.base) + parents_of(trecv.params[0])
+      else
+        parents_of trecv.base
+      end
+    when RDL::Type::OptionalType
+      parents_of trecv.type
     when RDL::Type::NominalType
       RDL::Util.to_class(trecv.name).ancestors.map { |klass| klass.to_s }
     when RDL::Type::FiniteHashType
       Hash.ancestors.map { |klass| klass.to_s }
+    when RDL::Type::BotType
+      []
     else
       raise RuntimeError, "unhandled type #{trecv.inspect}"
     end

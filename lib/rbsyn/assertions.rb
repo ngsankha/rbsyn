@@ -10,7 +10,12 @@ module Assertions
       ret = @ctx.functype.ret
       raise RuntimeError, "expected only one parameter" unless @params.size == 1
       type_env = {}
+      # @params is a parameters of post block
       type_env[@params[0].to_sym] = ret
+      @ctx.curr_binding.eval("instance_variables").each { |v|
+        # TODO: Only generates nominal types for now
+        type_env[v.to_sym] = RDL::Type::NominalType.new(@ctx.curr_binding.eval("#{v}.class.name"))
+      }
 
       # Ugly hack! See https://github.com/whitequark/parser/issues/343
       header = "#{@params[0]} = nil\n"
