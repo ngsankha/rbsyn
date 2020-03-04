@@ -13,7 +13,7 @@ Rake::TestTask.new(:bench) do |t|
   t.libs << "lib"
   t.libs << "models"
   t.test_files = FileList["test/benchmark/*_benchmark.rb"]
-  # t.test_files = FileList["test/benchmark/activate_benchmark.rb"]
+  # t.test_files = FileList["test/benchmark/check_site_contact_username_benchmark.rb"]
 end
 
 Rake::TestTask.new(:typecheck) do |t|

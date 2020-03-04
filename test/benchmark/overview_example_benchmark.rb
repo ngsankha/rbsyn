@@ -66,7 +66,7 @@ describe "Synthesis Benchmark" do
 def update_post(arg0, arg1, arg2)
   if DemoUser.exists?(username: arg0, admin: false)
     if Post.exists?(created_by: arg0, slug: arg1)
-      t0 = Post.where(created_by: arg0, slug: arg1).first
+      t0 = Post.where(slug: arg1).first
       t0.title=arg2.[](:title)
       t0
     else

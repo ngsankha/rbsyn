@@ -9,4 +9,16 @@ class User < ApplicationRecord
   def email_confirmed?
     !email_tokens.where(email: email, confirmed: true).empty?
   end
+
+  def revoke_admin!
+    update! admin: false
+  end
+
+  def revoke_moderation!
+    update! moderator: false
+  end
+
+  def staff?
+    admin || moderator
+  end
 end

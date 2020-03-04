@@ -16,17 +16,15 @@ class Synthesizer
 
     update_types_pass = RefineTypesPass.new
     progconds = @ctx.preconds.zip(@ctx.postconds).map { |precond, postcond|
-      cached = prog_cache.find_prog([precond], [postcond])
-      unless cached.nil?
-        progs = [cached]
-      else
+      prog = prog_cache.find_prog([precond], [postcond])
+      if prog.nil?
         env = LocalEnvironment.new
         prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
         seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
         seed.look_for(:type, @ctx.functype.ret)
-        progs = generate(seed, [precond], [postcond], true)
+        prog = generate(seed, [precond], [postcond], false)
         # add to cache for future use
-        progs.each { |prog| prog_cache.add(prog) }
+        prog_cache.add(prog)
       end
 
       env = LocalEnvironment.new
@@ -34,12 +32,16 @@ class Synthesizer
       seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, branch_ref), env)
       seed.look_for(:type, RDL::Globals.types[:bool])
       branches = generate(seed, [precond], [TRUE_POSTCOND], true)
-      progs.product(branches).map { |prog, branch|
-        ProgTuple.new(@ctx, prog, update_types_pass.process(branch.to_ast), [precond]) }
+      cond = BoolCond.new
+      branches.each { |b| cond << update_types_pass.process(b.to_ast) }
+
+      ProgTuple.new(@ctx, prog, cond, [precond])
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
-    return progconds[0][0].prog if progconds.size == 1
+    return progconds[0].prog if progconds.size == 1
+
+    progconds = merge_same_progs(progconds).map { |progcond| [progcond] }
 
     # TODO: we need to merge only the program with different body
     # (same programs with different branch conditions are wasted work?)
@@ -80,5 +82,19 @@ class Synthesizer
       return ast if test_outputs.all? true
     }
     raise RuntimeError, "No candidates found"
+  end
+
+  def merge_same_progs(progconds)
+    merged = []
+    progconds.each { |progcond|
+      looked = merged.find { |processed| processed.prog.to_ast == progcond.prog.to_ast }
+      unless looked.nil?
+        progcond.branch.conds.each { |b| looked.branch << b }
+        looked.preconds.push(*progcond.preconds)
+      else
+        merged << progcond
+      end
+    }
+    merged
   end
 end

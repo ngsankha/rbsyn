@@ -25,6 +25,7 @@ module SynHelper
             effect_needed << prog_wrap
           rescue Exception => e
             # puts e
+            # puts e.backtrace
             next
           end
         }

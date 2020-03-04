@@ -5,6 +5,8 @@ ActiveRecord::Schema.define do
     t.string :password
     t.boolean :staged
     t.boolean :active
+    t.boolean :admin
+    t.boolean :moderator
   end
   create_table :user_emails, force: true do |t|
     t.string :email

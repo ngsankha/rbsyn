@@ -70,19 +70,31 @@ class EffectAnalysis
 
       meth = ast.children[1]
       args = ast.children[2..].map { |arg| effect_of(arg, env, kind) }
-      my_eff = RDL::Globals.info.get(klass, meth, kind)
+      my_eff = case klass
+      when RDL::Globals.types[:bool]
+        []
+      when RDL::Type::SingletonType
+        RDL::Globals.info.get(RDL::Util.add_singleton_marker(klass.to_s), meth, kind)
+      when RDL::Type::NominalType
+        RDL::Globals.info.get(klass.name, meth, kind)
+      when RDL::Type::FiniteHashType
+        RDL::Globals.info.get('Hash', meth, kind)
+      else
+        raise RuntimeError, "unhandled type #{klass}"
+      end
+
       my_eff ||= []
       my_eff.map! { |eff|
         case klass
-        when RDL::Type::NominalType
-          eff.gsub('self', klass.name)
+        when RDL::Type::NominalType, RDL::Type::SingletonType
+          eff.gsub('self', klass.to_s)
         else
           raise RuntimeError, "unhandled type"
         end
       }
       effect_union(*([klass_eff, my_eff, args].flatten))
-    when :ivar, :lvar, :str, :true, :false
-      ['']
+    when :ivar, :lvar, :str, :true, :false, :const, :sym
+      []
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"
     end
@@ -94,10 +106,19 @@ class EffectAnalysis
       var_name = ast.children[0].to_sym
       return env[var_name] if env.key? var_name
       return RDL::Globals.types[:bot]
+    when :const
+      return RDL::Type::SingletonType.new(RDL::Util.to_class(ast.children[1].to_s))
     when :send
       klass = self.type_of(ast.children[0], env)
       meth = ast.children[1]
-      tmeth = RDL::Globals.info.get(klass, meth, :type)
+      tmeth = case klass
+      when RDL::Type::SingletonType
+        RDL::Globals.info.get(RDL::Util.add_singleton_marker(klass.to_s), meth, :type)
+      when RDL::Type::NominalType
+        RDL::Globals.info.get(klass.name, meth, :type)
+      else
+        raise RuntimeError, "unhandled type"
+      end
       # take only the first type for now
       case tmeth[0]
       when RDL::Type::MethodType

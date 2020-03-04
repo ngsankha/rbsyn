@@ -27,3 +27,11 @@ Fabricator(:email_token, class_name: EmailToken) do
   token { sequence(:token) { |i| "token#{i}" } }
   email { |attrs| attrs[:email] }
 end
+
+Fabricator(:admin, from: :user) do
+  admin { true }
+end
+
+Fabricator(:moderator, from: :user) do
+  moderator { true }
+end
