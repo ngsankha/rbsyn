@@ -12,9 +12,7 @@ Rake::TestTask.new(:bench) do |t|
   t.libs << "test"
   t.libs << "lib"
   t.libs << "models"
-  files = FileList["test/benchmark/*_benchmark.rb"]
-  files.exclude('check_site_contact_username', 'activate') if ENV['GITHUB_ACTIONS']
-  t.test_files = files
+  t.test_files = FileList["test/benchmark/*_benchmark.rb"]
   # t.test_files = FileList["test/benchmark/check_site_contact_username_benchmark.rb"]
 end
 
