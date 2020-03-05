@@ -73,6 +73,7 @@ RDL.type ProgTuple, :eql?, '(ProgTuple) -> %bool', typecheck: :later, wrap: fals
 RDL.type ProgTuple, :hash, '() -> Integer', typecheck: :later, wrap: false
 RDL.type ProgTuple, :+, '(ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
 RDL.type ProgTuple, :to_ast, '() -> TypedNode', typecheck: :later, wrap: false
+RDL.type ProgTuple, :merge_rec, '(ProgTuple, ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
 RDL.type ProgTuple, :merge_impl, '(ProgTuple, ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
 
 RDL.var_type ProgWrapper, :@env, 'LocalEnvironment'

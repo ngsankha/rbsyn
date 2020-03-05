@@ -54,7 +54,7 @@ class ProgTuple
     raise RuntimeError, "both progs should be of same type" if RDL.type_cast(other.prog, 'ProgWrapper')
       .ttype != RDL.type_cast(@prog, 'ProgWrapper').ttype
 
-    merge_impl(self, other)
+    merge_rec(self, other)
   end
 
   def to_ast
@@ -123,6 +123,22 @@ class ProgTuple
   end
 
   private
+  def merge_rec(first, second)
+    merged = RDL.type_cast([], 'Array<ProgTuple>', force: true)
+    if first.prog.is_a? Array
+      RDL.type_cast(first.prog, 'Array<ProgTuple>').each_with_index { |fprog, i|
+        merged_subprogs = merge_rec(fprog, second)
+        merged_subprogs.each { |m|
+          fdup = first.dup
+          RDL.type_cast(fdup.prog, 'Array<ProgTuple>')[i] = m
+          merged << fdup
+        }
+      }
+    end
+    merged.push(*merge_impl(first, second))
+    return merged
+  end
+
   def merge_impl(first, second)
     if first.prog == second.prog && first.branch.implies(second.branch)
       return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds])]

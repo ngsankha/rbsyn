@@ -41,7 +41,8 @@ class Synthesizer
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
     return progconds[0].prog if progconds.size == 1
 
-    progconds = merge_same_progs(progconds).map { |progcond| [progcond] }
+    # progconds = merge_same_progs(progconds).map { |progcond| [progcond] }
+    progconds.map! { |progcond| [progcond] }
 
     # TODO: we need to merge only the program with different body
     # (same programs with different branch conditions are wasted work?)
