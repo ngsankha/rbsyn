@@ -32,10 +32,10 @@ class BoolExprFold < BranchPruneStrategy
       # LocalEnvironment.new is fine here because the program body is just true or false
       if lbody.to_ast.type == :true && rbody.to_ast.type == :false
         return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, lbranch.to_ast, LocalEnvironment.new), cond,
-          progcond.preconds)
+          progcond.preconds, progcond.postconds)
       elsif lbody.to_ast.type == :false && rbody.to_ast.type == :true
         return ProgTuple.new(progcond.ctx, ProgWrapper.new(progcond.ctx, rbranch.to_ast, LocalEnvironment.new), cond,
-          progcond.preconds)
+          progcond.preconds, progcond.postconds)
       else
         return progcond
       end
@@ -70,9 +70,9 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
-             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds)],
+             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].postconds)],
             branch,
-            progcond.preconds)
+            progcond.preconds, progcond.postconds)
         end
       else
         rbranch_guess = lbranch.conds[0].children[0]
@@ -85,9 +85,9 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
             [progcond.prog[0],
-             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds)],
+             ProgTuple.new(progcond.ctx, progcond.prog[1].prog, rbranch_guess, progcond.prog[1].preconds, progcond.prog[1].postconds)],
             branch,
-            progcond.preconds)
+            progcond.preconds, progcond.postconds)
         end
       end
     rescue
@@ -106,10 +106,10 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch.conds[0].to_ast
           branch << lbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
-            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds),
+            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].postconds),
              progcond.prog[1]],
             branch,
-            progcond.preconds)
+            progcond.preconds, progcond.postconds)
         end
       else rbranch.negative?
         lbranch_guess = rbranch.conds[0].children[0]
@@ -121,10 +121,10 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
           branch << rbranch.conds[0].to_ast
           branch << lbranch_guess.to_ast
           guessed = ProgTuple.new(progcond.ctx,
-            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds),
+            [ProgTuple.new(progcond.ctx, progcond.prog[0].prog, lbranch_guess, progcond.prog[0].preconds, progcond.prog[0].postconds),
              progcond.prog[1]],
             branch,
-            progcond.preconds)
+            progcond.preconds, progcond.postconds)
         end
       end
     rescue
@@ -167,13 +167,13 @@ class InverseBranchFold < BranchPruneStrategy
               ProgWrapper.new(progcond.ctx,
                 s(progcond.prog[0].prog.ttype, :if, lbranch.to_ast, lbody, rbody), progcond.prog[0].prog.env + progcond.prog[1].prog.env),
               cond,
-              progcond.preconds)
+              progcond.preconds, progcond.postconds)
           else
             return ProgTuple.new(progcond.ctx,
               ProgWrapper.new(progcond.ctx,
                 s(progcond.prog[0].prog.ttype, :if, rbranch.to_ast, rbody, lbody), progcond.prog[0].prog.env + progcond.prog[1].prog.env),
               cond,
-              progcond.preconds)
+              progcond.preconds, progcond.postconds)
           end
         else
           return progcond

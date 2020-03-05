@@ -62,12 +62,14 @@ RDL.var_type ProgTuple, :@ctx, 'Context'
 RDL.var_type ProgTuple, :@branch, 'BoolCond'
 RDL.var_type ProgTuple, :@prog, 'ProgWrapper or Array<ProgTuple>'
 RDL.var_type ProgTuple, :@preconds, 'Array<Proc>'
+RDL.var_type ProgTuple, :@postconds, 'Array<Proc>'
 RDL.type ProgTuple, :prog, '() -> ProgWrapper or Array<ProgTuple>'
 RDL.type ProgTuple, :branch, '() -> BoolCond'
 RDL.type ProgTuple, :preconds, '() -> Array<Proc>'
+RDL.type ProgTuple, :postconds, '() -> Array<Proc>'
 RDL.type ProgTuple, :speculate_opposite_branch, '(Array<TypedNode>, Array<Proc>, Array<Proc>) -> Array<TypedNode>'
 
-RDL.type ProgTuple, :initialize, '(Context, ProgWrapper or Array<ProgTuple>, BoolCond or TypedNode, Array<Proc>) -> self', typecheck: :later, wrap: false
+RDL.type ProgTuple, :initialize, '(Context, ProgWrapper or Array<ProgTuple>, BoolCond or TypedNode, Array<Proc>, Array<Proc>) -> self', typecheck: :later, wrap: false
 RDL.type ProgTuple, :==, '(ProgTuple) -> %bool', typecheck: :later, wrap: false
 RDL.type ProgTuple, :eql?, '(ProgTuple) -> %bool', typecheck: :later, wrap: false
 RDL.type ProgTuple, :hash, '() -> Integer', typecheck: :later, wrap: false

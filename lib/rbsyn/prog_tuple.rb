@@ -2,9 +2,9 @@ class ProgTuple
   include AST
   include SynHelper
 
-  attr_reader :ctx, :branch, :prog, :preconds
+  attr_reader :ctx, :branch, :prog, :preconds, :postconds
 
-  def initialize(ctx, prog, branch, preconds)
+  def initialize(ctx, prog, branch, preconds, postconds)
     @ctx = ctx
     if branch.is_a? BoolCond
       @branch = RDL.type_cast(branch, 'BoolCond')
@@ -17,6 +17,7 @@ class ProgTuple
     raise RuntimeError, "expected ProgWrapper" unless prog.is_a?(Array) || prog.is_a?(ProgWrapper)
     @prog = prog
     @preconds = preconds
+    @postconds = postconds
   end
 
   def ==(other)
@@ -141,19 +142,21 @@ class ProgTuple
 
   def merge_impl(first, second)
     if first.prog == second.prog && first.branch.implies(second.branch)
-      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds])]
+      return [ProgTuple.new(@ctx, first.prog, first.branch, [*first.preconds, *second.preconds], [*first.postconds, *second.postconds])]
     elsif first.prog == second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
       new_cond << first.branch.to_ast
       new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, first.prog, new_cond,
-        [*first.preconds, *second.preconds])]
+        [*first.preconds, *second.preconds],
+        [*first.postconds, *second.postconds])]
     elsif first.prog != second.prog && !first.branch.implies(second.branch)
       new_cond = BoolCond.new
       new_cond << first.branch.to_ast
       new_cond << second.branch.to_ast
       return [ProgTuple.new(@ctx, [first, second], new_cond,
-        [*first.preconds, *second.preconds])]
+        [*first.preconds, *second.preconds],
+        [*first.postconds, *second.postconds])]
     else
       # prog different branch same, need to discover a new path condition
       # TODO: make a function that returns the post cond for booleans
@@ -185,9 +188,9 @@ class ProgTuple
           cond1 << b1.to_ast
           cond2 = BoolCond.new
           cond2 << b2.to_ast
-          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.preconds),
-            ProgTuple.new(@ctx, second.prog, cond2, second.preconds)],
-            first.branch, [*first.preconds, *second.preconds])
+          tuples << ProgTuple.new(@ctx, [ProgTuple.new(@ctx, first.prog, cond1, first.preconds, first.postconds),
+            ProgTuple.new(@ctx, second.prog, cond2, second.preconds, second.postconds)],
+            first.branch, [*first.preconds, *second.preconds], [*first.postconds, *second.postconds])
         }
       }
       return tuples

@@ -35,7 +35,7 @@ class Synthesizer
       cond = BoolCond.new
       branches.each { |b| cond << update_types_pass.process(b.to_ast) }
 
-      ProgTuple.new(@ctx, prog, cond, [precond])
+      ProgTuple.new(@ctx, prog, cond, [precond], [postcond])
     }
 
     # if there is only one generated, there is nothing to merge, we return the first synthesized program
