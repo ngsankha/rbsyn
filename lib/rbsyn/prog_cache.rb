@@ -1,4 +1,6 @@
 class ProgCache
+  include AST
+
   def initialize(ctx)
     @cache = Set.new
     @ctx = ctx

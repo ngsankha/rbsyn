@@ -33,19 +33,22 @@ class DuplicateElimiation < EliminationStrategy
   end
 end
 
-# class OrCountElimination < EliminationStrategy
-#   # eliminate same programs, only keeps programs with longer branch conditions
-#   def self.eliminate(progs)
-#     or_map = {}
-#     progs.map { |prog|
-#       score = prog.branch.conds.size
-#       unless or_map.key? prog.prog
-#         or_map[prog.prog] = prog
-#       else
-#         old = or_score(or_map[prog.prog].branch.expr)
-#         or_map[prog.prog] = prog if score > old
-#       end
-#     }
-#     or_map.values
-#   end
-# end
+class TestElimination < EliminationStrategy
+  extend AST
+
+  def self.eliminate(progs)
+    progs.select { |prog|
+      ast = prog.to_ast
+      prog.preconds.zip(prog.postconds).all? { |precond, postcond|
+        begin
+          res, klass = eval_ast(prog.ctx, ast, precond)
+          klass.instance_eval { @params = postcond.parameters.map &:last }
+          result = klass.instance_exec res, &postcond
+          true
+        rescue
+          false
+        end
+      }
+    }
+  end
+end

@@ -56,11 +56,11 @@ class Synthesizer
         }
       }
 
-      # TODO: eliminate incorrect programs by testing?
       # TODO: ordering?
       # EliminationStrategy.descendants.each { |strategy|
       #   results = strategy.eliminate(results)
       # }
+      results = TestElimination.eliminate(results)
       results = BranchCountElimination.eliminate(results)
       # TODO: Duplicate elimination doesn't work
       results = DuplicateElimiation.eliminate(results)
