@@ -34,61 +34,26 @@ class ProgTuple
 
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
-
-    if other.prog.is_a?(Array) || @prog.is_a?(Array)
-      first = RDL.type_cast(if @prog.is_a? Array
-        @prog
-      else
-        [@prog]
-      end, 'Array<ProgTuple>')
-
-      second = RDL.type_cast(if other.prog.is_a? Array
-        other.prog
-      else
-        [other.prog]
-      end, 'Array<ProgTuple>')
-
-      return RDL.type_cast(first.product(second).map { |items| items[0] + items[1] }.flatten,
-          'Array<ProgTuple>')
-    end
-
-    raise RuntimeError, "both progs should be of same type" if RDL.type_cast(other.prog, 'ProgWrapper')
-      .ttype != RDL.type_cast(@prog, 'ProgWrapper').ttype
-
     merge_rec(self, other)
   end
 
   def to_ast
     if @prog.is_a? Array
       prog_cast = RDL.type_cast(@prog, 'Array<ProgTuple>', force: true)
-      raise RuntimeError, "expected >1 subtrees" unless prog_cast.size > 1
+      raise RuntimeError, "expected <3 subtrees" unless prog_cast.size < 3
       fragments = prog_cast.map { |t| t.to_ast }
       branches = prog_cast.map { |program| program.branch }
-      true_body = nil
-      merged = nil
-      fragments.zip(branches).each { |items|
-        items_cast = RDL.type_cast(items, '[TypedNode, BoolCond]')
-        fragment = items_cast[0]
-        branch = items_cast[1]
-        if branch.true?
-          if true_body.nil?
-            true_body = fragment
-          else
-            raise RuntimeError, "expected only 1 true branch"
-          end
+
+      if prog_cast.size == 1
+        prog_cast[0].to_ast
+      else
+        if branches[0].inverse?(branches[1])
+          s(fragments[0].ttype, :if, branches[0].to_ast, fragments[0], fragments[1])
         else
-          if merged.nil?
-            merged = s(fragment.ttype, :if, branch.to_ast, fragment)
-          else
-            merged = s(fragment.ttype, :if, branch.to_ast, fragment, merged)
-          end
+          s(fragments[0].ttype, :if, branches[0].to_ast, fragments[0],
+            s(fragments[1].ttype, :if, branches[1].to_ast, fragments[1]))
         end
-      }
-      unless true_body.nil?
-        raise RuntimeError, "expected if" unless merged.type == :if
-        merged = s(merged.ttype, :if, *[*merged.children, true_body])
       end
-      merged
     else
       RDL.type_cast(@prog, 'ProgWrapper').to_ast
     end
@@ -107,8 +72,8 @@ class ProgTuple
     #   intermediate = strategy.prune(intermediate)
     # }
     intermediate = SpeculativeInverseBranchFold.prune(intermediate)
-    intermediate = BoolExprFold.prune(intermediate)
-    intermediate = InverseBranchFold.prune(intermediate)
+    # intermediate = BoolExprFold.prune(intermediate)
+    # intermediate = InverseBranchFold.prune(intermediate)
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them
@@ -123,15 +88,20 @@ class ProgTuple
     "{ prog: #{progs}, branch: #{Unparser.unparse(@branch.to_ast)} }"
   end
 
+  def clone
+    ProgTuple.new(@ctx, @prog.dup, @branch.dup, @preconds.dup, @postconds.dup)
+  end
+
   private
   def merge_rec(first, second)
+    raise RuntimeError, "second should be a single prog" if second.prog.is_a? Array
     merged = RDL.type_cast([], 'Array<ProgTuple>', force: true)
     if first.prog.is_a? Array
-      RDL.type_cast(first.prog, 'Array<ProgTuple>').each_with_index { |fprog, i|
+      RDL.type_cast(first.prog, 'Array<ProgTuple>', force: true).each_with_index { |fprog, i|
         merged_subprogs = merge_rec(fprog, second)
         merged_subprogs.each { |m|
-          fdup = first.dup
-          RDL.type_cast(fdup.prog, 'Array<ProgTuple>')[i] = m
+          fdup = first.clone
+          RDL.type_cast(fdup.prog, 'Array<ProgTuple>', force: true)[i] = m
           merged << fdup
         }
       }

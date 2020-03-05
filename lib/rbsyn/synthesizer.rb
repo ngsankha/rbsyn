@@ -61,10 +61,8 @@ class Synthesizer
       #   results = strategy.eliminate(results)
       # }
       results = TestElimination.eliminate(results)
-      results = BranchCountElimination.eliminate(results)
-      # TODO: Duplicate elimination doesn't work
       results = DuplicateElimiation.eliminate(results)
-      results
+      results.sort { |a, b| flat_comparator(a, b) }
     }
 
     completed.each { |progcond|
@@ -72,10 +70,11 @@ class Synthesizer
       test_outputs = @ctx.preconds.zip(@ctx.postconds).map { |precond, postcond|
         res, klass = eval_ast(@ctx, ast, precond) rescue next
         begin
+          klass.instance_eval { @params = postcond.parameters.map &:last }
           klass.instance_exec res, &postcond
-        rescue AssertionError => e
-          puts "TODO"
-        rescue Exception
+        rescue Exception => e
+          # puts e
+          # puts e.backtrace
           nil
         end
       }
@@ -97,5 +96,15 @@ class Synthesizer
       end
     }
     merged
+  end
+
+  def flat_comparator(a, b)
+    if ProgSizePass.prog_size(a.to_ast, nil) < ProgSizePass.prog_size(b.to_ast, nil)
+      1
+    elsif ProgSizePass.prog_size(a.to_ast, nil) == ProgSizePass.prog_size(b.to_ast, nil)
+      0
+    else
+      -1
+    end
   end
 end

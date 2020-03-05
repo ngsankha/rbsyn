@@ -29,6 +29,11 @@ class ProgSizePass < ::AST::Processor
   #   nil
   # end
 
+  def on_if(node)
+    @size += (node.children.size == 3 ? 2 : 1)
+    handler_missing(node)
+  end
+
   def on_envref(node)
     process(@env.get_expr(node.children[0])[:expr])
     nil
