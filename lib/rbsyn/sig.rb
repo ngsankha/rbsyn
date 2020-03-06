@@ -42,9 +42,9 @@ RDL.type EffectAnalysis, 'self.effect_leq', '(String, String) -> %bool', typeche
 RDL.type EffectAnalysis, 'self.replace_self', '(Array<String>, String) -> Array<String>', typecheck: :later, wrap: false
 RDL.type EffectAnalysis, 'self.has_self?', '(Array<String>) -> %bool', typecheck: :later, wrap: false
 
-RDL.type BranchCountElimination, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>', typecheck: :later, wrap: false
-RDL.type BranchCountElimination, 'self.count_branches', '(ProgTuple) -> Integer', typecheck: :later, wrap: false
 RDL.type DuplicateElimiation, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>', typecheck: :later, wrap: false
+RDL.type MinSizeElimination, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>', typecheck: :later, wrap: false
+RDL.type TestElimination, 'self.eliminate', '(Array<ProgTuple>) -> Array<ProgTuple>'
 
 RDL.var_type LocalEnvironment, :@@ref, 'Integer'
 RDL.var_type LocalEnvironment, :@info, 'Hash<Integer, { expr: TypedNode, count: Integer, ref: Integer }>'
@@ -63,6 +63,7 @@ RDL.var_type ProgTuple, :@branch, 'BoolCond'
 RDL.var_type ProgTuple, :@prog, 'ProgWrapper or Array<ProgTuple>'
 RDL.var_type ProgTuple, :@preconds, 'Array<Proc>'
 RDL.var_type ProgTuple, :@postconds, 'Array<Proc>'
+RDL.type ProgTuple, :ctx, '() -> Context'
 RDL.type ProgTuple, :prog, '() -> ProgWrapper or Array<ProgTuple>'
 RDL.type ProgTuple, :branch, '() -> BoolCond'
 RDL.type ProgTuple, :preconds, '() -> Array<Proc>'
@@ -77,6 +78,10 @@ RDL.type ProgTuple, :+, '(ProgTuple) -> Array<ProgTuple>', typecheck: :later, wr
 RDL.type ProgTuple, :to_ast, '() -> TypedNode', typecheck: :later, wrap: false
 RDL.type ProgTuple, :merge_rec, '(ProgTuple, ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
 RDL.type ProgTuple, :merge_impl, '(ProgTuple, ProgTuple) -> Array<ProgTuple>', typecheck: :later, wrap: false
+RDL.type ProgTuple, :current_prog_passes?, '(ProgTuple) -> %bool'
+RDL.type ProgTuple, :has_same_prog?, '(ProgTuple) -> %bool'
+RDL.type ProgTuple, :guess_branch_same?, '(ProgTuple) -> %bool'
+RDL.type ProgTuple, :propagate_conds, '(ProgTuple) -> %bot'
 
 RDL.var_type ProgWrapper, :@env, 'LocalEnvironment'
 RDL.var_type ProgWrapper, :@seed, 'TypedNode'
@@ -107,3 +112,5 @@ RDL.type ExpandHolePass, :effect_methds=, '(Array<[String, Symbol]>) -> Array<[S
 
 RDL.type ExtractASTPass, :initialize, '(Array<Integer>, LocalEnvironment) -> self'
 RDL.type ExtractASTPass, :env, '() -> LocalEnvironment'
+
+RDL.type ProgSizePass, 'self.prog_size', '(TypedNode, LocalEnvironment) -> Integer'
