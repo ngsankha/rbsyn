@@ -60,8 +60,13 @@ class Synthesizer
       # EliminationStrategy.descendants.each { |strategy|
       #   results = strategy.eliminate(results)
       # }
+      # results.map { |r|
+      #   puts Unparser.unparse(r.to_ast)
+      #   puts Unparser.unparse(r.branch.to_ast)
+      #   puts "------"
+      # }
       results = DuplicateElimiation.eliminate(results)
-      results = MinSizeElimination.eliminate(results)
+      # results = MinSizeElimination.eliminate(results)
       results = TestElimination.eliminate(results)
       results.sort { |a, b| flat_comparator(a, b) }
     }
@@ -74,6 +79,7 @@ class Synthesizer
           klass.instance_eval { @params = postcond.parameters.map &:last }
           klass.instance_exec res, &postcond
         rescue Exception => e
+          # puts Unparser.unparse(ast)
           # puts e
           # puts e.backtrace
           nil

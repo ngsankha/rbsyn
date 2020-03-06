@@ -1,7 +1,7 @@
 class Context
   attr_accessor :max_prog_size, :components, :preconds, :postconds, :mth_name,
     :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth,
-    :curr_binding
+    :curr_binding, :constants
 
   def initialize
     @max_prog_size = 0
@@ -18,6 +18,10 @@ class Context
     @next_ref = 0
     @ref_map = {}
     @curr_binding = nil
+    @constants = {
+      string: [''],
+      integer: [0]
+    }
   end
 
   def add_example(precond, postcond)

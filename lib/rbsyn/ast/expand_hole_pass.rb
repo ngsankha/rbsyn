@@ -39,6 +39,16 @@ class ExpandHolePass < ::AST::Processor
         expanded.concat bool_const
       end
 
+      # integer constants
+      if node.ttype <= RDL::Globals.types[:integer]
+        expanded.concat int_const
+      end
+
+      # string constants
+      if node.ttype <= RDL::Globals.types[:string]
+        expanded.concat string_const
+      end
+
       # symbols
       if node.ttype.is_a?(RDL::Type::SingletonType) && node.ttype.val.is_a?(Symbol)
         expanded.concat symbols([node.ttype])
@@ -140,6 +150,14 @@ class ExpandHolePass < ::AST::Processor
   def bool_const
     [s(RDL::Globals.types[:bool], :true),
     s(RDL::Globals.types[:bool], :false)]
+  end
+
+  def int_const
+    @ctx.constants[:integer].map { |i| s(RDL::Globals.types[:integer], :int, i) }
+  end
+
+  def string_const
+    @ctx.constants[:string].map { |i| s(RDL::Globals.types[:string], :str, i) }
   end
 
   def symbols(types)
