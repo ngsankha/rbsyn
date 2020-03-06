@@ -64,8 +64,9 @@ describe "Synthesis Benchmark" do
       assert_equal generate_program, %{
 def activate(arg0)
   if EmailToken.exists?(confirmed: false)
+    EmailToken.confirm(EmailToken.joins(:user).first.token)
     arg0.update!(active: true)
-    arg0.email_tokens.first.update!(confirmed: true)
+    false
   else
     arg0.active=true
     true

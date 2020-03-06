@@ -60,8 +60,9 @@ class Synthesizer
       # EliminationStrategy.descendants.each { |strategy|
       #   results = strategy.eliminate(results)
       # }
-      results = TestElimination.eliminate(results)
       results = DuplicateElimiation.eliminate(results)
+      results = MinSizeElimination.eliminate(results)
+      results = TestElimination.eliminate(results)
       results.sort { |a, b| flat_comparator(a, b) }
     }
 
@@ -82,20 +83,6 @@ class Synthesizer
       return ast if test_outputs.all? true
     }
     raise RuntimeError, "No candidates found"
-  end
-
-  def merge_same_progs(progconds)
-    merged = []
-    progconds.each { |progcond|
-      looked = merged.find { |processed| processed.prog.to_ast == progcond.prog.to_ast }
-      unless looked.nil?
-        progcond.branch.conds.each { |b| looked.branch << b }
-        looked.preconds.push(*progcond.preconds)
-      else
-        merged << progcond
-      end
-    }
-    merged
   end
 
   def flat_comparator(a, b)

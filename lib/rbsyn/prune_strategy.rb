@@ -11,6 +11,7 @@ class BoolExprFold < BranchPruneStrategy
     # we know branches are always bool (enforced when ProgTuple is created)
     # there is nothing to prune if there is no children
     return progcond unless progcond.prog.is_a? Array
+    return progcond unless progcond.prog.all? { |pc| pc.prog.is_a? ProgWrapper }
     # this strategy works only when the prog body is a boolean
     # all the children will be booleans is enforced during the merge process
     return progcond unless progcond.prog[0].prog.ttype <= RDL::Globals.types[:bool]

@@ -104,10 +104,10 @@ describe "Synthesis Benchmark" do
 
       assert_equal generate_program, %{
 def check_site_contact_username(arg0)
-  if (!(!arg0.staff?))
-    true
-  else
+  if (!arg0.staff?)
     DiscourseSiteSetting.set_and_log(:site_contact_username, DiscourseSiteSetting.defaults.[](:site_contact_username))
+  else
+    true
   end
 end
 }.strip

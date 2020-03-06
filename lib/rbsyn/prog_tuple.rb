@@ -2,7 +2,8 @@ class ProgTuple
   include AST
   include SynHelper
 
-  attr_reader :ctx, :branch, :prog, :preconds, :postconds
+  attr_reader :ctx, :branch, :preconds, :postconds
+  attr_accessor :prog
 
   def initialize(ctx, prog, branch, preconds, postconds)
     @ctx = ctx
@@ -34,7 +35,49 @@ class ProgTuple
 
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
-    merge_rec(self, other)
+
+    if current_prog_passes?(other) && has_same_prog?(other)
+      propagate_conds(other)
+      [self]
+    else
+      merge_rec(self, other)
+    end
+  end
+
+  def propagate_conds(other)
+    if current_prog_passes? other
+      if @prog.is_a? Array
+        if @prog[0].current_prog_passes? other
+          @prog[0].propagate_conds other
+        elsif @prog[1].current_prog_passes? other
+          @prog[1].propagate_conds other
+        else
+          raise RuntimeError, "unexpected"
+        end
+      end
+      other.branch.conds.each { |b| @branch << b }
+    end
+  end
+
+  def has_same_prog?(other)
+    if @prog.is_a? ProgWrapper
+      @prog == other.prog
+    else
+      @prog.any? { |prog| prog.has_same_prog? other }
+    end
+  end
+
+  def current_prog_passes?(other)
+    other.preconds.zip(other.postconds).all? { |precond, postcond|
+      begin
+        res, klass = eval_ast(other.ctx, to_ast, precond)
+        klass.instance_eval { @params = postcond.parameters.map &:last }
+        result = klass.instance_exec res, &postcond
+        true
+      rescue
+        false
+      end
+    }
   end
 
   def to_ast
@@ -72,8 +115,7 @@ class ProgTuple
     #   intermediate = strategy.prune(intermediate)
     # }
     intermediate = SpeculativeInverseBranchFold.prune(intermediate)
-    # intermediate = BoolExprFold.prune(intermediate)
-    # intermediate = InverseBranchFold.prune(intermediate)
+    intermediate = BoolExprFold.prune(intermediate)
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them
