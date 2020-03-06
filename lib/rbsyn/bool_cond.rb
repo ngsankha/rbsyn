@@ -10,7 +10,7 @@ class BoolCond
   def <<(cond)
     raise RuntimeError, "expected TypedAST, got #{cond}" unless cond.is_a? TypedNode
     # raise RuntimeError, "don't expect holes" if cond.has_hole?
-    @conds << cond
+    @conds << cond unless @conds.include? cond
   end
 
   def positive?

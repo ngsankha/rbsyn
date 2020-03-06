@@ -36,12 +36,19 @@ class ProgTuple
   def +(other)
     raise RuntimeError, "expected another ProgTuple" if other.class != self.class
 
-    if current_prog_passes?(other) && has_same_prog?(other)
+    if current_prog_passes?(other) && has_same_prog?(other) && guess_branch_same?(other)
       propagate_conds(other)
       [self]
     else
       merge_rec(self, other)
     end
+  end
+
+  def guess_branch_same?(other)
+    precond = other.preconds[0]
+    postcond = other.postconds[0]
+    res, klass = eval_ast(@ctx, @branch.to_ast, precond)
+    res == true
   end
 
   def propagate_conds(other)
