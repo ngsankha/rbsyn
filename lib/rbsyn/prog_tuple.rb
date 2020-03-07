@@ -63,6 +63,8 @@ class ProgTuple
         end
       end
       other.branch.conds.each { |b| @branch << b }
+      @preconds.push(*other.preconds)
+      @postconds.push(*other.postconds)
     end
   end
 

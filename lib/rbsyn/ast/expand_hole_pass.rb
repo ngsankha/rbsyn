@@ -39,6 +39,13 @@ class ExpandHolePass < ::AST::Processor
         expanded.concat bool_const
       end
 
+      # and of 2 boolean expressions
+      if node.ttype <= RDL::Globals.types[:bool] && @no_bool_consts && @ctx.enable_and
+        expanded << s(RDL::Globals.types[:bool], :and,
+          s(RDL::Globals.types[:bool], :hole, 0, { bool_consts: false }),
+          s(RDL::Globals.types[:bool], :hole, 0, { bool_consts: false }))
+      end
+
       # integer constants
       if node.ttype <= RDL::Globals.types[:integer]
         expanded.concat int_const

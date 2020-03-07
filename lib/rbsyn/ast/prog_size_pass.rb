@@ -26,17 +26,24 @@ class ProgSizePass < ::AST::Processor
   # def on_hash(node)
   #   @size += 1
   #   node.children.each { |c| process(c) }
-  #   nil
+  #   node
   # end
 
   def on_if(node)
     @size += (node.children.size == 3 ? 2 : 1)
     handler_missing(node)
+    node
   end
 
   def on_envref(node)
     process(@env.get_expr(node.children[0])[:expr])
-    nil
+    node
+  end
+
+  def on_and(node)
+    @size += 1
+    handler_missing(node)
+    node
   end
 
   def handler_missing(node)

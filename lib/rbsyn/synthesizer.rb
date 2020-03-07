@@ -35,6 +35,10 @@ class Synthesizer
       cond = BoolCond.new
       branches.each { |b| cond << update_types_pass.process(b.to_ast) }
 
+      # puts Unparser.unparse(prog.to_ast)
+      # puts Unparser.unparse(cond.to_ast)
+      # puts "======"
+
       ProgTuple.new(@ctx, prog, cond, [precond], [postcond])
     }
 
