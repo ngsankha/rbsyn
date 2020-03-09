@@ -40,11 +40,7 @@ describe "Synthesis Benchmark" do
         }
       end
 
-      assert_equal generate_program, %{
-def username_exists?(arg0, arg1)
-  !UserEmail.joins(:user).exists?(email: arg1)
-end
-}.strip
+      putsyn generate_program
     end
   end
 end

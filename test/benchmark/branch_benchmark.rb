@@ -54,16 +54,7 @@ describe "Synthesis Benchmark" do
         }
       end
 
-      assert_equal generate_program, %{
-def username_available?(arg0)
-  if (!SiteSettings.reserved_username?(arg0))
-    !User.exists?(username: arg0)
-  else
-    false
-  end
-end
-}.strip
-
+      putsyn generate_program
     end
   end
 end

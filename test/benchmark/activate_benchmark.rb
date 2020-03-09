@@ -61,18 +61,7 @@ describe "Synthesis Benchmark" do
         }
       end
 
-      assert_equal generate_program, %{
-def activate(arg0)
-  if EmailToken.exists?(confirmed: false)
-    EmailToken.confirm(EmailToken.joins(:user).first.token)
-    arg0.update!(active: true)
-    false
-  else
-    arg0.active=true
-    true
-  end
-end
-}.strip
+      putsyn generate_program
     end
   end
 end

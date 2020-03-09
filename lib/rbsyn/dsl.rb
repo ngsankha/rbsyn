@@ -21,12 +21,13 @@ class SynthesizerProxy
 
   attr_accessor :assertions
 
-  def initialize(mth_name, type, components, prog_size, max_hash_size)
+  def initialize(mth_name, type, components, prog_size, max_hash_size, consts)
     @ctx = Context.new
     @ctx.max_prog_size = prog_size
     @ctx.components = components
     @ctx.functype = RDL::Globals.parser.scan_str type
     @ctx.max_hash_size = max_hash_size
+    @ctx.enable_constants = consts
     raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
 
     @mth_name = mth_name.to_sym
@@ -46,7 +47,7 @@ class SynthesizerProxy
   end
 
   def generate_program
-    Timeout::timeout(600) {
+    Timeout::timeout(900) {
       @specs.each { |spec|
         @ctx.add_example(spec.pre_blk, spec.post_blk)
       }
@@ -65,8 +66,8 @@ class SynthesizerProxy
 end
 
 module SpecDSL
-  def define(mth_name, type, components, prog_size: 5, max_hash_size: 1, &blk)
-    syn_proxy = SynthesizerProxy.new(mth_name, type, components, prog_size, max_hash_size)
+  def define(mth_name, type, components, prog_size: 5, max_hash_size: 1, consts: false, &blk)
+    syn_proxy = SynthesizerProxy.new(mth_name, type, components, prog_size, max_hash_size, consts)
     syn_proxy.instance_eval(&blk)
   end
 end

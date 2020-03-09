@@ -20,6 +20,7 @@ PATH
       activerecord
       fabrication
       parser
+      rouge
       sqlite3
       unparser
 
@@ -78,6 +79,7 @@ GEM
       pry (~> 0.10)
     racc (1.4.16)
     rake (10.5.0)
+    rouge (3.16.0)
     ruby-progressbar (1.10.1)
     sql-parser (0.0.2)
       racc
@@ -93,7 +95,7 @@ GEM
       equalizer (~> 0.0.9)
       parser (>= 2.6.5)
       procto (~> 0.0.2)
-    zeitwerk (2.2.2)
+    zeitwerk (2.3.0)
 
 PLATFORMS
   ruby

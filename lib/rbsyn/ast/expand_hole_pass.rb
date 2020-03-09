@@ -47,12 +47,12 @@ class ExpandHolePass < ::AST::Processor
       end
 
       # integer constants
-      if node.ttype <= RDL::Globals.types[:integer]
+      if node.ttype <= RDL::Globals.types[:integer] && @ctx.enable_constants
         expanded.concat int_const
       end
 
       # string constants
-      if node.ttype <= RDL::Globals.types[:string]
+      if node.ttype <= RDL::Globals.types[:string] && @ctx.enable_constants
         expanded.concat string_const
       end
 

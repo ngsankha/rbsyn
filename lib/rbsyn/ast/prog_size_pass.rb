@@ -23,11 +23,11 @@ class ProgSizePass < ::AST::Processor
     node
   end
 
-  # def on_hash(node)
-  #   @size += 1
-  #   node.children.each { |c| process(c) }
-  #   node
-  # end
+  def on_hash(node)
+    @size += 1
+    node.children.each { |c| process(c) }
+    node
+  end
 
   def on_if(node)
     @size += (node.children.size == 3 ? 2 : 1)

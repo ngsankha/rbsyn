@@ -62,25 +62,7 @@ describe "Synthesis Benchmark" do
         }
       end
 
-      assert_equal generate_program, %{
-def update_post(arg0, arg1, arg2)
-  if Post.exists?(created_by: arg0, slug: arg1)
-    t0 = Post.where(slug: arg1).first
-    t0.title=arg2.[](:title)
-    t0
-  else
-    if DemoUser.exists?(username: arg0, admin: false)
-      Post.where(slug: arg1).first
-    else
-      t1 = Post.where(slug: arg1).first
-      t1.created_by=arg2.[](:created_by)
-      t1.title=arg2.[](:title)
-      t1.slug=arg2.[](:slug)
-      t1
-    end
-  end
-end
-}.strip
+      putsyn generate_program
     end
   end
 end

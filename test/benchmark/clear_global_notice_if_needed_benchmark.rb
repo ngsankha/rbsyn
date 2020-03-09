@@ -20,7 +20,7 @@ describe "Synthesis Benchmark" do
 
     RDL.type Integer, :<, '(Integer) -> %bool', wrap: false
 
-    define :clear_global_notice_if_needed, "(User) -> %bot", [DiscourseSiteSetting], prog_size: 30 do
+    define :clear_global_notice_if_needed, "(User) -> %bot", [DiscourseSiteSetting], prog_size: 30, consts: true do
 
       spec "doesn't clear the notice when a system user is saved" do
         pre {
@@ -64,22 +64,7 @@ describe "Synthesis Benchmark" do
         }
       end
 
-      assert_equal generate_program, %{
-def clear_global_notice_if_needed(arg0)
-  if (arg0.id < 0)
-    true
-  else
-    if arg0.admin
-      DiscourseSiteSetting.has_login_hint=false
-      DiscourseSiteSetting.global_notice=\"\"
-      true
-    else
-      true
-    end
-  end
-end
-}.strip
-
+      putsyn generate_program
     end
   end
 end

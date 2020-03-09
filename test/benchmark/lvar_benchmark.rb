@@ -16,12 +16,7 @@ describe "Synthesis Benchmark" do
         }
       end
 
-      assert_equal generate_program, %{
-def identity(arg0)
-  arg0
-end
-}.strip
-
+      putsyn generate_program
     end
   end
 end

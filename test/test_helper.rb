@@ -2,6 +2,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "rbsyn"
 require "fabrication"
+require "rouge"
 require_relative "../models/model_helper"
 require_relative "../components/component_helper"
 
@@ -21,3 +22,9 @@ end
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 Rbsyn::ActiveRecord::Utils.load_schema
+
+def putsyn(src)
+  formatter = Rouge::Formatters::Terminal256.new
+  lexer = Rouge::Lexers::Ruby.new
+  puts formatter.format(lexer.lex(src))
+end
