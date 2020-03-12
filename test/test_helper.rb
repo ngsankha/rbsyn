@@ -10,6 +10,8 @@ require "minitest/autorun"
 require "minitest/hooks/test"
 require "minitest/reporters"
 
+require_relative "syn_stats_reporter"
+
 class Object
   include SpecDSL
 end
@@ -19,7 +21,7 @@ Fabrication.configure do |config|
   config.path_prefix = 'test'
 end
 
-Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
+Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new, SynthesisStatsReporter.new]
 
 Rbsyn::ActiveRecord::Utils.load_schema
 
