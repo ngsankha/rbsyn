@@ -1,7 +1,8 @@
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Synthetic" do
   it "lvar" do
+    skip
     load_typedefs :stdlib, :active_record
 
     define :identity, "(String) -> String", [User, UserEmail] do

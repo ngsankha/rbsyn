@@ -3,8 +3,9 @@
 # test ordering matters in this to get a successful synthesis
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Discourse" do
   it "clear_global_notice_if_needed" do
+    skip
     load_typedefs :stdlib, :active_record
 
     class DiscourseSiteSetting

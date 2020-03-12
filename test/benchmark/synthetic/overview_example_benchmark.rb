@@ -1,8 +1,9 @@
 # synthetic: true
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Synthetic" do
   it "overview example" do
+    skip
     load_typedefs :stdlib, :active_record
 
     define :update_post, "(String, String, {created_by: ?String, title: ?String, slug: ?String}) -> Post", [Post, DemoUser], prog_size: 30, max_hash_size: 2 do

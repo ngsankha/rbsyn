@@ -1,7 +1,8 @@
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Discourse" do
   it "unstage user" do
+    skip
     load_typedefs :stdlib, :active_record
 
     define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser", [AnotherUser], prog_size: 20 do

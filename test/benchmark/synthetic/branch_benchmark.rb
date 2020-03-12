@@ -1,7 +1,8 @@
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Synthetic" do
   it "branching" do
+    skip
     load_typedefs :stdlib, :active_record
 
     class SiteSettings

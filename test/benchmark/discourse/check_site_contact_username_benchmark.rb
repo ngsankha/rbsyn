@@ -2,8 +2,9 @@
 # source: https://github.com/discourse/discourse/blob/bd49d4af1a19feb303f0658ae51bfeba81687519/app/models/user.rb#L1532
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Discourse" do
   it "check_site_contact_username" do
+    skip
     load_typedefs :stdlib, :active_record
 
     class DiscourseSiteSetting

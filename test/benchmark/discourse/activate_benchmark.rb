@@ -4,8 +4,9 @@
 # Our engine is unable to discover a branch condition that is able to tell the functions apart or get 2 programs same
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Discourse" do
   it "activate" do
+    skip
     load_typedefs :stdlib, :active_record, :ar_update
 
     define :activate, "(User) -> %bot", [User, EmailToken], prog_size: 30 do

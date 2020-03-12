@@ -2,7 +2,7 @@
 # source: https://github.com/discourse/discourse/blob/bd49d4af1a19feb303f0658ae51bfeba81687519/app/models/user.rb#L728
 require "test_helper"
 
-describe "Synthesis Benchmark" do
+describe "Discourse" do
   it "update_last_seen!" do
     skip
 
