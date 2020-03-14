@@ -1,7 +1,7 @@
 # benchmark: true
 # source: https://github.com/discourse/discourse/blob/bd49d4af1a19feb303f0658ae51bfeba81687519/app/models/user.rb#L941
-# This benchmark doesn't work as it is - since the precondition is same for 2 tests and the postcondition is different
-# Our engine is unable to discover a branch condition that is able to tell the functions apart or get 2 programs same
+# This benchmark has two merged tests (T1 and T2)
+
 require "test_helper"
 
 describe "Discourse" do
@@ -30,6 +30,8 @@ describe "Discourse" do
         }
 
         post { |result|
+          assert { @inactive.email_confirmed? }
+          assert { @inactive.active }
           @inactive.reload
           assert { @inactive.email_confirmed? }
           assert { @inactive.active }
