@@ -6,7 +6,6 @@ require "test_helper"
 
 describe "Discourse" do
   it "activate" do
-    skip
     load_typedefs :stdlib, :active_record, :ar_update
 
     define :activate, "(User) -> %bot", [User, EmailToken], prog_size: 30 do
@@ -62,7 +61,7 @@ describe "Discourse" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end

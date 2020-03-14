@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthetic" do
   it "false" do
-    skip
     load_typedefs :stdlib, :active_record
 
     define :just_false, "(String) -> %bool", [User, UserEmail] do
@@ -17,7 +16,7 @@ describe "Synthetic" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end

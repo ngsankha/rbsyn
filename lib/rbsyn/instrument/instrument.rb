@@ -1,17 +1,20 @@
 require_relative "ast_node_count"
+require_relative "branch_count"
 
 class Instrumentation
-  @@prog = nil
+  class << self
+    attr_accessor :prog, :specs
 
-  def self.reset!
-    @@prog = nil
-  end
+    def reset!
+      self.prog = nil
+    end
 
-  def self.load_config
-    if ENV['']
-  end
+    def size
+      ASTNodeCount.size(Parser::CurrentRuby.parse(self.prog))
+    end
 
-  def self.prog=(prog)
-    @@prog = prog
+    def branches
+      BranchCount.branches(Parser::CurrentRuby.parse(self.prog))
+    end
   end
 end

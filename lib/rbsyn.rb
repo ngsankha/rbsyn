@@ -36,3 +36,5 @@ require "rbsyn/reachability"
 require "rbsyn/synthesizer"
 require "rbsyn/active_record/adapter"
 require "rbsyn/active_record/utils"
+
+require "rbsyn/instrument/instrument"

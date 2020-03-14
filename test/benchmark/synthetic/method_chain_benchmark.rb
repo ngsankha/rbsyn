@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthetic" do
   it "method chains" do
-    skip
     load_typedefs :stdlib, :active_record
 
     define :username_available?, "(String) -> %bool", [User, UserEmail] do
@@ -28,7 +27,7 @@ describe "Synthetic" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end

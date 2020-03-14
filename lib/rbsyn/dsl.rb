@@ -60,7 +60,10 @@ class SynthesizerProxy
         s(RDL::Globals.types[:top], :args, *args.map { |arg|
           s(RDL::Globals.types[:top], :arg, arg)
         }), prog.to_ast)
-      Unparser.unparse(fn)
+      src = Unparser.unparse(fn)
+      Instrumentation.prog = src
+      Instrumentation.specs = @specs.size
+      src
     }
   end
 end

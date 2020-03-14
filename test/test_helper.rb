@@ -3,6 +3,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "rbsyn"
 require "fabrication"
 require "rouge"
+require "json"
 require_relative "../models/model_helper"
 require_relative "../components/component_helper"
 
@@ -21,12 +22,9 @@ Fabrication.configure do |config|
   config.path_prefix = 'test'
 end
 
-Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new, SynthesisStatsReporter.new]
+reporters = [Minitest::Reporters::SpecReporter.new]
+# reporters << SynthesisStatsReporter.new(ENV['INSTRUMENTATION']) if ENV.key? 'INSTRUMENTATION'
+reporters << SynthesisStatsReporter.new('test_log.json')
+Minitest::Reporters.use! reporters
 
 Rbsyn::ActiveRecord::Utils.load_schema
-
-def putsyn(src)
-  formatter = Rouge::Formatters::Terminal256.new
-  lexer = Rouge::Lexers::Ruby.new
-  puts formatter.format(lexer.lex(src))
-end

@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthetic" do
   it "fold branches" do
-    skip
     load_typedefs :stdlib, :active_record
 
     define :username_exists?, "(String, String) -> %bool", [User, UserEmail] do
@@ -41,7 +40,7 @@ describe "Synthetic" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end

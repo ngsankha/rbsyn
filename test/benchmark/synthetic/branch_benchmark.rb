@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Synthetic" do
   it "branching" do
-    skip
     load_typedefs :stdlib, :active_record
 
     class SiteSettings
@@ -55,7 +54,7 @@ describe "Synthetic" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end

@@ -2,7 +2,6 @@ require "test_helper"
 
 describe "Discourse" do
   it "unstage user" do
-    skip
     load_typedefs :stdlib, :active_record
 
     define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser", [AnotherUser], prog_size: 20 do
@@ -22,7 +21,7 @@ describe "Discourse" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end

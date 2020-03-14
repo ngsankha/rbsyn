@@ -5,7 +5,6 @@ require "test_helper"
 
 describe "Discourse" do
   it "clear_global_notice_if_needed" do
-    skip
     load_typedefs :stdlib, :active_record
 
     class DiscourseSiteSetting
@@ -65,7 +64,7 @@ describe "Discourse" do
         }
       end
 
-      putsyn generate_program
+      generate_program
     end
   end
 end
