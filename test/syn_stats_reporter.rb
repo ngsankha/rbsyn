@@ -21,7 +21,8 @@ class SynthesisStatsReporter < Minitest::StatisticsReporter
       time: result.time,
       size: Instrumentation.size,
       branches: Instrumentation.branches,
-      specs: Instrumentation.specs
+      specs: Instrumentation.specs,
+      components: RDL::Globals.info.info.map { |k, v| v.size }.sum
     }
   end
 
