@@ -12,8 +12,8 @@ class ASTNodeCount < ::AST::Processor
   end
 
   def handler_missing(node)
+    @size += 1
     node.children.map { |k|
-      @size += 1
       k.is_a?(node.class) ? process(k) : k
     }
   end
