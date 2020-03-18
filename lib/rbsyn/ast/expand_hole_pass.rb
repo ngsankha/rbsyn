@@ -141,6 +141,9 @@ class ExpandHolePass < ::AST::Processor
             path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
             exprs << fn_call(path)
           end
+        when RDL::Type::DynamicType
+          path = CallChain.new([type, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+          exprs << fn_call(path)
         else
           raise RuntimeError, "unhandled type #{type}"
         end

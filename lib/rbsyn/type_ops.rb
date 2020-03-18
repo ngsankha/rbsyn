@@ -3,6 +3,8 @@ module TypeOperations
     # TODO: we use only the first definition, ignoring overloaded method definitions
     type = tmeth[0]
     targs = type.args
+    return targs.map { |targ| RDL::Type::DynamicType.new } if ENV.key? 'DISABLE_TYPES'
+
     targs.map { |targ|
       case targ
       when RDL::Type::ComputedType
@@ -18,6 +20,8 @@ module TypeOperations
   def compute_tout(trec, tmeth, targs)
     # TODO: we use only the first definition, ignoring overloaded method definitions
     type = tmeth[0]
+    return RDL::Type::DynamicType.new if ENV.key? 'DISABLE_TYPES'
+
     tret = type.ret
     case tret
     when RDL::Type::ComputedType
@@ -61,6 +65,8 @@ module TypeOperations
       Hash.ancestors.map { |klass| klass.to_s }
     when RDL::Type::BotType
       []
+    when RDL::Type::DynamicType
+      RDL::Globals.info.info.keys
     else
       raise RuntimeError, "unhandled type #{trecv.inspect}"
     end
