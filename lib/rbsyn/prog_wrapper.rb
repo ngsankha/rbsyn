@@ -81,11 +81,28 @@ class ProgWrapper
     when :effect
       # TODO: ordering can be done better to build candidates programs with
       # method calls that can satisfy multiple effects at once
-      RDL.type_cast(@target, 'Array<String>', force: true).map { |eff|
-        methds = methods_with_write_effect(eff)
-        eff_hole = s(RDL::Globals.types[:top], :hole, 1, {effect: true})
+      unless ENV.key? 'DISABLE_EFFECTS'
+        RDL.type_cast(@target, 'Array<String>', force: true).map { |eff|
+          methds = methods_with_write_effect(eff)
+          eff_hole = s(RDL::Globals.types[:top], :hole, 1, {effect: true})
+          pass1 = ExpandHolePass.new(@ctx, @env)
+          pass1.effect_methds = methds
+          expanded = pass1.process(eff_hole)
+          expand_map = pass1.expand_map.map { |i| i.times.to_a }
+          generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
+            pass2 = ExtractASTPass.new(selection, @env)
+            program = update_types_pass.process(pass2.process(expanded))
+            new_env = pass2.env
+            prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
+            prog_wrap.add_side_effect_expr(program)
+            prog_wrap.look_for(:teffect, [eff])
+            prog_wrap.passed_asserts = @passed_asserts
+            prog_wrap
+          }
+        }.flatten
+      else
+        eff_hole = s(RDL::Globals.types[:top], :hole, 1, {})
         pass1 = ExpandHolePass.new(@ctx, @env)
-        pass1.effect_methds = methds
         expanded = pass1.process(eff_hole)
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
         generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
@@ -94,11 +111,11 @@ class ProgWrapper
           new_env = pass2.env
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
-          prog_wrap.look_for(:teffect, [eff])
+          prog_wrap.look_for(:teffect, [])
           prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
-      }.flatten
+      end
     when :teffect
       pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@exprs.last)
