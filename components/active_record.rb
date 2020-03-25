@@ -1,4 +1,42 @@
 class DBTypes
+  def self.uc_first_arg(trec)
+    tschema = schema_type(trec)
+    case tschema
+    when RDL::Type::UnionType
+      RDL::Type::UnionType.new(*tschema.types.map { |t| t.elts.keys.map { |k|
+        RDL::Type::SingletonType.new(k)
+      } }.flatten)
+    else
+      RDL::Type::UnionType.new(*tschema.elts.keys.map { |k|
+        RDL::Type::SingletonType.new(k)
+      })
+    end
+  end
+
+  def self.uc_second_arg(trec)
+    tschema = schema_type(trec)
+    case tschema
+    when RDL::Type::UnionType
+      RDL::Type::UnionType.new(*tschema.types.map { |t| t.elts.values.map { |v|
+        case v
+        when RDL::Type::OptionalType
+          v.type
+        else
+          v
+        end
+      } }.flatten)
+    else
+      RDL::Type::UnionType.new(*schema_type(trec).elts.values.map { |v|
+        case v
+        when RDL::Type::OptionalType
+          v.type
+        else
+          v
+        end
+      }).canonical
+    end
+  end
+
   def self.table_name_to_schema_hash(table)
     schema = DBUtils.get_schema(table).params[0]
     Hash[schema.elts.except(:__associations).map { |k, v|

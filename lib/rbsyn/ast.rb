@@ -21,7 +21,7 @@ module AST
       s(RDL::Globals.types[:top], :args, *args.map { |arg|
         s(RDL::Globals.types[:top], :arg, arg)
       }), ast)
-    # puts Unparser.unparse(func)
+    puts Unparser.unparse(func)
     klass.instance_eval Unparser.unparse(func)
     result = klass.instance_eval &precond unless precond.nil?
     [result, klass]

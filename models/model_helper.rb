@@ -7,6 +7,7 @@ ActiveRecord::Schema.define do
     t.boolean :active
     t.boolean :admin
     t.boolean :moderator
+    t.integer :uploaded_avatar_id
   end
   create_table :user_emails, force: true do |t|
     t.string :email
@@ -38,6 +39,13 @@ ActiveRecord::Schema.define do
     t.string :username
     t.boolean :admin
   end
+  create_table :uploads, force: true do |t|
+    t.string :url
+  end
+  create_table :user_avatars, force: true do |t|
+    t.integer :custom_upload_id
+    t.references :user
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base
@@ -50,3 +58,5 @@ require_relative "email_token"
 require_relative "another_user"
 require_relative "post"
 require_relative "demo_user"
+require_relative "user_avatar"
+require_relative "upload"

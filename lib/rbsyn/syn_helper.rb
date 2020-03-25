@@ -24,8 +24,8 @@ module SynHelper
             prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
           rescue Exception => e
-            # puts e
-            # puts e.backtrace
+            puts e
+            puts e.backtrace
             next
           end
         }

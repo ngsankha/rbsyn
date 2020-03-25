@@ -19,7 +19,7 @@ class Context
     @ref_map = {}
     @curr_binding = nil
     @constants = {
-      string: [''],
+      string: ["", "\n"],
       integer: [0]
     }
     @enable_and = false

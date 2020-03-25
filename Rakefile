@@ -12,8 +12,8 @@ Rake::TestTask.new(:bench) do |t|
   t.libs << "test"
   t.libs << "lib"
   t.libs << "models"
-  t.test_files = FileList["test/benchmark/**/*_benchmark.rb"]
-  # t.test_files = FileList["test/benchmark/branch_benchmark.rb"]
+  # t.test_files = FileList["test/benchmark/**/*_benchmark.rb"]
+  t.test_files = FileList["test/benchmark/discourse/set_random_avatar_benchmark.rb"]
 end
 
 Rake::TestTask.new(:typecheck) do |t|

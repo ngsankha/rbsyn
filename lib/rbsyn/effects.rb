@@ -79,6 +79,8 @@ class EffectAnalysis
         RDL::Globals.info.get(klass.name, meth, kind)
       when RDL::Type::FiniteHashType
         RDL::Globals.info.get('Hash', meth, kind)
+      when RDL::Type::GenericType
+        RDL::Globals.info.get(klass.base, meth, kind)
       else
         raise RuntimeError, "unhandled type #{klass}"
       end
@@ -93,7 +95,9 @@ class EffectAnalysis
         end
       }
       effect_union(*([klass_eff, my_eff, args].flatten))
-    when :ivar, :lvar, :str, :true, :false, :const, :sym
+    when :array
+      effect_union(*ast.children.map { |c| effect_of(c, env, kind) }.flatten)
+    when :ivar, :lvar, :str, :true, :false, :const, :sym, :nil
       []
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"
@@ -131,6 +135,9 @@ class EffectAnalysis
       else
         raise RuntimeError, "unexpected #{tmeth.inspect}"
       end
+    when :array
+      tparam = RDL::Type::UnionType.new(*ast.children.map { |c| type_of(c, env) }).canonical
+      return RDL::Type::GenericType.new(RDL::Type::NominalType.new('Array'), tparam)
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"
     end

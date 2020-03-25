@@ -70,6 +70,23 @@ def load_typedefs(*categories)
       ActiveRecord_Relation.class_eval do
         type :update!, "(``DBTypes.schema_type(trec)``) -> self", wrap: false, write: ['self']
       end
+
+    when :random_avatar
+      RDL.type String, :split, '(String) -> Array<String>', wrap: false
+
+      RDL.nowrap :Array
+
+      RDL.type_params :Array, [:t], :all?
+      RDL.type Array, :sample, '(Array<t>) -> t', wrap: false
+
+      ActiveRecord::Base.class_eval do
+        type :update_column, "(``DBTypes.uc_first_arg(trec)``, ``DBTypes.uc_second_arg(trec)``) -> %bool", wrap: false, write: ['self']
+        type 'self.find_by', "(``DBTypes.schema_type(trec)``) -> self", wrap: false
+      end
+
+      ActiveRecord_Relation.class_eval do
+        type :update_column, "(``DBTypes.uc_first_arg(trec)``, ``DBTypes.uc_second_arg(trec)``) -> %bool", wrap: false, write: ['self']
+      end
     else
       raise RuntimeError, "unhandled category of type definitions"
     end

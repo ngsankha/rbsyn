@@ -26,8 +26,15 @@ module TypeOperations
       bind.local_variable_set(:targs, targs)
       tret.compute(bind)
     when RDL::Type::VarType
-      raise RuntimeError, "unexpected" unless tret.name == :self
-      trec
+      case tret.name
+      when :self
+        trec
+      when :t
+        raise RuntimeError, "expected array got #{trec.base}" unless trec.base.name == "Array"
+        trec.params[0]
+      else
+        raise RuntimeError, "don't know how to handle"
+      end
     else
       tret
     end
