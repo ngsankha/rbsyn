@@ -7,6 +7,7 @@ module Assertions
       @passed_count += 1
       ans
     else
+      return if ENV.key? 'DISABLE_EFFECTS'
       ret = @ctx.functype.ret
       raise RuntimeError, "expected only one parameter" unless @params.size == 1
       type_env = {}

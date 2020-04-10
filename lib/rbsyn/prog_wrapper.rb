@@ -81,28 +81,11 @@ class ProgWrapper
     when :effect
       # TODO: ordering can be done better to build candidates programs with
       # method calls that can satisfy multiple effects at once
-      unless ENV.key? 'DISABLE_EFFECTS'
-        RDL.type_cast(@target, 'Array<String>', force: true).map { |eff|
-          methds = methods_with_write_effect(eff)
-          eff_hole = s(RDL::Globals.types[:top], :hole, 1, {effect: true})
-          pass1 = ExpandHolePass.new(@ctx, @env)
-          pass1.effect_methds = methds
-          expanded = pass1.process(eff_hole)
-          expand_map = pass1.expand_map.map { |i| i.times.to_a }
-          generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
-            pass2 = ExtractASTPass.new(selection, @env)
-            program = update_types_pass.process(pass2.process(expanded))
-            new_env = pass2.env
-            prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
-            prog_wrap.add_side_effect_expr(program)
-            prog_wrap.look_for(:teffect, [eff])
-            prog_wrap.passed_asserts = @passed_asserts
-            prog_wrap
-          }
-        }.flatten
-      else
-        eff_hole = s(RDL::Globals.types[:top], :hole, 1, {})
+      RDL.type_cast(@target, 'Array<String>', force: true).map { |eff|
+        methds = methods_with_write_effect(eff)
+        eff_hole = s(RDL::Globals.types[:top], :hole, 1, {effect: true})
         pass1 = ExpandHolePass.new(@ctx, @env)
+        pass1.effect_methds = methds
         expanded = pass1.process(eff_hole)
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
         generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
@@ -111,11 +94,11 @@ class ProgWrapper
           new_env = pass2.env
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
-          prog_wrap.look_for(:teffect, [])
+          prog_wrap.look_for(:teffect, [eff])
           prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
-      end
+      }.flatten
     when :teffect
       pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@exprs.last)
@@ -137,26 +120,33 @@ class ProgWrapper
   end
 
   def methods_with_write_effect(eff)
-    # if eff.split('.').size == 1
-    #   effect_causing = []
-    #   klass = RDL::Util.to_class(eff)
-    #   RDL::Globals.info.info.each { |cls, v1|
-    #     v1.each { |meth, v2|
-    #       v2.fetch(:write, ['']).each { |weff|
-    #         cls_qual = RDL::Util.to_class(cls)
-    #         cls_qual = RDL::Util.singleton_class_to_class(cls_qual) if cls_qual.singleton_class?
-    #         override_class = false
-    #         if weff.include? 'self'
-    #           if (klass.ancestors.include?(cls_qual) || (cls_qual == ActiveRecord_Relation && klass.ancestors.include?(ActiveRecord::Base)))
-    #             weff = weff.gsub('self', klass.name)
-    #           end
-    #         end
-    #         effect_causing << [cls, meth] if EffectAnalysis.effect_leq(eff, weff)
-    #       }
-    #     }
-    #   }
-    #   return effect_causing
-    if eff.split('.').size <= 2
+    if eff == '*'
+      effect_causing = []
+      klasses = RDL::Globals.info.info.keys.map { |kls| RDL::Util.to_class(kls) }
+      klasses.each { |klass|
+        RDL::Globals.info.info.each { |cls, v1|
+          v1.each { |meth, v2|
+            v2.fetch(:write, ['']).each { |weff|
+              next if weff.empty?
+              cls_qual = RDL::Util.to_class(cls)
+              cls_qual = RDL::Util.singleton_class_to_class(cls_qual) if cls_qual.singleton_class?
+              if klass.ancestors.include? cls_qual
+                kl = RDL::Util.to_class_str(klass)
+                if RDL::Util.to_class(cls).singleton_class?
+                  kls = RDL::Util.add_singleton_marker(kl)
+                else
+                  kls = klass
+                end
+                effect_causing << [kls, meth]
+              else
+                effect_causing << [cls, meth]
+              end
+            }
+          }
+        }
+      }
+      return effect_causing
+    elsif eff.split('.').size <= 2
       effect_causing = []
       klass = RDL::Util.to_class(eff.split('.')[0])
       # klass = RDL::Util.singleton_class_to_class(klass) if klass.singleton_class?
@@ -166,7 +156,6 @@ class ProgWrapper
           v2.fetch(:write, ['']).each { |weff|
             cls_qual = RDL::Util.to_class(cls)
             cls_qual = RDL::Util.singleton_class_to_class(cls_qual) if cls_qual.singleton_class?
-            override_class = false
             if weff.include? 'self'
               if (klass.ancestors.include?(cls_qual) || (cls_qual == ActiveRecord_Relation && klass.ancestors.include?(ActiveRecord::Base)))
                 weff = weff.gsub('self', klass.name)
