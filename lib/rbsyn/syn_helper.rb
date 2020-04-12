@@ -33,6 +33,10 @@ module SynHelper
         if test_outputs.all? true
           correct_progs << prog_wrap
           return prog_wrap unless return_all
+        elsif ENV.key? 'DISABLE_EFFECTS'
+          prog_wrap.passed_asserts = 0
+          prog_wrap.look_for(:effect, ['*'])
+          effect_needed << prog_wrap
         end
       }
 
