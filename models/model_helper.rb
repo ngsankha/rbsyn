@@ -38,6 +38,10 @@ ActiveRecord::Schema.define do
     t.string :username
     t.boolean :admin
   end
+  create_table :gitlab_issues, force: true do |t|
+    t.integer :state_id
+    t.datetime :closed_at
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base
@@ -50,3 +54,4 @@ require_relative "email_token"
 require_relative "another_user"
 require_relative "post"
 require_relative "demo_user"
+require_relative "gitlab_issue"

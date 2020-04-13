@@ -93,7 +93,7 @@ class EffectAnalysis
         end
       }
       effect_union(*([klass_eff, my_eff, args].flatten))
-    when :ivar, :lvar, :str, :true, :false, :const, :sym
+    when :ivar, :lvar, :str, :true, :false, :const, :sym, :nil
       []
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"

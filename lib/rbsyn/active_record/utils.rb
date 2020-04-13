@@ -27,8 +27,10 @@ module Rbsyn::ActiveRecord
             tname = "%bool"
             schema[k] = RDL::Globals.types[:bool]
           when "Datetime"
-            tname = "DateTime or Time"
-            schema[k] = RDL::Type::UnionType.new(RDL::Type::NominalType.new(Time), RDL::Type::NominalType.new(DateTime))
+            # tname = "DateTime or Time"
+            # schema[k] = RDL::Type::UnionType.new(RDL::Type::NominalType.new(Time), RDL::Type::NominalType.new(DateTime))
+            tname = "Time"
+            schema[k] = RDL::Type::NominalType.new(Time)
           when "Text"
             tname = "String"
             schema[k] = RDL::Globals.types[:string]
