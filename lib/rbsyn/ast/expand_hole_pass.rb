@@ -34,6 +34,11 @@ class ExpandHolePass < ::AST::Processor
     expanded = []
 
     if depth == 0
+      # nil constant
+      if @ctx.enable_nil# && !@recv
+        expanded << nil_const
+      end
+
       # boolean constants
       if node.ttype <= RDL::Globals.types[:bool] && !@no_bool_consts
         expanded.concat bool_const

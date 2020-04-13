@@ -1,7 +1,7 @@
 class Context
   attr_accessor :max_prog_size, :components, :preconds, :postconds, :mth_name,
     :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth,
-    :curr_binding, :constants, :enable_and, :enable_constants
+    :curr_binding, :constants, :enable_and, :enable_constants, :enable_nil
 
   def initialize
     @max_prog_size = 0
@@ -24,6 +24,7 @@ class Context
     }
     @enable_and = false
     @enable_constants = false
+    @enable_nil = false
   end
 
   def add_example(precond, postcond)

@@ -1,0 +1,2 @@
+class GitlabUser < ApplicationRecord
+end

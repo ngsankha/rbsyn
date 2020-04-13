@@ -38,7 +38,7 @@ module Rbsyn::ActiveRecord
             schema[k] = RDL::Type::NominalType.new(tname)
           end
           RDL.type model, "#{k}=".to_sym, "(#{tname}) -> #{tname}", wrap: false, write: ["#{model}.#{k}"]
-          RDL.type model, k.to_s,         "() -> #{tname}", wrap: false, read: ["#{model}.#{k}"]
+          RDL.type model, k.to_sym,         "() -> #{tname}", wrap: false, read: ["#{model}.#{k}"]
         }
         schema = schema.transform_keys { |k| k.to_sym }
         assoc = {}
@@ -51,9 +51,10 @@ module Rbsyn::ActiveRecord
           end
 
           if assoc_info.name.to_s.pluralize == assoc_info.name.to_s
-            RDL.type model, assoc_info.name, "() -> ActiveRecord_Relation<#{assoc_info.class_name}>", wrap: false
+            RDL.type model, assoc_info.name, "() -> ActiveRecord_Relation<#{assoc_info.class_name}>", wrap: false, read: ["#{assoc_info.class_name}"]
           else
-            RDL.type model, assoc_info.name, "() -> #{assoc_info.name.to_s.camelize.singularize}", wrap: false
+            RDL.type model, "#{assoc_info.name}".to_sym, "() -> #{assoc_info.class_name}", wrap: false, read: ["#{assoc_info.class_name}"]
+            RDL.type model, "#{assoc_info.name}=".to_sym, "(#{assoc_info.class_name}) -> #{assoc_info.class_name}", wrap: false, write: ["#{assoc_info.class_name}"]
           end
         }
         schema[:__associations] = RDL::Type::FiniteHashType.new(assoc, nil)
