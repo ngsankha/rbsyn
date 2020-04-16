@@ -44,6 +44,12 @@ ActiveRecord::Schema.define do
     t.references :closed_by
   end
   create_table :gitlab_users, force: true do |t|
+    t.boolean :otp_required_for_login
+    t.string :encrypted_otp_secret
+    t.string :encrypted_otp_secret_iv
+    t.string :encrypted_otp_secret_salt
+    t.string :otp_backup_codes
+    t.datetime :otp_grace_period_started_at
   end
 end
 
