@@ -1,4 +1,7 @@
+require 'json'
+
 class SynthesisStatsReporter < Minitest::StatisticsReporter
+  include Utils
   def initialize(path)
     super
     @path = path
@@ -31,8 +34,6 @@ class SynthesisStatsReporter < Minitest::StatisticsReporter
   end
 
   def putsyn(src)
-    formatter = Rouge::Formatters::Terminal256.new
-    lexer = Rouge::Lexers::Ruby.new
-    puts formatter.format(lexer.lex(src))
+    puts format(src)
   end
 end

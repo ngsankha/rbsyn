@@ -2,8 +2,6 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "rbsyn"
 require "fabrication"
-require "rouge"
-require "json"
 require_relative "../models/model_helper"
 require_relative "../components/component_helper"
 

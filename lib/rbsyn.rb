@@ -9,6 +9,7 @@ require "minitest"
 require "timeout"
 
 require "rbsyn/version"
+require "rbsyn/utils"
 require "rbsyn/type_ops"
 require "rbsyn/exceptions"
 require "rbsyn/effects"

@@ -5,6 +5,7 @@ TRUE_POSTCOND = Proc.new { |result| result == true }
 class Synthesizer
   include AST
   include SynHelper
+  include Utils
 
   def initialize(ctx)
     @ctx = ctx
@@ -25,6 +26,9 @@ class Synthesizer
         prog = generate(seed, [precond], [postcond], false)
         # add to cache for future use
         prog_cache.add(prog)
+        @ctx.logger.debug("Synthesized program:\n#{format_ast(prog.to_ast)}")
+      else
+        @ctx.logger.debug("Found program in cache:\n#{format_ast(prog.to_ast)}")
       end
 
       env = LocalEnvironment.new
@@ -39,6 +43,7 @@ class Synthesizer
       # puts Unparser.unparse(cond.to_ast)
       # puts "======"
 
+      @ctx.logger.debug("Synthesized branch: #{format_ast(cond.to_ast)}")
       ProgTuple.new(@ctx, prog, cond, [precond], [postcond])
     }
 
