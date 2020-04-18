@@ -1,6 +1,7 @@
 class ProgTuple
   include AST
   include SynHelper
+  include Utils
 
   attr_reader :ctx, :branch, :preconds, :postconds
   attr_accessor :prog
@@ -145,6 +146,9 @@ class ProgTuple
 
   private
   def merge_rec(first, second)
+    @ctx.logger.debug("Merge programs:")
+    @ctx.logger.debug("Candidate 1:\n#{format_ast(first.to_ast)}")
+    @ctx.logger.debug("Candidate 2:\n#{format_ast(second.to_ast)}")
     raise RuntimeError, "second should be a single prog" if second.prog.is_a? Array
     merged = RDL.type_cast([], 'Array<ProgTuple>', force: true)
     if first.prog.is_a? Array
@@ -158,6 +162,8 @@ class ProgTuple
       }
     end
     merged.push(*merge_impl(first, second))
+    @ctx.logger.debug('Merged programs:')
+    merged.each { |m| @ctx.logger.debug("\n#{format_ast(m.to_ast)}\n----------") }
     return merged
   end
 
