@@ -51,9 +51,10 @@ module Rbsyn::ActiveRecord
           end
 
           if assoc_info.name.to_s.pluralize == assoc_info.name.to_s
-            RDL.type model, assoc_info.name, "() -> ActiveRecord_Relation<#{assoc_info.class_name}>", wrap: false, read: ["#{assoc_info.class_name}"]
+            RDL.type model, "#{assoc_info.name}".to_sym, "() -> ActiveRecord_Relation<#{assoc_info.class_name}>", wrap: false, read: ["self", "#{assoc_info.class_name}"]
+            RDL.type model, "#{assoc_info.name}=".to_sym, "(Array<#{assoc_info.class_name}>) -> ActiveRecord_Relation<#{assoc_info.class_name}>", wrap: false, write: ["#{assoc_info.class_name}"]
           else
-            RDL.type model, "#{assoc_info.name}".to_sym, "() -> #{assoc_info.class_name}", wrap: false, read: ["#{assoc_info.class_name}"]
+            RDL.type model, "#{assoc_info.name}".to_sym, "() -> #{assoc_info.class_name}", wrap: false, read: ["self", "#{assoc_info.class_name}"]
             RDL.type model, "#{assoc_info.name}=".to_sym, "(#{assoc_info.class_name}) -> #{assoc_info.class_name}", wrap: false, write: ["#{assoc_info.class_name}"]
           end
         }

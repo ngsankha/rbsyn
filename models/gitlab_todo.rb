@@ -1,0 +1,2 @@
+class GitlabTodo < ApplicationRecord
+end

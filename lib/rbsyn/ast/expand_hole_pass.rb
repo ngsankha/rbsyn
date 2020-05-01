@@ -111,8 +111,22 @@ class ExpandHolePass < ::AST::Processor
 
   private
   def effects
-    types = Set[*(@ctx.functype.args +
-      @env.info.values.map { |v| v[:expr].ttype } +
+    arg_types = @ctx.functype.args.map { |t|
+      if t.is_a? RDL::Type::UnionType
+        t.types
+      else
+        t
+      end
+    }.flatten
+    env_types = @env.info.values.map { |v|
+      if v[:expr].ttype.is_a? RDL::Type::UnionType
+        v[:expr].ttype.types
+      else
+        v[:expr].ttype
+      end
+    }.flatten
+
+    types = Set[*(arg_types + env_types +
       @ctx.components.map { |c| RDL::Type::SingletonType.new(c) })]
     exprs = []
 
@@ -140,6 +154,9 @@ class ExpandHolePass < ::AST::Processor
             path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
             exprs << fn_call(path)
           end
+        when RDL::Type::GenericType
+          # ignore
+          next
         when RDL::Type::FiniteHashType
           if klass == Hash
             trecv = type

@@ -75,7 +75,11 @@ class Reachability
       when COVARIANT
         type <= chain.last
       when CONTRAVARIANT
-        chain.last <= type
+        if chain.last.is_a? RDL::Type::UnionType
+          chain.last.types.any? { |t| t <= type }
+        else
+          chain.last <= type
+        end
       else
         raise RuntimeError, "unexpected variance"
       end

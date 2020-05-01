@@ -79,6 +79,12 @@ class EffectAnalysis
         RDL::Globals.info.get(klass.name, meth, kind)
       when RDL::Type::FiniteHashType
         RDL::Globals.info.get('Hash', meth, kind)
+      when RDL::Type::GenericType
+        if klass.base.to_s == 'ActiveRecord_Relation'
+          RDL::Globals.info.get(klass.params[0].to_s, meth, kind)
+        else
+          raise RuntimeError, "unhandled type #{klass}"
+        end
       else
         raise RuntimeError, "unhandled type #{klass}"
       end
@@ -93,7 +99,7 @@ class EffectAnalysis
         end
       }
       effect_union(*([klass_eff, my_eff, args].flatten))
-    when :ivar, :lvar, :str, :true, :false, :const, :sym, :nil
+    when :ivar, :lvar, :str, :true, :false, :const, :sym, :nil, :int
       []
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"
@@ -106,6 +112,8 @@ class EffectAnalysis
       var_name = ast.children[0].to_sym
       return env[var_name] if env.key? var_name
       return RDL::Globals.types[:bot]
+    when :int
+      return RDL::Globals.types[:integer]
     when :const
       return RDL::Type::SingletonType.new(RDL::Util.to_class(ast.children[1].to_s))
     when :send
@@ -116,8 +124,14 @@ class EffectAnalysis
         RDL::Globals.info.get(RDL::Util.add_singleton_marker(klass.to_s), meth, :type)
       when RDL::Type::NominalType
         RDL::Globals.info.get(klass.name, meth, :type)
+      when RDL::Type::GenericType
+        if RDL::Globals.info.get(klass.base.name, meth, :type)
+          RDL::Globals.info.get(klass.base.name, meth, :type)
+        else
+          RDL::Globals.info.get(klass.params[0].name, meth, :type)
+        end
       else
-        raise RuntimeError, "unhandled type"
+        raise RuntimeError, "unhandled type #{klass}"
       end
       # take only the first type for now
       case tmeth[0]

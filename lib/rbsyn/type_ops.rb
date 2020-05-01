@@ -30,8 +30,14 @@ module TypeOperations
       bind.local_variable_set(:targs, targs)
       tret.compute(bind)
     when RDL::Type::VarType
-      raise RuntimeError, "unexpected" unless tret.name == :self
-      trec
+      if tret.name == :self
+        trec
+      else
+        params = RDL::Wrap.get_type_params(trec.base.to_s)[0]
+        idx = params.index(tret.name)
+        raise RuntimeError, "unexpected" if idx.nil?
+        trec.params[idx]
+      end
     else
       tret
     end
@@ -44,7 +50,7 @@ module TypeOperations
       if cls.is_a? Class
         cls.ancestors.map { |klass| RDL::Util.add_singleton_marker(klass.to_s) }
       else
-        raise RuntimeError, "expected only true/false" unless (cls == true || cls == false || cls.nil?)
+        raise RuntimeError, "expected only true/false" unless (cls == true || cls == false || cls.nil? || cls.is_a?(Symbol))
         cls.class.ancestors.map { |klass| klass.to_s }
       end
     when RDL::Type::PreciseStringType

@@ -9,6 +9,7 @@ end
 
 def load_typedefs(*categories)
   RDL.reset
+  Rbsyn::ActiveRecord::Utils.load_schema
 
   categories.each { |category|
     case category
@@ -17,21 +18,25 @@ def load_typedefs(*categories)
       RDL.type :BasicObject, :!, '() -> %bool', effect: [:+, :+]
       # RDL.type :BasicObject, :==, '(self) -> %bool', effect: [:+, :+]
 
+      RDL.nowrap :Array
+      RDL.type_params :Array, [:t], :all?
+
       RDL.nowrap :Hash
       RDL.type_params :Hash, [:k, :v], :all?
       RDL.type :Hash, :[], '(``any_or_k(trec)``) -> ``output_type(trec, targs)``', effect: [:+, :+]
 
     when :active_record
-      Rbsyn::ActiveRecord::Utils.load_schema
 
       ActiveRecord::Base.class_eval do
         extend RDL::Annotate
 
+        # type 'self.create', "(``DBTypes.schema_type(trec)``) -> self", wrap: false, write: ['self']
         type 'self.where', "(``DBTypes.schema_type(trec)``) -> ``DBTypes.array_schema(trec)``", wrap: false
         type 'self.exists?', "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false
         type 'self.joins', "(``DBTypes.joins_input_type(trec)``) -> ``DBTypes.joins_output_type(trec, targs)``", wrap: false
 
         type :where, "(``DBTypes.schema_type(trec)``) -> ``DBTypes.array_schema(trec)``", wrap: false
+        type :save, '() -> %bot', wrap: false, write: ['*']
       end
 
       # ActiveRecord::Querying.class_eval do
@@ -59,15 +64,23 @@ def load_typedefs(*categories)
 
         type :exists?, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false
         type :first, "() -> ``DBTypes.rec_to_nominal(trec)``", wrap: false
+        type :count, "() -> Integer", wrap: false
         # type :empty?, "() -> %bool", wrap: false
+        # type :pluck, "(``DBTypes.pluck_input_type(trec)``) -> ``DBTypes.pluck_output_type(trec, targs)``", wrap: false
+        # type :not, "(``DBTypes.schema_type(trec)``) -> ``DBTypes.array_schema(trec)``", wrap: false
+        # type :update_all, "(``DBTypes.schema_type(trec)``) -> %bot", wrap: false, write: ['self']
       end
 
     when :ar_update
       ActiveRecord::Base.class_eval do
+        extend RDL::Annotate
+
         type :update!, "(``DBTypes.schema_type(trec)``) -> self", wrap: false, write: ['self']
       end
 
       ActiveRecord_Relation.class_eval do
+        extend RDL::Annotate
+
         type :update!, "(``DBTypes.schema_type(trec)``) -> self", wrap: false, write: ['self']
       end
     else

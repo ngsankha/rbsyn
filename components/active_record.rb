@@ -111,4 +111,21 @@ class DBTypes
       raise RuntimeError, "can handle only singletons"
     end
   end
+
+  def self.pluck_input_type(trec)
+    finite_hash = schema_type(trec)
+    RDL::Type::UnionType.new(*finite_hash.elts.keys.map { |sym| RDL::Type::SingletonType.new(sym) })
+  end
+
+  def self.pluck_output_type(trec, targs)
+    case targs[0]
+    when RDL::Type::UnionType
+      RDL::Type::UnionType.new(*targs[0].types.map { |t| pluck_output_type(trec, [t]) })
+    else
+      finite_hash = schema_type(trec)
+      val_type = finite_hash.elts[targs[0].val]
+      val_type = val_type.type if val_type.is_a? RDL::Type::OptionalType
+      RDL::Type::GenericType.new(RDL::Type::NominalType.new(Array), val_type)
+    end
+  end
 end

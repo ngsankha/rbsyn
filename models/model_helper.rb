@@ -51,6 +51,17 @@ ActiveRecord::Schema.define do
     t.string :otp_backup_codes
     t.datetime :otp_grace_period_started_at
   end
+  create_table :gitlab_notes, force: true do |t|
+    t.bigint :gitlab_note_id
+    t.bigint :gitlab_discussion_id
+  end
+  create_table :gitlab_merge_requests, force: true do |t|
+    t.bigint :gitlab_note_id
+  end
+  create_table :gitlab_discussions, force: true do |t|
+    t.bigint :note_id
+    t.bigint :noteable_id
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base
@@ -65,3 +76,4 @@ require_relative "post"
 require_relative "demo_user"
 require_relative "gitlab_issue"
 require_relative "gitlab_user"
+require_relative "gitlab_discussion"

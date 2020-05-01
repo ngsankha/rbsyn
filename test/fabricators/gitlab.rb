@@ -17,3 +17,7 @@ Fabricator(:two_factor_user, from: :gitlab_user) do
   otp_backup_codes { Array.new(4) { rand(500_000_000) }.join(' ') }
   otp_grace_period_started_at { Time.now }
 end
+
+Fabricator(:diff_note_on_merge_request, class_name: GitlabNote) do
+  noteable { GitlabMergeRequest.create }
+end
