@@ -133,7 +133,10 @@ class ExpandHolePass < ::AST::Processor
     @effect_methds.each { |klass, methd|
       types.each { |type|
         case type
-        when RDL::Globals.types[:bool], RDL::Globals.types[:bot]
+        when RDL::Globals.types[:bool],
+             RDL::Globals.types[:true],
+             RDL::Globals.types[:false],
+             RDL::Globals.types[:bot]
           # ignore
           next
         when RDL::Type::SingletonType
