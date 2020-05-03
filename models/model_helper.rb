@@ -70,6 +70,9 @@ ActiveRecord::Schema.define do
   create_table :diaspora_users, force: true do |t|
     t.string :username
     t.integer :invited_by_id
+    t.string :confirm_email_token
+    t.string :email
+    t.string :unconfirmed_email
   end
 end
 
