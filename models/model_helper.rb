@@ -74,6 +74,11 @@ ActiveRecord::Schema.define do
     t.string :email
     t.string :unconfirmed_email
   end
+  create_table :diaspora_pods, force: true do |t|
+    t.datetime :updated_at
+    t.boolean :scheduled_check
+    t.integer :status
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base

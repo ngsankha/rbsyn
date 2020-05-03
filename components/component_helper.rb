@@ -75,13 +75,15 @@ def load_typedefs(*categories)
       ActiveRecord::Base.class_eval do
         extend RDL::Annotate
 
-        type :update!, "(``DBTypes.schema_type(trec)``) -> self", wrap: false, write: ['self']
+        type :update!, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false, write: ['self']
+        # type :update, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false, write: ['self']
       end
 
       ActiveRecord_Relation.class_eval do
         extend RDL::Annotate
 
-        type :update!, "(``DBTypes.schema_type(trec)``) -> self", wrap: false, write: ['self']
+        type :update!, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false, write: ['self']
+        # type :update, "(``DBTypes.schema_type(trec)``) -> %bool", wrap: false, write: ['self']
       end
     else
       raise RuntimeError, "unhandled category of type definitions"

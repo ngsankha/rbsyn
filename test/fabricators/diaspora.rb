@@ -11,3 +11,13 @@ Fabricator(:diaspora_user_with_token, from: :diaspora_user) do
   unconfirmed_email { sequence(:email) { |i| "user#{i}@example.com" } }
   confirm_email_token { SecureRandom.hex(6) }
 end
+
+Fabricator(:pod, class_name: DiasporaPod) do
+  # scheduled_check { false }
+  transient :status
+
+  after_create { |pod, transients|
+    pod.update!(status: DiasporaPod.status_codes[transients[:status] || :unchecked])
+    # pod.update!(status: DiasporaPod.status_codes[transients[:status]])
+  }
+end
