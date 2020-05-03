@@ -62,6 +62,11 @@ ActiveRecord::Schema.define do
     t.bigint :note_id
     t.bigint :noteable_id
   end
+  create_table :invitation_codes, force: true do |t|
+    t.string :token
+    # t.integer :diaspora_user_id
+    t.integer :count
+  end
 end
 
 class ApplicationRecord < ActiveRecord::Base
@@ -77,3 +82,4 @@ require_relative "demo_user"
 require_relative "gitlab_issue"
 require_relative "gitlab_user"
 require_relative "gitlab_discussion"
+require_relative "diaspora"

@@ -24,7 +24,7 @@ class Context
     @curr_binding = nil
     @constants = {
       string: [''],
-      integer: [0]
+      integer: [0, 1]
     }
     @enable_and = false
     @enable_constants = false

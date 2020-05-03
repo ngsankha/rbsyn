@@ -101,6 +101,9 @@ class EffectAnalysis
       effect_union(*([klass_eff, my_eff, args].flatten))
     when :ivar, :lvar, :str, :true, :false, :const, :sym, :nil, :int
       []
+    when :begin
+      effects = ast.children.map { |c| effect_of(c, env, kind) }
+      effect_union(*effects.flatten)
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"
     end
@@ -145,6 +148,8 @@ class EffectAnalysis
       else
         raise RuntimeError, "unexpected #{tmeth.inspect}"
       end
+    when :begin
+      type_of(ast.children.last, env)
     else
       raise RuntimeError, "unhandled ast node #{ast.type}"
     end
