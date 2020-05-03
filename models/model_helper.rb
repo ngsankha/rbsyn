@@ -64,8 +64,12 @@ ActiveRecord::Schema.define do
   end
   create_table :invitation_codes, force: true do |t|
     t.string :token
-    # t.integer :diaspora_user_id
+    t.integer :diaspora_user_id
     t.integer :count
+  end
+  create_table :diaspora_users, force: true do |t|
+    t.string :username
+    t.integer :invited_by_id
   end
 end
 
