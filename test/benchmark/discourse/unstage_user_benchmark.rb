@@ -4,11 +4,10 @@ describe "Discourse" do
   it "unstage user" do
     load_typedefs :stdlib, :active_record
 
-    define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser", [AnotherUser], prog_size: 20 do
+    define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser", [AnotherUser], prog_size: 30, enable_nil: true do
       spec "correctly unstages a user" do
         pre {
-          @dummy = Fabricate(:another_user)
-          @staged = Fabricate(:another_user, email: 'staged@account.com')
+          @staged = Fabricate(:staged_user, email: 'staged@account.com')
           unstage(email: 'staged@account.com', active: true, username: 'unstaged1', name: 'Foo Bar')
         }
 
@@ -18,6 +17,27 @@ describe "Discourse" do
           assert { user.name == 'Foo Bar' }
           assert { user.active == false }
           assert { user.email == 'staged@account.com' }
+        }
+      end
+
+      spec "returns nil when the user cannot be unstaged" do
+        pre {
+          Fabricate(:coding_horror)
+          unstage(email: 'jeff@somewhere.com')
+        }
+
+        post { |user|
+          assert { user == nil }
+        }
+      end
+
+      spec "returns nil when the user cannot be unstaged" do
+        pre {
+          unstage(email: 'ano@account.com')
+        }
+
+        post { |user|
+          assert { user == nil }
         }
       end
 
