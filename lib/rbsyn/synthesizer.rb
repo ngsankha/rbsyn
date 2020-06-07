@@ -65,7 +65,7 @@ class Synthesizer
         }
       }
 
-      ELIMINATION_ORDER.each { |strategy| results = strategy.eliminate(results) }
+      results = ELIMINATION_ORDER.inject(results) { |memo, strategy| strategy.eliminate memo }
       results.sort { |a, b| flat_comparator(a, b) }
     }
 

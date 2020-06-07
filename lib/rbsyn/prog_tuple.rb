@@ -118,14 +118,7 @@ class ProgTuple
       @prog = pruned_children
     end
 
-    intermediate = self
-    # puts intermediate
-    # TODO: ordering
-    # BranchPruneStrategy.descendants.each { |strategy|
-    #   intermediate = strategy.prune(intermediate)
-    # }
-    intermediate = SpeculativeInverseBranchFold.prune(intermediate)
-    intermediate = BoolExprFold.prune(intermediate)
+    intermediate = PRUNE_ORDER.inject(self) { |memo, strategy| strategy.prune memo }
     @prog = intermediate.prog
     @branch = intermediate.branch
     # the setups and envs stay the same, so not copying them
