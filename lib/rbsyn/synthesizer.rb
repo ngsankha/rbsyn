@@ -65,18 +65,7 @@ class Synthesizer
         }
       }
 
-      # TODO: ordering?
-      # EliminationStrategy.descendants.each { |strategy|
-      #   results = strategy.eliminate(results)
-      # }
-      # results.map { |r|
-      #   puts Unparser.unparse(r.to_ast)
-      #   puts Unparser.unparse(r.branch.to_ast)
-      #   puts "------"
-      # }
-      results = DuplicateElimiation.eliminate(results)
-      # results = MinSizeElimination.eliminate(results)
-      results = TestElimination.eliminate(results)
+      ELIMINATION_ORDER.each { |strategy| results = strategy.eliminate(results) }
       results.sort { |a, b| flat_comparator(a, b) }
     }
 

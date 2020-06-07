@@ -1,22 +1,3 @@
-class EliminationStrategy
-  def self.eliminate(progs)
-    raise RuntimeError, "Not implemented"
-  end
-end
-
-class DuplicateElimiation < EliminationStrategy
-  def self.eliminate(progs)
-    Set[*progs].to_a
-  end
-end
-
-class MinSizeElimination < EliminationStrategy
-  def self.eliminate(progs)
-    least = progs.map { |prog| ProgSizePass.prog_size(prog.to_ast, nil) }.min
-    progs.reject { |prog| ProgSizePass.prog_size(prog.to_ast, nil) > least }
-  end
-end
-
 class TestElimination < EliminationStrategy
   extend AST
 
