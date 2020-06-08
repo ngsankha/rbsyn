@@ -21,7 +21,7 @@ class BranchCount < ::AST::Processor
       process(node.children[1])
       process(node.children[2])
     else
-      raise RuntimeError, "unexpected"
+      raise RbSynError, "unexpected"
     end
   end
 

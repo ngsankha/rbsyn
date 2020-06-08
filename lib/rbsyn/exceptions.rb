@@ -1,4 +1,6 @@
-class AssertionError < StandardError
+class RbSynError < StandardError; end
+
+class AssertionError < RbSynError
   attr_reader :passed_count, :read_set, :write_set
 
   def initialize(passed_count, read_set, write_set)

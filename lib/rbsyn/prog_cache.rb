@@ -12,11 +12,23 @@ class ProgCache
 
   def find_prog(precond, postcond)
     @cache.each { |prog|
-      res, klass = eval_ast(@ctx, prog.to_ast, precond) rescue next
+      begin
+        res, klass = eval_ast(@ctx, prog.to_ast, precond)
+      rescue RbSynError => err
+        raise err
+      rescue StandardError => err
+        next
+      end
       klass.instance_eval {
         @params = postcond.parameters.map &:last
       }
-      return prog if klass.instance_exec res, &postcond rescue next
+      begin
+        return prog if klass.instance_exec res, &postcond
+      rescue RbSynError => err
+        raise err
+      rescue StandardError => err
+        next
+      end
     }
     nil
   end

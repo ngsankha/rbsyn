@@ -13,7 +13,14 @@ module SynHelper
 
       evaluable.each { |prog_wrap|
         test_outputs = preconds.zip(postconds).map { |precond, postcond|
-          res, klass = eval_ast(@ctx, prog_wrap.to_ast, precond) rescue next
+          begin
+            res, klass = eval_ast(@ctx, prog_wrap.to_ast, precond)
+          rescue RbSynError => err
+            raise err
+          rescue StandardError => err
+            next
+          end
+
           begin
             klass.instance_eval {
               @params = postcond.parameters.map &:last
@@ -23,9 +30,9 @@ module SynHelper
             prog_wrap.passed_asserts = e.passed_count
             prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
-          rescue Exception => e
-            # puts e
-            # puts e.backtrace
+          rescue RbSynError => e
+            raise e
+          rescue StandardError => e
             next
           end
         }
@@ -55,7 +62,7 @@ module SynHelper
 
       work_list = [*work_list, *remainder_holes].sort { |a, b| comparator(a, b) }
     end
-    raise RuntimeError, "No candidates found"
+    raise RbSynError, "No candidates found"
   end
 
   def comparator(a, b)

@@ -14,7 +14,13 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
       if lbranch.positive?
         rbranch_guess = s(RDL::Globals.types[:bool], :send, lbranch.conds[0], :!)
         results = progcond.prog[1].preconds.map { |precond|
-          eval_ast(progcond.ctx, rbranch_guess, precond)[0] rescue nil
+          begin
+            eval_ast(progcond.ctx, rbranch_guess, precond)[0]
+          rescue RbSynError => err
+            raise err
+          rescue StandardError => err
+            nil
+          end
         }
 
         if results.all? true
@@ -30,7 +36,13 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
       else
         rbranch_guess = lbranch.conds[0].children[0]
         results = progcond.prog[1].preconds.map { |precond|
-          eval_ast(progcond.ctx, rbranch_guess, precond)[0] rescue nil
+          begin
+            eval_ast(progcond.ctx, rbranch_guess, precond)[0]
+          rescue RbSynError => err
+            raise err
+          rescue StandardError => err
+            nil
+          end
         }
         if results.all? true
           branch = BoolCond.new
@@ -52,7 +64,13 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
       if rbranch.positive?
         lbranch_guess = s(RDL::Globals.types[:bool], :send, rbranch.conds[0], :!)
         results = progcond.prog[0].preconds.map { |precond|
-          eval_ast(progcond.ctx, lbranch_guess, precond)[0] rescue nil
+          begin
+            eval_ast(progcond.ctx, lbranch_guess, precond)[0]
+          rescue RbSynError => err
+            raise err
+          rescue StandardError => err
+            nil
+          end
         }
         if results.all? true
           branch = BoolCond.new
@@ -67,7 +85,13 @@ class SpeculativeInverseBranchFold < BranchPruneStrategy
       else rbranch.negative?
         lbranch_guess = rbranch.conds[0].children[0]
         results = progcond.prog[0].preconds.map { |precond|
-          eval_ast(progcond.ctx, lbranch_guess, precond)[0] rescue nil
+          begin
+            eval_ast(progcond.ctx, lbranch_guess, precond)[0]
+          rescue RbSynError => err
+            raise err
+          rescue StandardError => err
+            nil
+          end
         }
         if results.all? true
           branch = BoolCond.new

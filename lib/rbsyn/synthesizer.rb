@@ -72,21 +72,27 @@ class Synthesizer
     completed.each { |progcond|
       ast = progcond.to_ast
       test_outputs = @ctx.preconds.zip(@ctx.postconds).map { |precond, postcond|
-        res, klass = eval_ast(@ctx, ast, precond) rescue next
+        begin
+          res, klass = eval_ast(@ctx, ast, precond)
+        rescue RbSynError => err
+          raise err
+        rescue StandardError => err
+          next
+        end
+
         begin
           klass.instance_eval { @params = postcond.parameters.map &:last }
           klass.instance_exec res, &postcond
-        rescue Exception => e
-          # puts Unparser.unparse(ast)
-          # puts e
-          # puts e.backtrace
+        rescue RbSynError => e
+          raise e
+        rescue StandardError => e
           nil
         end
       }
 
       return ast if test_outputs.all? true
     }
-    raise RuntimeError, "No candidates found"
+    raise RbSynError, "No candidates found"
   end
 
   def flat_comparator(a, b)

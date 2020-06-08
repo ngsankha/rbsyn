@@ -1,6 +1,6 @@
 class BranchPruneStrategy
   def self.prune(progcond)
-    raise RuntimeError, "Not implemented"
+    raise RbSynError, "Not implemented"
   end
 end
 

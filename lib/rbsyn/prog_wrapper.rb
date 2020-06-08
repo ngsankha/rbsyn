@@ -15,7 +15,7 @@ class ProgWrapper
   def look_for(kind, target)
     case kind
     when :type
-      raise RuntimeError, "expected target to be a type" unless target.is_a? RDL::Type::Type
+      raise RbSynError, "expected target to be a type" unless target.is_a? RDL::Type::Type
       @looking_for = :type
       @target = target
     when :effect
@@ -25,7 +25,7 @@ class ProgWrapper
       @looking_for = :teffect
       @target = target
     else
-      raise RuntimeError, "can look for types/effects only"
+      raise RbSynError, "can look for types/effects only"
     end
   end
 
@@ -115,7 +115,7 @@ class ProgWrapper
         prog_wrap
       }
     else
-      raise RuntimeError, "can look for types/effects only"
+      raise RbSynError, "can look for types/effects only"
     end
   end
 
@@ -178,7 +178,7 @@ class ProgWrapper
       }
       return effect_causing
     else
-      raise RuntimeError, "don't know how to handle #{eff.inspect}"
+      raise RbSynError, "don't know how to handle #{eff.inspect}"
     end
   end
 

@@ -1,6 +1,6 @@
 class EliminationStrategy
   def self.eliminate(progs)
-    raise RuntimeError, "Not implemented"
+    raise RbSynError, "Not implemented"
   end
 end
 

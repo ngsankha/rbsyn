@@ -11,12 +11,12 @@ class ProgTuple
     if branch.is_a? BoolCond
       @branch = RDL.type_cast(branch, 'BoolCond')
     else
-      raise RuntimeError, "expected a TypedNode" unless branch.is_a? TypedNode
-      raise RuntimeError, "expected branch condition to be a %bool" unless RDL.type_cast(branch, 'TypedNode').ttype <= RDL::Globals.types[:bool]
+      raise RbSynError, "expected a TypedNode" unless branch.is_a? TypedNode
+      raise RbSynError, "expected branch condition to be a %bool" unless RDL.type_cast(branch, 'TypedNode').ttype <= RDL::Globals.types[:bool]
       @branch = BoolCond.new
       @branch << RDL.type_cast(branch, 'TypedNode')
     end
-    raise RuntimeError, "expected ProgWrapper" unless prog.is_a?(Array) || prog.is_a?(ProgWrapper)
+    raise RbSynError, "expected ProgWrapper" unless prog.is_a?(Array) || prog.is_a?(ProgWrapper)
     @prog = prog
     @preconds = preconds
     @postconds = postconds
@@ -35,7 +35,7 @@ class ProgTuple
   end
 
   def +(other)
-    raise RuntimeError, "expected another ProgTuple" if other.class != self.class
+    raise RbSynError, "expected another ProgTuple" if other.class != self.class
 
     if current_prog_passes?(other) && has_same_prog?(other) && guess_branch_same?(other)
       propagate_conds(other)
@@ -60,7 +60,7 @@ class ProgTuple
         elsif @prog[1].current_prog_passes? other
           @prog[1].propagate_conds other
         else
-          raise RuntimeError, "unexpected"
+          raise RbSynError, "unexpected"
         end
       end
       other.branch.conds.each { |b| @branch << b }
@@ -93,7 +93,7 @@ class ProgTuple
   def to_ast
     if @prog.is_a? Array
       prog_cast = RDL.type_cast(@prog, 'Array<ProgTuple>', force: true)
-      raise RuntimeError, "expected <3 subtrees" unless prog_cast.size < 3
+      raise RbSynError, "expected <3 subtrees" unless prog_cast.size < 3
       fragments = prog_cast.map { |t| t.to_ast }
       branches = prog_cast.map { |program| program.branch }
 
@@ -142,7 +142,7 @@ class ProgTuple
     @ctx.logger.debug("Merge programs:")
     @ctx.logger.debug("Candidate 1:\n#{format_ast(first.to_ast)}")
     @ctx.logger.debug("Candidate 2:\n#{format_ast(second.to_ast)}")
-    raise RuntimeError, "second should be a single prog" if second.prog.is_a? Array
+    raise RbSynError, "second should be a single prog" if second.prog.is_a? Array
     merged = RDL.type_cast([], 'Array<ProgTuple>', force: true)
     if first.prog.is_a? Array
       RDL.type_cast(first.prog, 'Array<ProgTuple>', force: true).each_with_index { |fprog, i|
@@ -230,7 +230,13 @@ class ProgTuple
         items_cast = RDL.type_cast(items, '[Proc, Proc]')
         precond = items_cast[0]
         postcond = items_cast[1]
-        res, klass = eval_ast(@ctx, b.to_ast, precond) rescue next
+        begin
+          res, klass = eval_ast(@ctx, b.to_ast, precond)
+        rescue RbSynError => err
+          raise err
+        rescue StandardError => err
+          next
+        end
         klass.instance_exec(res, &postcond)
       }.all?
     }

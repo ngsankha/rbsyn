@@ -1,7 +1,7 @@
 class EffectAnalysis
   def self.effect_leq(e1, e2)
     # TODO: unhandled right now: Singleton classes
-    raise RuntimeError, "cannot have self during leq of effects" if has_self?([e1]) || has_self?([e2])
+    raise RbSynError, "cannot have self during leq of effects" if has_self?([e1]) || has_self?([e2])
 
     if e1 == ''
       true
@@ -15,7 +15,7 @@ class EffectAnalysis
       elsif e2.split('.').size == 2
         false
       else
-        raise RuntimeError, "unexpected effect format"
+        raise RbSynError, "unexpected effect format"
       end
     elsif e1.split('.').size == 1
       if e2 == ''
@@ -27,7 +27,7 @@ class EffectAnalysis
       elsif e2.split('.').size == 2
         e1 == e2.split('.')[0]
       else
-        raise RuntimeError, "unexpected effect format"
+        raise RbSynError, "unexpected effect format"
       end
     elsif e1.split('.').size == 2
       if e2 == ''
@@ -39,15 +39,15 @@ class EffectAnalysis
       elsif e2.split('.').size == 2
         e1 == e2
       else
-        raise RuntimeError, "unexpected effect format"
+        raise RbSynError, "unexpected effect format"
       end
     else
-      raise RuntimeError, "unexpected effect format"
+      raise RbSynError, "unexpected effect format"
     end
   end
 
   def self.effect_union(*es)
-    raise RuntimeError, "cannot have self during union of effects" if has_self? es
+    raise RbSynError, "cannot have self during union of effects" if has_self? es
     union = es.map { |e| Set[*e] }
       .reduce { |e1, e2| e1 | e2 }
       .to_a
@@ -83,10 +83,10 @@ class EffectAnalysis
         if klass.base.to_s == 'ActiveRecord_Relation'
           RDL::Globals.info.get(klass.params[0].to_s, meth, kind)
         else
-          raise RuntimeError, "unhandled type #{klass}"
+          raise RbSynError, "unhandled type #{klass}"
         end
       else
-        raise RuntimeError, "unhandled type #{klass}"
+        raise RbSynError, "unhandled type #{klass}"
       end
 
       my_eff ||= []
@@ -95,7 +95,7 @@ class EffectAnalysis
         when RDL::Type::NominalType, RDL::Type::SingletonType
           eff.gsub('self', klass.to_s)
         else
-          raise RuntimeError, "unhandled type"
+          raise RbSynError, "unhandled type"
         end
       }
       effect_union(*([klass_eff, my_eff, args].flatten))
@@ -105,7 +105,7 @@ class EffectAnalysis
       effects = ast.children.map { |c| effect_of(c, env, kind) }
       effect_union(*effects.flatten)
     else
-      raise RuntimeError, "unhandled ast node #{ast.type}"
+      raise RbSynError, "unhandled ast node #{ast.type}"
     end
   end
 
@@ -134,7 +134,7 @@ class EffectAnalysis
           RDL::Globals.info.get(klass.params[0].name, meth, :type)
         end
       else
-        raise RuntimeError, "unhandled type #{klass}"
+        raise RbSynError, "unhandled type #{klass}"
       end
       # take only the first type for now
       case tmeth[0]
@@ -144,14 +144,14 @@ class EffectAnalysis
         # is that a good thing?
         return tmeth[0].ret
       when RDL::Type::ComputedType
-        raise RuntimeError, "TODO"
+        raise RbSynError, "TODO"
       else
-        raise RuntimeError, "unexpected #{tmeth.inspect}"
+        raise RbSynError, "unexpected #{tmeth.inspect}"
       end
     when :begin
       type_of(ast.children.last, env)
     else
-      raise RuntimeError, "unhandled ast node #{ast.type}"
+      raise RbSynError, "unhandled ast node #{ast.type}"
     end
   end
 

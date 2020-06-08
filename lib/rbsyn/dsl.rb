@@ -29,7 +29,7 @@ class SynthesizerProxy
     @ctx.max_hash_size = max_hash_size
     @ctx.enable_constants = consts
     @ctx.enable_nil = enable_nil
-    raise RuntimeError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
+    raise RbSynError, "expected method type" unless @ctx.functype.is_a? RDL::Type::MethodType
 
     @mth_name = mth_name.to_sym
     @ctx.mth_name = @mth_name

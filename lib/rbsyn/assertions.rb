@@ -9,7 +9,7 @@ module Assertions
     else
       return if ENV.key? 'DISABLE_EFFECTS'
       ret = @ctx.functype.ret
-      raise RuntimeError, "expected only one parameter" unless @params.size == 1
+      raise RbSynError, "expected only one parameter" unless @params.size == 1
       type_env = {}
       # @params is a parameters of post block
       type_env[@params[0].to_sym] = ret

@@ -9,7 +9,7 @@ class ExpandHolePass < ::AST::Processor
     @expand_map = []
     @visited_envrefs = Set.new
     @ctx = ctx
-    raise RuntimeError, "expected LocalEnvironment" unless env.is_a? LocalEnvironment
+    raise RbSynError, "expected LocalEnvironment" unless env.is_a? LocalEnvironment
     @env = env
   end
 
@@ -91,7 +91,7 @@ class ExpandHolePass < ::AST::Processor
     elsif depth == 1 && @effect
       expanded.concat effects
     else
-      raise RuntimeError, "unexpected"
+      raise RbSynError, "unexpected"
     end
 
     # synthesize a hole with higher depth
@@ -170,7 +170,7 @@ class ExpandHolePass < ::AST::Processor
           path = CallChain.new([type, methd, RDL::Globals.types[:bot]], @ctx.tenv)
           exprs << fn_call(path)
         else
-          raise RuntimeError, "unhandled type #{type}"
+          raise RbSynError, "unhandled type #{type}"
         end
       }
     }
@@ -228,7 +228,7 @@ class ExpandHolePass < ::AST::Processor
           accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth, limit_depth: true, recv: true}),
             mth, *hole_args)
         else
-          raise RuntimeError, "expected type" unless accum.ttype <= trecv
+          raise RbSynError, "expected type" unless accum.ttype <= trecv
           accum = s(tret, :send, accum, mth, *hole_args)
         end
       rescue StopIteration
@@ -240,7 +240,7 @@ class ExpandHolePass < ::AST::Processor
 
   def finite_hash(type)
     # TODO: some hashes can have mandatory keys too
-    type.elts.each { |k, t| raise RuntimeError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType }
+    type.elts.each { |k, t| raise RbSynError, "expect everything to be optional in a hash" unless t.is_a? RDL::Type::OptionalType }
     possible_types = (1..@ctx.max_hash_size).map { |size|
       hash_combinations(type, size)
     }.flatten

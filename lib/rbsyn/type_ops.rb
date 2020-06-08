@@ -35,7 +35,7 @@ module TypeOperations
       else
         params = RDL::Wrap.get_type_params(trec.base.to_s)[0]
         idx = params.index(tret.name)
-        raise RuntimeError, "unexpected" if idx.nil?
+        raise RbSynError, "unexpected" if idx.nil?
         trec.params[idx]
       end
     else
@@ -50,7 +50,7 @@ module TypeOperations
       if cls.is_a? Class
         cls.ancestors.map { |klass| RDL::Util.add_singleton_marker(klass.to_s) }
       else
-        raise RuntimeError, "expected only true/false" unless (cls == true || cls == false || cls.nil? || cls.is_a?(Symbol))
+        raise RbSynError, "expected only true/false" unless (cls == true || cls == false || cls.nil? || cls.is_a?(Symbol))
         cls.class.ancestors.map { |klass| klass.to_s }
       end
     when RDL::Type::PreciseStringType
@@ -74,7 +74,7 @@ module TypeOperations
     when RDL::Type::DynamicType
       RDL::Globals.info.info.keys
     else
-      raise RuntimeError, "unhandled type #{trecv.inspect}"
+      raise RbSynError, "unhandled type #{trecv.inspect}"
     end
   end
 
@@ -100,12 +100,12 @@ module TypeOperations
         if [Symbol, TrueClass, FalseClass].include? targ.val.class
           true
         else
-          raise RuntimeError, "unhandled type #{targ.inspect}"
+          raise RbSynError, "unhandled type #{targ.inspect}"
         end
       when bool
         true
       else
-        raise RuntimeError, "unhandled type #{targ.inspect}"
+        raise RbSynError, "unhandled type #{targ.inspect}"
       end
     }
   end

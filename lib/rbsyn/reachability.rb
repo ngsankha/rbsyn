@@ -18,8 +18,8 @@ class CallChain
   attr_reader :path, :tenv
 
   def initialize(path, tenv)
-    raise RuntimeError, "expect path to be an array" unless path.is_a? Array
-    raise RuntimeError, "last element in a path must always be a type" unless path.last.is_a? RDL::Type::Type
+    raise RbSynError, "expect path to be an array" unless path.is_a? Array
+    raise RbSynError, "last element in a path must always be a type" unless path.last.is_a? RDL::Type::Type
     @path = path
     @tenv = tenv
   end
@@ -81,7 +81,7 @@ class Reachability
           chain.last <= type
         end
       else
-        raise RuntimeError, "unexpected variance"
+        raise RbSynError, "unexpected variance"
       end
     }
   end
