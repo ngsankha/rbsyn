@@ -11,7 +11,7 @@ describe "Gitlab" do
 
     define :build, '(Array<GitlabNote>, GitlabMergeRequest) -> GitlabDiscussion', [GitlabDiscussion, GitlabMergeRequest, GitlabNote], prog_size: 30 do
       spec 'returns a discussion of the right type' do
-        pre {
+        setup {
           @first_note = Fabricate(:diff_note_on_merge_request)
           @merge_request = @first_note.noteable
           second_note = Fabricate(:diff_note_on_merge_request, in_reply_to: @first_note)

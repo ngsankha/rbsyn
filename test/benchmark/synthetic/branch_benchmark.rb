@@ -23,7 +23,7 @@ describe "Synthetic" do
       }
 
       spec "returns true when user doesn't exist" do
-        pre {
+        setup {
           username_available? 'bruce1'
         }
 
@@ -33,7 +33,7 @@ describe "Synthetic" do
       end
 
       spec "returns false when user exists" do
-        pre {
+        setup {
           u = Fabricate(:user)
           username_available? u.username
         }
@@ -44,7 +44,7 @@ describe "Synthetic" do
       end
 
       spec "returns false when username is reserved" do
-        pre {
+        setup {
           SiteSettings.reserved_usernames = ['apple', 'dog']
           username_available? 'apple'
         }

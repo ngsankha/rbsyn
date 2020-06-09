@@ -9,7 +9,7 @@ describe "Diaspora" do
 
     define :process_invite_acceptence, "(DiasporaUser, InvitationCode) -> %bot", [DiasporaUser, InvitationCode] do
       spec "sets the inviter on user" do
-        pre {
+        setup {
           @bob = Fabricate(:diaspora_user, username: 'bob')
           @inv = Fabricate(:invitation_code, :diaspora_user => @bob)
           @old_count = @inv.count

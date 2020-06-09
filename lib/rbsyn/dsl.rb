@@ -5,7 +5,7 @@ class SpecProxy
     @mth_name = mth_name
   end
 
-  def pre(&blk)
+  def setup(&blk)
     @pre_blk = blk
   end
 

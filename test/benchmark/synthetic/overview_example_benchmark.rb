@@ -18,7 +18,7 @@ describe "Synthetic" do
       end
 
       spec "author can only change titles" do
-        pre {
+        setup {
           Shared.seed_db
           @post = Fabricate(:post, created_by: 'author', slug: 'hello-world', title: 'Hello World')
           update_post('author', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
@@ -33,7 +33,7 @@ describe "Synthetic" do
       end
 
       spec "unrelated users cannot change anything" do
-        pre {
+        setup {
           Shared.seed_db
           @post = Fabricate(:post, created_by: 'author', slug: 'hello-world', title: 'Hello World')
           update_post('dummy', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')
@@ -48,7 +48,7 @@ describe "Synthetic" do
       end
 
       spec "admin can takeover any post" do
-        pre {
+        setup {
           Shared.seed_db
           @post = Fabricate(:post, created_by: 'author', slug: 'hello-world', title: 'Hello World')
           update_post('admin', 'hello-world', created_by: 'dummy', title: 'Foo Bar', slug: 'foo-bar')

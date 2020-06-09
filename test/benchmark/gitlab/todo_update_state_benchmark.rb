@@ -19,7 +19,7 @@ describe 'Gitlab' do
 
     define :update_state, '(GitlabTodo, Symbol) -> Array<Integer>', [GitlabTodo], prog_size: 30 do
       spec 'updates the state of todos' do
-        pre {
+        setup {
           @todo = GitlabTodo.create(state: :pending)
           ids = update_state(@todo, :done)
           @todo.reload
@@ -32,7 +32,7 @@ describe 'Gitlab' do
       end
 
       # spec 'does not update todos that already have the given state' do
-      #   pre {
+      #   setup {
       #     @todo = GitlabTodo.create(state: :pending)
       #     update_state(@todo, :pending)
       #   }

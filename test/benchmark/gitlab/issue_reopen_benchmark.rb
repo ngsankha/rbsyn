@@ -11,7 +11,7 @@ describe "Gitlab" do
 
     define :reopen, '(GitlabIssue) -> %bot', [GitlabIssue, Time], enable_nil: true do
       spec "changes the state to closed" do
-        pre {
+        setup {
           @user = Fabricate(:gitlab_user)
           @issue = Fabricate(:issue, state: 'closed', closed_at: Time.now, closed_by: @user)
           @prev_state = @issue.state_id

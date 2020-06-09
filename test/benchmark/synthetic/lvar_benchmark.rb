@@ -7,7 +7,7 @@ describe "Synthetic" do
     define :identity, "(String) -> String", [User, UserEmail] do
 
       spec "returns same value" do
-        pre {
+        setup {
           identity 'hello'
         }
 

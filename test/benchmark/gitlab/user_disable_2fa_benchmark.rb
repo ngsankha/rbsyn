@@ -8,7 +8,7 @@ describe 'Gitlab' do
 
     define :disable_two_factor!, '(GitlabUser) -> %bot', [GitlabUser], enable_nil: true do
       spec "clears all 2FA-related fields" do
-        pre {
+        setup {
           @user = Fabricate(:two_factor_user)
           @old_two_factor_enabled = @user.two_factor_enabled?
           @old_encrypted_otp_secret = @user.encrypted_otp_secret

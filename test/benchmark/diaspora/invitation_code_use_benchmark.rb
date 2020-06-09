@@ -9,7 +9,7 @@ describe "Diaspora" do
 
     define :use!, "(InvitationCode) -> %bot", [InvitationCode], consts: true do
       spec "decrements the count of the code" do
-        pre {
+        setup {
           @code = Fabricate(:invitation_code)
           @old_count = @code.count
           use!(@code)

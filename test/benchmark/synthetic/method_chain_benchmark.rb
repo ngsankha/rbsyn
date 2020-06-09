@@ -7,7 +7,7 @@ describe "Synthetic" do
     define :username_available?, "(String) -> %bool", [User, UserEmail] do
 
       spec "returns true when user doesn't exist" do
-        pre {
+        setup {
           username_available? 'bruce1'
         }
 
@@ -17,7 +17,7 @@ describe "Synthetic" do
       end
 
       spec "returns false when user exists" do
-        pre {
+        setup {
           u = Fabricate(:user)
           username_available? u.username
         }

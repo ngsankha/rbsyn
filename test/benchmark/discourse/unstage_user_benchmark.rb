@@ -6,7 +6,7 @@ describe "Discourse" do
 
     define :unstage, "({ email: ?String, active: ?%bool, username: ?String, name: ?String}) -> AnotherUser", [AnotherUser], prog_size: 30, enable_nil: true do
       spec "correctly unstages a user" do
-        pre {
+        setup {
           @staged = Fabricate(:staged_user, email: 'staged@account.com')
           unstage(email: 'staged@account.com', active: true, username: 'unstaged1', name: 'Foo Bar')
         }
@@ -21,7 +21,7 @@ describe "Discourse" do
       end
 
       spec "returns nil when the user cannot be unstaged" do
-        pre {
+        setup {
           Fabricate(:coding_horror)
           unstage(email: 'jeff@somewhere.com')
         }
@@ -32,7 +32,7 @@ describe "Discourse" do
       end
 
       spec "returns nil when the user cannot be unstaged" do
-        pre {
+        setup {
           unstage(email: 'ano@account.com')
         }
 

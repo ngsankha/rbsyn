@@ -24,7 +24,7 @@ describe "Discourse" do
       RDL.type EmailToken, :active, '() -> ActiveRecord_Relation<EmailToken>', read: ['EmailToken'], write: []
 
       spec "confirms email token and activates user" do
-        pre {
+        setup {
           @inactive = Fabricate(:inactive_user)
           activate(@inactive)
         }
@@ -39,7 +39,7 @@ describe "Discourse" do
       end
 
       # spec 'works without needing to reload the model' do
-      #   pre {
+      #   setup {
       #     @inactive = Fabricate(:inactive_user)
       #     activate(@inactive)
       #   }
@@ -51,7 +51,7 @@ describe "Discourse" do
       # end
 
       spec 'activates user even if email token is already confirmed' do
-        pre {
+        setup {
           @inactive = Fabricate(:inactive_user)
           token = @inactive.email_tokens.find_by(email: @inactive.email)
           token.update_column(:confirmed, true)

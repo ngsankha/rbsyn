@@ -9,7 +9,7 @@ describe "Diaspora" do
 
     define :confirm_email, "(DiasporaUser, String) -> %bool", [DiasporaUser], enable_nil: true, prog_size: 30 do
       spec 'confirms email and set the unconfirmed_email to email on valid token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user_with_token)
           @user.update_attribute(:unconfirmed_email, "alice@newmail.com")
           confirm_email(@user, @user.confirm_email_token)
@@ -23,7 +23,7 @@ describe "Diaspora" do
       end
 
       spec 'returns false and does not change anything on wrong token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user_with_token)
           @user.update_attribute(:unconfirmed_email, "alice@newmail.com")
           confirm_email(@user, @user.confirm_email_token.reverse)
@@ -37,7 +37,7 @@ describe "Diaspora" do
       end
 
       spec 'returns false and does not change anything on blank token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user_with_token)
           @user.update_attribute(:unconfirmed_email, "alice@newmail.com")
           confirm_email(@user, "")
@@ -51,7 +51,7 @@ describe "Diaspora" do
       end
 
       spec 'returns false and does not change anything on blank token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user_with_token)
           @user.update_attribute(:unconfirmed_email, "alice@newmail.com")
           confirm_email(@user, nil)
@@ -65,7 +65,7 @@ describe "Diaspora" do
       end
 
       spec 'returns false and does not change anything on any token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user)
           confirm_email(@user, "12345" * 6)
         }
@@ -78,7 +78,7 @@ describe "Diaspora" do
       end
 
       spec 'returns false and does not change anything on blank token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user)
           confirm_email(@user, "")
         }
@@ -91,7 +91,7 @@ describe "Diaspora" do
       end
 
       spec 'returns false and does not change anything on blank token' do
-        pre {
+        setup {
           @user = Fabricate(:diaspora_user)
           confirm_email(@user, nil)
         }

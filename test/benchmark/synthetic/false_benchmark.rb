@@ -7,7 +7,7 @@ describe "Synthetic" do
     define :just_false, "(String) -> %bool", [User, UserEmail] do
 
       spec "returns false" do
-        pre {
+        setup {
           just_false 'hello'
         }
 

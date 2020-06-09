@@ -37,7 +37,7 @@ describe "Discourse" do
     define :check_site_contact_username, "(User) -> %bot", [DiscourseSiteSetting] do
 
       spec "clears site_contact_username site setting when admin privilege is revoked" do
-        pre {
+        setup {
           @contact_user = Fabricate(:admin)
           DiscourseSiteSetting.site_contact_username = @contact_user.username
           @contact_user.revoke_admin!
@@ -50,7 +50,7 @@ describe "Discourse" do
       end
 
       spec "clears site_contact_username site setting when moderator privilege is revoked" do
-        pre {
+        setup {
           @contact_user = Fabricate(:moderator)
           DiscourseSiteSetting.site_contact_username = @contact_user.username
           @contact_user.revoke_moderation!
@@ -63,7 +63,7 @@ describe "Discourse" do
       end
 
       spec "does not change site_contact_username site setting when admin privilege is revoked" do
-        pre {
+        setup {
           @contact_user = Fabricate(:moderator, admin: true)
           DiscourseSiteSetting.site_contact_username = @contact_user.username
           @contact_user.revoke_admin!
@@ -76,7 +76,7 @@ describe "Discourse" do
       end
 
       spec "does not change site_contact_username site setting when moderator privilege is revoked" do
-        pre {
+        setup {
           @contact_user = Fabricate(:moderator, admin: true)
           DiscourseSiteSetting.site_contact_username = @contact_user.username
           @contact_user.revoke_moderation!
@@ -89,7 +89,7 @@ describe "Discourse" do
       end
 
       spec "clears site_contact_username site setting when staff privileges are revoked" do
-        pre {
+        setup {
           @contact_user = Fabricate(:moderator, admin: true)
           DiscourseSiteSetting.site_contact_username = @contact_user.username
           @contact_user.revoke_admin!

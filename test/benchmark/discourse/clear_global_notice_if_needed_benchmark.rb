@@ -23,7 +23,7 @@ describe "Discourse" do
     define :clear_global_notice_if_needed, "(User) -> %bot", [DiscourseSiteSetting], prog_size: 30, consts: true do
 
       spec "doesn't clear the notice when a system user is saved" do
-        pre {
+        setup {
           system_user = Fabricate(:admin, id: -1)
           DiscourseSiteSetting.has_login_hint = true
           DiscourseSiteSetting.global_notice = "some notice"
@@ -37,7 +37,7 @@ describe "Discourse" do
       end
 
       spec "clears the notice when the admin is saved" do
-        pre {
+        setup {
           admin = Fabricate(:admin)
           DiscourseSiteSetting.has_login_hint = true
           DiscourseSiteSetting.global_notice = "some notice"
@@ -51,7 +51,7 @@ describe "Discourse" do
       end
 
       spec "doesn't clear the login hint when a regular user is saved" do
-        pre {
+        setup {
           user = Fabricate(:user, admin: false)
           DiscourseSiteSetting.has_login_hint = true
           DiscourseSiteSetting.global_notice = "some notice"

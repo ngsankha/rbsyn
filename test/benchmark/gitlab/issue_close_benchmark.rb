@@ -11,7 +11,7 @@ describe "Gitlab" do
 
     define :close, '(GitlabIssue) -> %bot', [GitlabIssue, Time] do
       spec "changes the state to closed" do
-        pre {
+        setup {
           @issue = Fabricate(:issue)
           @prev_state = @issue.state_id
           close(@issue)

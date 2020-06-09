@@ -12,7 +12,7 @@ describe "Diaspora" do
 
     define :schedule_check_if_needed, "(DiasporaPod) -> %bool", [DiasporaPod], prog_size: 50 do
       spec "schedules the pod for the next check if it is offline" do
-        pre {
+        setup {
           @pod = Fabricate(:pod, status: :net_failed)
           schedule_check_if_needed(@pod)
         }
@@ -23,7 +23,7 @@ describe "Diaspora" do
       end
 
       spec "does nothing if the pod unchecked" do
-        pre {
+        setup {
           @pod = Fabricate(:pod)
           schedule_check_if_needed(@pod)
         }
@@ -34,7 +34,7 @@ describe "Diaspora" do
       end
 
       spec "does nothing if the pod is online" do
-        pre {
+        setup {
           @pod = Fabricate(:pod, status: :no_errors)
           schedule_check_if_needed(@pod)
         }
@@ -45,7 +45,7 @@ describe "Diaspora" do
       end
 
       # spec "does nothing if the pod is scheduled for the next check" do
-      #   pre {
+      #   setup {
       #     @pod = Fabricate(:pod, status: :no_errors, scheduled_check: true)
       #     @old_updated = @pod.updated_at
       #     schedule_check_if_needed(@pod)
