@@ -1,3 +1,5 @@
+<img align="left" src="rbsyn-logo.png" width=110>
+
 # Rbsyn ![](https://github.com/ngsankha/rbsyn/workflows/Rbsyn%20Build/badge.svg)
 
 Program synthesis for Ruby.
@@ -83,3 +85,8 @@ end
 You can run the unit tests and the sample benchmarks by executing `bundle exec rake`.
 
 All the unit tests are in [`test/unit`](test/unit) and the benchmarks can be found in [`test/benchmark`](test/benchmark).
+
+---
+
+_Logo derived from icon by [ultimatearm](https://www.flaticon.com/authors/ultimatearm) from [www.flaticon.com](https://www.flaticon.com/)._
+
