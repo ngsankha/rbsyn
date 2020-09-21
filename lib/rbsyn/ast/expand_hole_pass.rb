@@ -33,7 +33,7 @@ class ExpandHolePass < ::AST::Processor
     @recv = @params.fetch(:recv, false)
     expanded = []
 
-    if depth == 0
+    unless @effect
       # nil constant
       if @ctx.enable_nil# && !@recv
         expanded << nil_const
@@ -83,21 +83,18 @@ class ExpandHolePass < ::AST::Processor
 
       # possibly reusable subexpressions
       expanded.concat envref(node.ttype)
-    elsif depth > 0 && !@effect
-      # synthesize function calls
-      r = Reachability.new(@ctx.tenv)
-      paths = r.paths_to_type(node.ttype, depth, @variance)
+
+      r = Reachability.new(@ctx)
+      paths = r.paths_to_type(node.ttype, 1, @variance) # 1 is the depth of reachability graph
       expanded.concat paths.map { |path| fn_call(path) }
-    elsif depth == 1 && @effect
-      expanded.concat effects
     else
-      raise RbSynError, "unexpected"
+      expanded.concat effects
     end
 
     # synthesize a hole with higher depth
     # TODO: we don't do this if we are synthesizing for effects, will do after
     # effect reachability graph is implemented
-    expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg, variance: @variance}) unless (@effect || @limit_depth)
+    # expanded << s(node.ttype, :hole, depth + 1, {hash_depth: @curr_hash_depth, method_arg: @method_arg, variance: @variance}) unless (@effect || @limit_depth)
 
     @expand_map << expanded.size
     s(node.ttype, :filled_hole, *expanded, {method_arg: @method_arg})
@@ -213,29 +210,15 @@ class ExpandHolePass < ::AST::Processor
 
   def fn_call(path)
     tokens = path.path.to_enum
-    accum = nil
-    loop {
-      begin
-        trecv = tokens.next
-        mth = tokens.next
-        mthds = methods_of(trecv)
-        info = mthds[mth]
-        tmeth = info[:type]
-        targs = compute_targs(trecv, tmeth)
-        tret = compute_tout(trecv, tmeth, targs)
-        hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth, method_arg: true}) }
-        if accum.nil?
-          accum = s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth, limit_depth: true, recv: true}),
-            mth, *hole_args)
-        else
-          raise RbSynError, "expected type" unless accum.ttype <= trecv
-          accum = s(tret, :send, accum, mth, *hole_args)
-        end
-      rescue StopIteration
-        break
-      end
-    }
-    accum
+    trecv = tokens.next
+    mth = tokens.next
+    mthds = methods_of(trecv)
+    info = mthds[mth]
+    tmeth = info[:type]
+    targs = compute_targs(trecv, tmeth)
+    tret = compute_tout(trecv, tmeth, targs)
+    hole_args = targs.map { |targ| s(targ, :hole, 0, {hash_depth: @curr_hash_depth, method_arg: true}) }
+    s(tret, :send, s(trecv, :hole, 0, {hash_depth: @curr_hash_depth, limit_depth: true, recv: true}), mth, *hole_args)
   end
 
   def finite_hash(type)

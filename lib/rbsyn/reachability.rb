@@ -36,13 +36,14 @@ end
 class Reachability
   include TypeOperations
 
-  def initialize(initial_tenv)
-    @initial_tenv = initial_tenv
+  def initialize(ctx)
+    @ctx = ctx
+    @initial_tenv = ctx.tenv
   end
 
   def paths_to_type(target, depth, variance=COVARIANT)
     curr_depth = 0
-    types = types_from_tenv(@initial_tenv)
+    types = known_types(@ctx, @initial_tenv)
     queue = types.map { |t| CallChain.new([t], types) }
 
     until curr_depth == depth do

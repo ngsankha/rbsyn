@@ -48,7 +48,7 @@ class SynthesizerProxy
   end
 
   def generate_program
-    Timeout::timeout(300) {
+    Timeout::timeout(60) {
       @specs.each { |spec|
         @ctx.add_example(spec.pre_blk, spec.post_blk)
       }

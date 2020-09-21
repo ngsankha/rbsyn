@@ -110,8 +110,19 @@ module TypeOperations
     }
   end
 
-  def types_from_tenv(tenv)
-    tenv.values.to_set
+  def known_types(ctx, tenv)
+    (tenv.values +
+    [RDL::Globals.types[:bool]] +
+    ctx.constants.keys.map { |k|
+      case k
+      when :string
+        RDL::Globals.types[:string]
+      when :integer
+        RDL::Globals.types[:integer]
+      else
+        raise RbSynError, "unexpected"
+      end
+    }).to_set
   end
 
   def methods_of(trecv)

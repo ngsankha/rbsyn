@@ -30,6 +30,7 @@ module SynHelper
             prog_wrap.passed_asserts = e.passed_count
             prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
+            false
           rescue RbSynError => e
             raise e
           rescue StandardError => e
