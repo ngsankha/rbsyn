@@ -1,7 +1,7 @@
 class ProgWrapper
   include AST
 
-  attr_reader :seed, :env, :exprs
+  attr_reader :seed, :env, :exprs, :looking_for, :target
   attr_accessor :passed_asserts
 
   def initialize(ctx, seed, env, exprs=RDL.type_cast([], 'Array<TypedNode>', force: true))
@@ -10,6 +10,7 @@ class ProgWrapper
     @env = env
     @exprs = exprs
     @passed_asserts = 0
+    @looking_for = :type
   end
 
   def look_for(kind, target)
@@ -89,12 +90,14 @@ class ProgWrapper
         expanded = pass1.process(eff_hole)
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
         generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
+          raise RbSynError, "expected only one item" unless selection.size == 1
+          read_eff = pass1.read_effs[selection.first]
           pass2 = ExtractASTPass.new(selection, @env)
           program = update_types_pass.process(pass2.process(expanded))
           new_env = pass2.env
           prog_wrap = ProgWrapper.new(@ctx, @seed, new_env, @exprs.dup)
           prog_wrap.add_side_effect_expr(program)
-          prog_wrap.look_for(:teffect, [eff])
+          prog_wrap.look_for(:teffect, read_eff)
           prog_wrap.passed_asserts = @passed_asserts
           prog_wrap
         }
@@ -137,9 +140,9 @@ class ProgWrapper
                 else
                   kls = klass
                 end
-                effect_causing << [kls, meth]
+                effect_causing << [kls, meth, v2.fetch(:read, [''])]
               else
-                effect_causing << [cls, meth]
+                effect_causing << [cls, meth, v2.fetch(:read, [''])]
               end
             }
           }
@@ -168,9 +171,9 @@ class ProgWrapper
                 else
                   kls = eff.split('.')[0]
                 end
-                effect_causing << [kls, meth]
+                effect_causing << [kls, meth, v2.fetch(:read, [''])]
               else
-                effect_causing << [cls, meth]
+                effect_causing << [cls, meth, v2.fetch(:read, [''])]
               end
             end
           }

@@ -2,11 +2,12 @@ class ExpandHolePass < ::AST::Processor
   include AST
   include TypeOperations
 
-  attr_reader :expand_map
+  attr_reader :expand_map, :read_effs
   attr_writer :effect_methds
 
   def initialize(ctx, env)
     @expand_map = []
+    @read_effs = []
     @visited_envrefs = Set.new
     @ctx = ctx
     raise RbSynError, "expected LocalEnvironment" unless env.is_a? LocalEnvironment
@@ -130,7 +131,7 @@ class ExpandHolePass < ::AST::Processor
       @ctx.components.map { |c| RDL::Type::SingletonType.new(c) })]
     exprs = []
 
-    @effect_methds.each { |klass, methd|
+    @effect_methds.each { |klass, methd, read_eff|
       types.each { |type|
         case type
         when RDL::Globals.types[:bool],
@@ -147,6 +148,7 @@ class ExpandHolePass < ::AST::Processor
             trecv = type
             path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
             exprs << fn_call(path)
+            @read_effs << read_eff
           end
         when RDL::Type::NominalType
           klass_qual = RDL::Util.to_class(klass)
@@ -156,6 +158,7 @@ class ExpandHolePass < ::AST::Processor
             # the %top type here doesn't matter
             path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
             exprs << fn_call(path)
+            @read_effs << read_eff
           end
         when RDL::Type::GenericType
           # ignore
@@ -165,10 +168,12 @@ class ExpandHolePass < ::AST::Processor
             trecv = type
             path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
             exprs << fn_call(path)
+            @read_effs << read_eff
           end
         when RDL::Type::DynamicType
           path = CallChain.new([type, methd, RDL::Globals.types[:bot]], @ctx.tenv)
           exprs << fn_call(path)
+          @read_effs << read_eff
         else
           raise RbSynError, "unhandled type #{type}"
         end

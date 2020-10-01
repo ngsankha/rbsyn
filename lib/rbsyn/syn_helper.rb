@@ -27,9 +27,17 @@ module SynHelper
             }
             klass.instance_exec res, &postcond
           rescue AssertionError => e
+            orig_prog = prog_wrap.dup
             prog_wrap.passed_asserts = e.passed_count
             prog_wrap.look_for(:effect, e.read_set)
             effect_needed << prog_wrap
+
+            # also possible failure from the residual read effect
+            if orig_prog.looking_for == :teffect && !(orig_prog.target.size == 1 || orig_prog.target[0] == '')
+              orig_prog.passed_asserts = e.passed_count
+              orig_prog.look_for(:teffect, orig_prog.target)
+              effect_needed << orig_prog
+            end
           rescue RbSynError => e
             raise e
           rescue StandardError => e
