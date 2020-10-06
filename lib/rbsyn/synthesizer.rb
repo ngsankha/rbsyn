@@ -12,6 +12,13 @@ class Synthesizer
   end
 
   def run
+    if ENV.key? 'EFFECT_PREC'
+      eff_prec = ENV['EFFECT_PREC'].strip.to_i
+    else
+      eff_prec = 0
+    end
+    change_effect_precision(eff_prec)
+
     @ctx.load_tenv!
     prog_cache = ProgCache.new @ctx
 
