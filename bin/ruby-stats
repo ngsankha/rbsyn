@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "rbsyn"
+
+module Enumerable
+    def mean
+      self.sum/self.length.to_f
+    end
+
+    def sample_variance
+      m = self.mean
+      sum = self.inject(0){|accum, i| accum +(i-m)**2 }
+      sum/(self.length - 1).to_f
+    end
+
+    def standard_deviation
+      Math.sqrt(self.sample_variance)
+    end
+
+end 
+
+class MethSize < ::AST::Processor
+  attr_reader :sizes
+
+  def initialize
+    @sizes = {}
+    @tmp = 0
+  end
+
+  def on_def(node)
+    process(node.children.last)
+    @sizes[node.children.first] = @tmp if (BlockCount.has_block?(node.children.last) && MetaprogCount.has_meta?(node.children.last))
+    @tmp = 0
+    nil
+  end
+
+  def handler_missing(node)
+    @tmp += 1
+    node.children.map { |k|
+      k.is_a?(node.class) ? process(k) : k
+    }
+  end
+end
+
+class BlockCount < ::AST::Processor
+  attr_reader :has_block
+
+  def self.has_block?(node)
+    pass = BlockCount.new
+    pass.process(node)
+    pass.has_block
+  end
+
+  def initialize
+    @has_block = false
+  end
+
+  def on_block(node)
+    @has_block = true
+  end
+
+  def handler_missing(node)
+    node.children.map { |k|
+      k.is_a?(node.class) ? process(k) : k
+    }
+  end
+end
+
+class MetaprogCount < ::AST::Processor
+  attr_reader :has_meta
+
+  def self.has_meta?(node)
+    pass = MetaprogCount.new
+    pass.process(node)
+    pass.has_meta
+  end
+
+  def initialize
+    @has_meta = false
+  end
+
+  def on_send(node)
+    res = [:send, :public_send, :define_method, :method_missing, :remove_method, :undef_method].include? node.children[1]
+    @has_meta ||= res
+    handler_missing(node)
+    nil
+  end
+
+  def handler_missing(node)
+    node.children.map { |k|
+      k.is_a?(node.class) ? process(k) : k
+    }
+  end
+end
+
+files = Dir["/Users/sankha/projects/discourse/app/models/*.rb"]
+meth_sizes = files.map { |f|
+  begin
+  ast = Parser::CurrentRuby.parse(File.read(f))
+  pass1 = MethSize.new
+  # pass2 = BlockCount.new
+  # pass3 = MetaprogCount.new
+  pass1.process(ast)
+  # pass2.process(ast)
+  # pass3.process(ast)
+  # puts "#{f}\t#{pass1.sizes.size}\t#{pass1.sizes.values.sum}\t#{pass2.count}\t#{pass3.count}"
+  pass1.sizes.size
+  rescue Exception
+    0
+  end
+}.sum
+puts meth_sizes
+# puts meth_sizes.standard_deviation
+# puts meth_sizes.min
+# puts meth_sizes.max
+# meth_sizes.sort!.filter! { |x| x != 0 }
+# puts meth_sizes.first
+# puts meth_sizes.last
+# puts meth_sizes[meth_sizes.size / 2]
+# puts (meth_sizes[meth_sizes.size * 3/ 4] - meth_sizes[meth_sizes.size / 4]) / 2
