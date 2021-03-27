@@ -1,50 +1,60 @@
 <img align="left" src="rbsyn-logo.png" width=110>
 
-# Rbsyn ![](https://github.com/ngsankha/rbsyn/workflows/Rbsyn%20Build/badge.svg)
+# Rbsyn
 
 Program synthesis for Ruby.
 
-Given a function specification in the form of tests and type annotations with [RDL](https://github.com/tupl-tufts/rdl), this synthesizes a Ruby function that would pass the tests. This reduces programmer effort to just writing tests that specify the function behavior and the computer writing the function implementation for you.
+Given a function specification in the form of tests, type and effect annotations with [RDL](https://github.com/tupl-tufts/rdl), this synthesizes a Ruby function that would pass the tests. This reduces programmer effort to just writing tests that specify the function behavior and the computer writing the function implementation for you.
 
 ## Installation
 
 You need a working Ruby installation with [Bundler](https://bundler.io/) installed. Then install all the dependencies by executing `bundle install`.
 
-## Using Rbsyn
+We have tested RbSyn on Ruby 2.6.3 with Bundler 2.1.4. Other versions should work, but we have not tested it. Let us know if there are any issues.
 
-Rbsyn specifications are written in a similar fashion as unit tests in a domain specific language.
+## Running Tests
 
-You start off by defining a function you want to specify:
+All the benchmark programs can be run using the following command:
 
-```ruby
-define :foo, "(String) -> %bool" do
-  # ...
-end
+```
+bundle exec rake bench
 ```
 
-The first argument is the name of function, and the second argument is the function signature. Inside this block you can now write the unit tests for this function. A unit test is of the following form:
+Prefix the environment variable `CONSOLE_LOG=1` to the above command to print the synthesized method. To run a single test use the following command:
 
-```ruby
-spec "returns true if some condition is met" do
-  pre {
-    # the code that makes that condition true
-  }
-
-  foo("argument to my function")
-
-  post { |result|
-    result == true
-  }
-end
+```
+bundle exec rake bench TEST=<path-to-test-file>
 ```
 
-The actual function call is preceded by a `pre` block that does the setup necessary to execute the function under test. The following line actually executes the function for which we are writing a test. The `post` block comes at the end. This is like a post condition - this blokc should return true if the test passes all assertions, false otherwise.
+All the benchmarks can be found in [`test/benchmark`](test/benchmark) and custom benchmarks can be run by updating in [`Rakefile`](Rakefile) in line 15, for the `t.test_files` value.
 
-### Example
+## Environment Variables
 
-Let us take a look at a complete example that defines and generates the `username_available?` function by querying the database.
+Multiple flags can be passed to RbSyn to explore different configurations of synthesis:
 
-```ruby
+* `CONSOLE_LOG=1`: Print the programs that are bring synthesized.
+* `DISABLE_TYPES=1`: Disable type directed synthesis.
+* `DISABLE_EFFECTS=1`: Disable effect guided synthesis.
+* `EFFECT_PREC=0` or `EFFECT_PREC=1` or `EFFECT_PREC=2`: Set the level of effect precision to use. 0 is the most precise, 1 is class level precision and 2 reduces annotations to pure or impure only.
+
+These environment variables can be passed in any combination in the bench command like so:
+
+```
+CONSOLE_LOG=1 DISABLE_EFFECTS=1 bundle exec rake bench
+```
+
+## Using RbSyn
+
+You can try to play with the implementation of RbSyn, the purpose of some of the key modules are given in the file structure section above.
+
+To write a new test, you can either copy an example from the existing benchmark and modify it. Update the `Rakefile` so the `t.test_files` contain your new benchmark.
+
+Benchmarks follow roughly this format:
+
+```
+# type definitions for methods that will be used for synthesis
+RDL.type Array, :first, '() -> t', wrap: false
+
 define :username_available?, "(String) -> %bool" do
 
   spec "returns true when user doesn't exist" do
@@ -56,7 +66,7 @@ define :username_available?, "(String) -> %bool" do
   end
 
   spec "returns false when user exists" do
-    pre {
+    setup {
       u = User.create(name: 'Bruce Wayne', username: 'bruce1', password: 'coolcool')
       u.emails.create(email: 'bruce1@wayne.com')
     }
@@ -72,19 +82,9 @@ define :username_available?, "(String) -> %bool" do
 end
 ```
 
-This should print the following program to the console:
+By default RbSyn will only use "" (empty string), 0 and 1 for constants during synthesis. To include some other constants in this set, add them to `lib/rbsyn/context.rb` lines 26 and 27.
 
-```ruby
-def username_available?(arg0)
-  User.exists?(username: arg0)
-end
-```
-
-## Tests
-
-You can run the unit tests and the sample benchmarks by executing `bundle exec rake`.
-
-All the unit tests are in [`test/unit`](test/unit) and the benchmarks can be found in [`test/benchmark`](test/benchmark).
+`nil` is not synthesized by default, to enable the synthesis of `nil` set the option `enable_nil: true`. For an example see, `test/benchmark/diaspora/user_confirm_email_benchmark.rb`.
 
 ---
 
