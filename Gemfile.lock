@@ -78,7 +78,7 @@ GEM
       byebug (~> 11.0)
       pry (~> 0.10)
     racc (1.4.16)
-    rake (10.5.0)
+    rake (13.0.3)
     rouge (3.16.0)
     ruby-progressbar (1.10.1)
     sql-parser (0.0.2)
@@ -108,7 +108,7 @@ DEPENDENCIES
   minitest-reporters
   pry
   pry-byebug
-  rake (~> 10.0)
+  rake (~> 13.0)
   rbsyn!
   rdl!
 
