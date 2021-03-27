@@ -22,7 +22,7 @@ Rake::TestTask.new(:smallbench) do |t|
   t.test_files = FileList["test/benchmark/synthetic/user_exists_benchmark.rb",
                           "test/benchmark/discourse/clear_global_notice_if_needed_benchmark.rb",
                           "test/benchmark/gitlab/discussion_build_benchmark.rb",
-                          "test/benchmark/diaspora/pod_schedule_check_if_needed_benchmark.rb"]
+                          "test/benchmark/diaspora/user_confirm_email_benchmark.rb"]
 end
 
 Rake::TestTask.new(:typecheck) do |t|
