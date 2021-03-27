@@ -48,7 +48,12 @@ class SynthesizerProxy
   end
 
   def generate_program
-    Timeout::timeout(300) {
+    if ENV.key? 'TIMEOUT'
+      timeout = ENV['TIMEOUT'].strip.to_i
+    else
+      timeout = 300
+    end
+    Timeout::timeout(timeout) {
       @specs.each { |spec|
         @ctx.add_example(spec.pre_blk, spec.post_blk)
       }
