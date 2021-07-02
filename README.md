@@ -2,9 +2,9 @@
 
 # Rbsyn
 
-Program synthesis for Ruby.
+Program synthesis for Ruby, guided by type and effect annotations. See the [PLDI 2021](https://arxiv.org/abs/2102.13183) paper for more details on the approach.
 
-Given a function specification in the form of tests, type and effect annotations with [RDL](https://github.com/tupl-tufts/rdl), this synthesizes a Ruby function that would pass the tests. This reduces programmer effort to just writing tests that specify the function behavior and the computer writing the function implementation for you.
+Given a method specification in the form of tests, type and effect annotations with [RDL](https://github.com/tupl-tufts/rdl), this synthesizes a Ruby function that will pass the tests. This reduces programmer effort to just writing tests that specify the function behavior and the computer writing the function implementation for you.
 
 ## Installation
 
@@ -85,6 +85,10 @@ end
 By default RbSyn will only use "" (empty string), 0 and 1 for constants during synthesis. To include some other constants in this set, add them to `lib/rbsyn/context.rb` lines 26 and 27.
 
 `nil` is not synthesized by default, to enable the synthesis of `nil` set the option `enable_nil: true`. For an example see, `test/benchmark/diaspora/user_confirm_email_benchmark.rb`.
+
+## Issues, questions or comments?
+
+Please file an issue on Github if you have problem running RbSyn. Feel free to send an email to sankha@cs.umd.edu.
 
 ---
 
