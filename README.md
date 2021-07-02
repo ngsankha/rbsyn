@@ -51,7 +51,7 @@ To write a new test, you can either copy an example from the existing benchmark 
 
 Benchmarks follow roughly this format:
 
-```
+```ruby
 # type definitions for methods that will be used for synthesis
 RDL.type Array, :first, '() -> t', wrap: false
 
