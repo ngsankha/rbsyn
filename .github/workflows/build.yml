@@ -1,21 +1,29 @@
-name: Rbsyn Build
+name: Rbsyn Quick Test
 
-on: [push]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        ruby-version: [2.6.x, 2.7.x, 3.0.x]
+
     steps:
     - uses: actions/checkout@v1
     - name: Set up Ruby 2.6
       uses: actions/setup-ruby@v1
       with:
-        ruby-version: 2.6.x
+        ruby-version: ${{ matrix.ruby-version }}
     - name: Build and test with Rake
       run: |
         sudo apt-get install -y libsqlite3-dev
         gem install bundler
         bundle install --jobs 4 --retry 3
-        bundle exec rake
+        bundle exec rake smallbench
