@@ -1,4 +1,4 @@
-name: Rbsyn Quick Test
+name: Rbsyn Build
 
 on:
   push:
@@ -16,12 +16,13 @@ jobs:
         ruby-version: [2.6.x, 2.7.x, 3.0.x]
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Ruby 2.6
-      uses: actions/setup-ruby@v1
+    - uses: actions/checkout@v2
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
-    - name: Build and test with Rake
+        bundler-cache: true
+    - name: Build and quick test with Rake
       run: |
         sudo apt-get install -y libsqlite3-dev
         gem install bundler

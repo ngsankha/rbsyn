@@ -1,6 +1,8 @@
 <img align="left" src="rbsyn-logo.png" width=110>
 
-# Rbsyn
+# RbSyn
+
+![RbSyn Build Status](https://github.com/ngsankha/rbsyn/actions/workflows/build.yml/badge.svg)
 
 Program synthesis for Ruby, guided by type and effect annotations. See the [PLDI 2021](https://arxiv.org/abs/2102.13183) paper for more details on the approach.
 
