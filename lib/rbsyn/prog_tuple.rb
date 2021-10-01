@@ -47,8 +47,7 @@ class ProgTuple
 
   def guess_branch_same?(other)
     precond = other.preconds[0]
-    postcond = other.postconds[0]
-    res, klass = eval_ast(@ctx, @branch.to_ast, precond)
+    res, _klass = eval_ast(@ctx, @branch.to_ast, precond)
     res == true
   end
 
@@ -82,7 +81,7 @@ class ProgTuple
       begin
         res, klass = eval_ast(other.ctx, to_ast, precond)
         klass.instance_eval { @params = postcond.parameters.map &:last }
-        result = klass.instance_exec res, &postcond
+        klass.instance_exec res, &postcond
         true
       rescue
         false

@@ -8,7 +8,7 @@ class TestElimination < EliminationStrategy
         begin
           res, klass = eval_ast(prog.ctx, ast, precond)
           klass.instance_eval { @params = postcond.parameters.map &:last }
-          result = klass.instance_exec res, &postcond
+          klass.instance_exec res, &postcond
           true
         rescue
           false

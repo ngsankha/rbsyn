@@ -11,7 +11,6 @@ class TypedNode < Parser::AST::Node
   def updated(type=nil, children=nil, properties=nil)
     new_type       = type       || @type
     new_children   = children   || @children
-    new_properties = properties || {}
 
     if @type == new_type &&
         @children == new_children &&

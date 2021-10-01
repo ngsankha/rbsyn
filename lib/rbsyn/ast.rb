@@ -23,7 +23,7 @@ module AST
       }), ast)
     # puts Unparser.unparse(func)
     klass.instance_eval Unparser.unparse(func)
-    result = klass.instance_eval &precond unless precond.nil?
+    result = klass.instance_eval(&precond) unless precond.nil?
     [result, klass]
   end
 end

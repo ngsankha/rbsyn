@@ -70,7 +70,7 @@ class ProgWrapper
       pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@seed)
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
-      generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
+      expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
         pass2 = ExtractASTPass.new(selection, @env)
         program = update_types_pass.process(pass2.process(expanded))
         new_env = pass2.env
@@ -89,7 +89,7 @@ class ProgWrapper
         pass1.effect_methds = methds
         expanded = pass1.process(eff_hole)
         expand_map = pass1.expand_map.map { |i| i.times.to_a }
-        generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
+        expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
           raise RbSynError, "expected only one item" unless selection.size == 1
           read_eff = pass1.read_effs[selection.first]
           pass2 = ExtractASTPass.new(selection, @env)
@@ -106,7 +106,7 @@ class ProgWrapper
       pass1 = ExpandHolePass.new(@ctx, @env)
       expanded = pass1.process(@exprs.last)
       expand_map = pass1.expand_map.map { |i| i.times.to_a }
-      generated_asts = expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
+      expand_map[0].product(*expand_map[1..expand_map.size]).map { |selection|
         pass2 = ExtractASTPass.new(selection, @env)
         program = pass2.process(expanded)
         new_env = pass2.env

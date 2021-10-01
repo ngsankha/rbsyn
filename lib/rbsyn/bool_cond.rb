@@ -15,7 +15,7 @@ class BoolCond
 
   def positive?
     raise RbSynError, "works for only 1 condition" if @conds.size > 1
-    stripped, nots = strip_not(@conds[0])
+    _stripped, nots = strip_not(@conds[0])
     nots % 2 == 0
   end
 
