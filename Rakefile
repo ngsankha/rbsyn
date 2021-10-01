@@ -20,7 +20,7 @@ Rake::TestTask.new(:smallbench) do |t|
   t.libs << "lib"
   t.libs << "models"
   t.test_files = FileList["test/benchmark/synthetic/user_exists_benchmark.rb",
-                          "test/benchmark/discourse/clear_global_notice_if_needed_benchmark.rb",
+                          "test/benchmark/discourse/activate_benchmark.rb",
                           "test/benchmark/gitlab/discussion_build_benchmark.rb",
                           "test/benchmark/diaspora/user_process_invite_acceptence_benchmark.rb"]
 end
