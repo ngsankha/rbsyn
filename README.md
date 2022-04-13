@@ -84,6 +84,14 @@ define :username_available?, "(String) -> %bool" do
 end
 ```
 
+The above `generate_program` runs RbSyn and produces the following snippet:
+
+```ruby
+def username_available?(arg0)
+  !User.exists?(username: arg0)
+end
+```
+
 By default RbSyn will only use "" (empty string), 0 and 1 for constants during synthesis. To include some other constants in this set, add them to `lib/rbsyn/context.rb` lines 26 and 27.
 
 `nil` is not synthesized by default, to enable the synthesis of `nil` set the option `enable_nil: true`. For an example see, `test/benchmark/diaspora/user_confirm_email_benchmark.rb`.
