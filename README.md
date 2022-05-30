@@ -4,9 +4,13 @@
 
 ![RbSyn Build Status](https://github.com/ngsankha/rbsyn/actions/workflows/build.yml/badge.svg)
 
-Program synthesis for Ruby, guided by type and effect annotations. See the [PLDI 2021](https://arxiv.org/abs/2102.13183) paper for more details on the approach.
+Program synthesis for Ruby, guided by type and effect annotations. See the [PLDI 2021](https://sankhs.com/static/rbsyn-pldi21.pdf) paper for more details on the approach.
 
 Given a method specification in the form of tests, type and effect annotations with [RDL](https://github.com/tupl-tufts/rdl), this synthesizes a Ruby function that will pass the tests. This reduces programmer effort to just writing tests that specify the function behavior and the computer writing the function implementation for you.
+
+## Demo
+
+[![RbSyn Demo YouTube Video](demo.png)](https://www.youtube.com/watch?v=yYAOK5S8lRY "RbSyn Demo YouTube Video")
 
 ## Installation
 
