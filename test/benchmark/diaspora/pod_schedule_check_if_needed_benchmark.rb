@@ -16,7 +16,7 @@ describe "Diaspora" do
           @pod = Fabricate(:pod, status: :net_failed)
           schedule_check_if_needed(@pod)
         }
-        
+
         post { |result|
           assert { !!@pod.reload.scheduled_check == true}
         }
@@ -50,7 +50,7 @@ describe "Diaspora" do
       #     @old_updated = @pod.updated_at
       #     schedule_check_if_needed(@pod)
       #   }
-        
+
       #   post { |result|
       #     assert { @pod.updated_at == @old_updated }
       #   }

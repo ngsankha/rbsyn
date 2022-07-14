@@ -16,7 +16,7 @@ Given a method specification in the form of tests, type and effect annotations w
 
 You need a working Ruby installation with [Bundler](https://bundler.io/) installed. Then install all the dependencies by executing `bundle install`.
 
-We have tested RbSyn on Ruby 2.6.3 and 3.0.2 with Bundler 2.1.4. Other versions should work, but we have not tested it. Let us know if there are any issues.
+We have tested RbSyn on Ruby 2.7.5 and 3.0.2 with Bundler 2.2.28. Other versions should work, but we have not tested it. Let us know if there are any issues.
 
 ## Running Tests
 

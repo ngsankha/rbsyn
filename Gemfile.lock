@@ -28,17 +28,16 @@ GEM
   remote: https://rubygems.org/
   specs:
     abstract_type (0.0.7)
-    activemodel (6.1.4.1)
-      activesupport (= 6.1.4.1)
-    activerecord (6.1.4.1)
-      activemodel (= 6.1.4.1)
-      activesupport (= 6.1.4.1)
-    activesupport (6.1.4.1)
+    activemodel (7.0.3.1)
+      activesupport (= 7.0.3.1)
+    activerecord (7.0.3.1)
+      activemodel (= 7.0.3.1)
+      activesupport (= 7.0.3.1)
+    activesupport (7.0.3.1)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
       tzinfo (~> 2.0)
-      zeitwerk (~> 2.3)
     adamantium (0.2.0)
       ice_nine (~> 0.11.0)
       memoizable (~> 0.4.0)
@@ -54,20 +53,20 @@ GEM
     concord (0.1.6)
       adamantium (~> 0.2.0)
       equalizer (~> 0.0.9)
-    concurrent-ruby (1.1.9)
-    diff-lcs (1.4.4)
+    concurrent-ruby (1.1.10)
+    diff-lcs (1.5.0)
     equalizer (0.0.11)
-    fabrication (2.22.0)
-    i18n (1.8.10)
+    fabrication (2.29.0)
+    i18n (1.11.0)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
     memoizable (0.4.2)
       thread_safe (~> 0.3, >= 0.3.1)
     method_source (1.0.0)
-    minitest (5.14.4)
+    minitest (5.16.2)
     minitest-hooks (1.5.0)
       minitest (> 5.3)
-    minitest-reporters (1.4.3)
+    minitest-reporters (1.5.0)
       ansi
       builder
       minitest (>= 5.0)
@@ -82,19 +81,19 @@ GEM
     parser (2.7.2.0)
       ast (~> 2.4.1)
     procto (0.0.3)
-    pry (0.13.1)
+    pry (0.14.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
-    pry-byebug (3.9.0)
+    pry-byebug (3.8.0)
       byebug (~> 11.0)
-      pry (~> 0.13.0)
-    racc (1.5.2)
+      pry (~> 0.10)
+    racc (1.6.0)
     rake (13.0.6)
-    rouge (3.26.1)
+    rouge (3.29.0)
     ruby-progressbar (1.11.0)
     sql-parser (0.0.2)
       racc
-    sqlite3 (1.4.2)
+    sqlite3 (1.4.4)
     thread_safe (0.3.6)
     tzinfo (2.0.4)
       concurrent-ruby (~> 1.0)
@@ -108,10 +107,9 @@ GEM
       mprelude (~> 0.1.0)
       parser (>= 2.6.5)
       procto (~> 0.0.2)
-    zeitwerk (2.4.2)
 
 PLATFORMS
-  ruby
+  x86_64-darwin-19
 
 DEPENDENCIES
   bundler (~> 2.0)
@@ -126,4 +124,4 @@ DEPENDENCIES
   rdl!
 
 BUNDLED WITH
-   2.1.4
+   2.2.28
