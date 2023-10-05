@@ -79,4 +79,14 @@ module SpecDSL
     syn_proxy = SynthesizerProxy.new(mth_name, type, components, prog_size, max_hash_size, consts, enable_nil)
     syn_proxy.instance_eval(&blk)
   end
+
+  def sketch(src, mth_name, type, components, prog_size: 5, max_hash_size: 1, consts: false, enable_nil: false, &blk)
+    sk_src = File.read(src)
+    ast = Parser::CurrentRuby.parse(sk_src)
+    rewrite_holes = SketchToHolePass.new
+    new_ast = rewrite_holes.process(ast)
+
+    # syn_proxy = SynthesizerProxy.new(mth_name, type, components, prog_size, max_hash_size, consts, enable_nil)
+    # syn_proxy.instance_eval(&blk)
+  end
 end

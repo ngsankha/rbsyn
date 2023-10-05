@@ -9,21 +9,25 @@ end
 
 def load_typedefs(*categories)
   RDL.reset
-  Rbsyn::ActiveRecord::Utils.load_schema
+  # Rbsyn::ActiveRecord::Utils.load_schema
 
   categories.each { |category|
     case category
     when :stdlib
-      RDL.nowrap :BasicObject
-      RDL.type :BasicObject, :!, '() -> %bool', effect: [:+, :+]
-      # RDL.type :BasicObject, :==, '(self) -> %bool', effect: [:+, :+]
+      # RDL.nowrap :BasicObject
+      # RDL.type :BasicObject, :!, '() -> %bool', effect: [:+, :+]
+      # # RDL.type :BasicObject, :==, '(self) -> %bool', effect: [:+, :+]
 
-      RDL.nowrap :Array
-      RDL.type_params :Array, [:t], :all?
+      # RDL.nowrap :Array
+      # RDL.type_params :Array, [:t], :all?
 
-      RDL.nowrap :Hash
-      RDL.type_params :Hash, [:k, :v], :all?
-      RDL.type :Hash, :[], '(``any_or_k(trec)``) -> ``output_type(trec, targs)``', effect: [:+, :+]
+      # RDL.nowrap :Hash
+      # RDL.type_params :Hash, [:k, :v], :all?
+      # RDL.type :Hash, :[], '(``any_or_k(trec)``) -> ``output_type(trec, targs)``', effect: [:+, :+]
+
+      RDL.nowrap :Integer
+      RDL.type :Integer, :+, '(Integer) -> Integer'
+      RDL.type :Integer, :*, '(Integer) -> Integer'
 
     when :active_record
 
