@@ -27,10 +27,17 @@ class Synthesizer
       prog = prog_cache.find_prog([precond], [postcond])
       if prog.nil?
         env = LocalEnvironment.new
-        prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
-        seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
-        seed.look_for(:type, @ctx.functype.ret)
-        prog = generate(seed, [precond], [postcond], false)
+        if @ctx.seed_expr
+          # we are in a sketch
+          seed = ProgWrapper.new(@ctx, @ctx.seed_expr, env)
+          seed.look_for(:type, @ctx.functype.ret)
+          prog = generate(seed, [precond], [postcond], false)
+        else
+          prog_ref = env.add_expr(s(@ctx.functype.ret, :hole, 0, {variance: CONTRAVARIANT}))
+          seed = ProgWrapper.new(@ctx, s(@ctx.functype.ret, :envref, prog_ref), env)
+          seed.look_for(:type, @ctx.functype.ret)
+          prog = generate(seed, [precond], [postcond], false)
+        end
         # add to cache for future use
         prog_cache.add(prog)
         @ctx.logger.debug("Synthesized program:\n#{format_ast(prog.to_ast)}")
@@ -38,13 +45,19 @@ class Synthesizer
         @ctx.logger.debug("Found program in cache:\n#{format_ast(prog.to_ast)}")
       end
 
-      env = LocalEnvironment.new
-      branch_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: false}))
-      seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, branch_ref), env)
-      seed.look_for(:type, RDL::Globals.types[:bool])
-      branches = generate(seed, [precond], [TRUE_POSTCOND], true)
-      cond = BoolCond.new
-      branches.each { |b| cond << update_types_pass.process(b.to_ast) }
+      if @ctx.seed_expr
+        cond = BoolCond.new
+        cond << s(RDL::Globals.types[:bool], :true)
+      else
+        # we are not in sketch, so generate branches
+        env = LocalEnvironment.new
+        branch_ref = env.add_expr(s(RDL::Globals.types[:bool], :hole, 0, {bool_consts: true}))
+        seed = ProgWrapper.new(@ctx, s(RDL::Globals.types[:bool], :envref, branch_ref), env)
+        seed.look_for(:type, RDL::Globals.types[:bool])
+        branches = generate(seed, [precond], [TRUE_POSTCOND], true)
+        cond = BoolCond.new
+        branches.each { |b| cond << update_types_pass.process(b.to_ast) }
+      end
 
       # puts Unparser.unparse(prog.to_ast)
       # puts Unparser.unparse(cond.to_ast)

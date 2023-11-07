@@ -3,7 +3,7 @@ require 'logger'
 class Context
   attr_accessor :max_prog_size, :components, :preconds, :postconds, :mth_name,
     :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth,
-    :curr_binding, :constants, :enable_and, :enable_constants, :enable_nil
+    :curr_binding, :constants, :enable_and, :enable_constants, :enable_nil, :seed_expr
 
   attr_reader :logger
 
