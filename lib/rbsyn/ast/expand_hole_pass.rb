@@ -127,7 +127,14 @@ class ExpandHolePass < ::AST::Processor
       end
     }.flatten
 
-    types = Set[*(arg_types + env_types +
+    unwrapped_arg_types = arg_types.map { |arg|
+      if arg.is_a? RDL::Type::AnnotatedArgType
+        arg.type
+      else
+        arg
+      end
+    }
+    types = Set[*(unwrapped_arg_types + env_types +
       @ctx.components.map { |c| RDL::Type::SingletonType.new(c) })]
     exprs = []
 

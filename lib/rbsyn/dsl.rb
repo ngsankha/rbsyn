@@ -26,6 +26,16 @@ class SynthesizerProxy
     @ctx.max_prog_size = prog_size
     @ctx.components = components
     @ctx.functype = RDL::Globals.parser.scan_str type
+    annotated_args = @ctx.functype.args.map.with_index { |arg, i|
+      if arg.is_a? RDL::Type::AnnotatedArgType
+        arg
+      else
+        RDL::Type::AnnotatedArgType.new("arg#{i}", arg)
+      end
+    }
+    # TODO: support blocks
+    ret_type = @ctx.functype.ret
+    @ctx.functype = RDL::Type::MethodType.new(annotated_args, nil, ret_type)
     @ctx.max_hash_size = max_hash_size
     @ctx.enable_constants = consts
     @ctx.enable_nil = enable_nil
@@ -57,14 +67,15 @@ class SynthesizerProxy
       @specs.each { |spec|
         @ctx.add_example(spec.pre_blk, spec.post_blk)
       }
+      seed_expr = s(@ctx.functype, :def, @mth_name,
+        s(RDL::Globals.types[:top], :args, *@ctx.functype.args.map { |arg|
+          s(arg, :arg, arg.name)
+        }), s(@ctx.functype.ret, :hole, 0))
       syn = Synthesizer.new(@ctx)
-      max_args = @ctx.functype.args.size
-      args = max_args.times.map { |t| "arg#{t}".to_sym }
       prog = syn.run
-      # TODO: these types can be made more precise
       fn = s(@ctx.functype, :def, @mth_name,
-        s(RDL::Globals.types[:top], :args, *args.map { |arg|
-          s(RDL::Globals.types[:top], :arg, arg)
+        s(RDL::Globals.types[:top], :args, *@ctx.functype.args.map { |arg|
+          s(arg, :arg, arg.name)
         }), prog.to_ast)
       src = Unparser.unparse(fn)
       Instrumentation.prog = src

@@ -47,8 +47,10 @@ class DBTypes
       end
     when RDL::Type::UnionType
       return RDL::Type::UnionType.new(*trec.types.map { |t| schema_type(t) }).canonical
+    when RDL::Type::AnnotatedArgType
+      return schema_type(trec.type)
     else
-      raise RuntimeError
+      raise RuntimeError, "unhandled type #{trec}"
     end
     RDL::Type::FiniteHashType.new(schema, nil)
   end
@@ -83,6 +85,8 @@ class DBTypes
     when RDL::Type::GenericType
       raise RuntimeError, "expected only ActiveRecord_Relation" if trec.base.name != "ActiveRecord_Relation"
       array_schema(trec.params[0])
+    when RDL::Type::AnnotatedArgType
+      array_schema(trec.type)
     else
       raise RuntimeError, "unexpected type #{trec}"
     end

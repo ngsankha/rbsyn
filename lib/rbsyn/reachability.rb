@@ -19,7 +19,7 @@ class CallChain
 
   def initialize(path, tenv)
     raise RbSynError, "expect path to be an array" unless path.is_a? Array
-    raise RbSynError, "last element in a path must always be a type" unless path.last.is_a? RDL::Type::Type
+    raise RbSynError, "last element in a path must always be a type: #{path.inspect}" unless path.last.is_a? RDL::Type::Type
     @path = path
     @tenv = tenv
   end

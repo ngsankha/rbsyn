@@ -33,10 +33,17 @@ module TypeOperations
       if tret.name == :self
         trec
       else
-        params = RDL::Wrap.get_type_params(trec.base.to_s)[0]
+        if trec.is_a? RDL::Type::AnnotatedArgType
+          base = trec.type.base
+          tparams = trec.type.params
+        else
+          base = trec.base
+          tparams = trec.params
+        end
+        params = RDL::Wrap.get_type_params(base.to_s)[0]
         idx = params.index(tret.name)
         raise RbSynError, "unexpected" if idx.nil?
-        trec.params[idx]
+        tparams[idx]
       end
     else
       tret
@@ -73,6 +80,8 @@ module TypeOperations
       []
     when RDL::Type::DynamicType
       RDL::Globals.info.info.keys
+    when RDL::Type::AnnotatedArgType
+      parents_of(trecv.type)
     else
       raise RbSynError, "unhandled type #{trecv.inspect}"
     end
