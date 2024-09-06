@@ -19,7 +19,6 @@ class Synthesizer
     end
     change_effect_precision(eff_prec)
 
-    @ctx.load_tenv!
     prog_cache = ProgCache.new @ctx
 
     update_types_pass = RefineTypesPass.new

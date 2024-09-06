@@ -14,11 +14,21 @@ class ExpandHolePass < ::AST::Processor
     @env = env
   end
 
+  def on_def(node)
+    @tenv = {}
+    node
+  end
+
   def on_envref(node)
     ref = node.children[0]
     @visited_envrefs.add(ref)
     info = @env.get_expr(ref)
     info[:expr] = process(info[:expr])
+    node
+  end
+
+  def on_arg(node)
+    tenv[node.children[0]] = node.ttype
     node
   end
 
@@ -86,7 +96,7 @@ class ExpandHolePass < ::AST::Processor
       expanded.concat envref(node.ttype)
     elsif depth > 0 && !@effect
       # synthesize function calls
-      r = Reachability.new(@ctx.tenv)
+      r = Reachability.new(@tenv)
       paths = r.paths_to_type(node.ttype, depth, @variance)
       expanded.concat paths.map { |path| fn_call(path) }
     elsif depth == 1 && @effect
@@ -153,7 +163,7 @@ class ExpandHolePass < ::AST::Processor
           recv_qual = RDL::Util.to_class(type.val)
           if recv_qual.ancestors.include? klass_qual
             trecv = type
-            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @tenv)
             exprs << fn_call(path)
             @read_effs << read_eff
           end
@@ -163,7 +173,7 @@ class ExpandHolePass < ::AST::Processor
           if recv_qual.ancestors.include? klass_qual
             trecv = type
             # the %top type here doesn't matter
-            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @tenv)
             exprs << fn_call(path)
             @read_effs << read_eff
           end
@@ -173,12 +183,12 @@ class ExpandHolePass < ::AST::Processor
         when RDL::Type::FiniteHashType
           if klass == Hash
             trecv = type
-            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+            path = CallChain.new([trecv, methd, RDL::Globals.types[:bot]], @tenv)
             exprs << fn_call(path)
             @read_effs << read_eff
           end
         when RDL::Type::DynamicType
-          path = CallChain.new([type, methd, RDL::Globals.types[:bot]], @ctx.tenv)
+          path = CallChain.new([type, methd, RDL::Globals.types[:bot]], @tenv)
           exprs << fn_call(path)
           @read_effs << read_eff
         else
@@ -213,7 +223,7 @@ class ExpandHolePass < ::AST::Processor
   end
 
   def lvar(type)
-    @ctx.tenv.select { |k, v| v <= type }
+    @tenv.select { |k, v| v <= type }
       .map { |k, v| s(v, :lvar, k) }
   end
 

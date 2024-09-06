@@ -2,7 +2,7 @@ require 'logger'
 
 class Context
   attr_accessor :max_prog_size, :components, :preconds, :postconds, :mth_name,
-    :reset_func, :functype, :tenv, :max_hash_size, :max_arg_length, :max_hash_depth,
+    :reset_func, :functype, :max_hash_size, :max_arg_length, :max_hash_depth,
     :curr_binding, :constants, :enable_and, :enable_constants, :enable_nil
 
   attr_reader :logger
@@ -12,7 +12,6 @@ class Context
     @components = []
     @preconds = []
     @postconds = []
-    @tenv = {}
     @reset_func = nil
     @functype = nil
     @mth_name = ""
@@ -42,15 +41,6 @@ class Context
   def add_example(precond, postcond)
     @preconds << precond
     @postconds << postcond
-  end
-
-  def load_tenv!
-    @functype.args.each_with_index { |type, i|
-      @tenv["arg#{i}".to_sym] = type
-    }
-    @components.each { |component|
-      @tenv[component] = RDL::Type::SingletonType.new(component)
-    }
   end
 
   def to_ctx_ref(ref)

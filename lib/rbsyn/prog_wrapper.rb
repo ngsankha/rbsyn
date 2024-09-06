@@ -4,10 +4,10 @@ class ProgWrapper
   attr_reader :seed, :env, :exprs, :looking_for, :target
   attr_accessor :passed_asserts
 
-  def initialize(ctx, seed, env, exprs=RDL.type_cast([], 'Array<TypedNode>', force: true))
+  def initialize(ctx, seed, env, exprs=[])
     @ctx = ctx
     @seed = seed
-    @env = env
+    @env = env # LocalEnvironment
     @exprs = exprs
     @passed_asserts = 0
     @looking_for = :type
