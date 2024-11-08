@@ -1,5 +1,10 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
+require "warning"
+Gem.path.each do |path|
+  Warning.ignore(//, path)
+end
+
 require "rbsyn"
 require "fabrication"
 require_relative "../models/model_helper"

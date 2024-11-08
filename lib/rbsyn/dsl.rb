@@ -17,7 +17,7 @@ end
 class SynthesizerProxy
   include AST
   require "minitest/assertions"
-  include MiniTest::Assertions
+  include Minitest::Assertions
 
   attr_accessor :assertions
 

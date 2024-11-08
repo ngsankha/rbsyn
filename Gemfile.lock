@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/ngsankha/rdl
   revision: b851321ca8174e091757d58a66d61eae1b10a9f6
-  branch: effects
+  branch: rbsyn
   specs:
     rdl (2.1.0)
       parser (~> 2.3, >= 2.3.1.4)
@@ -28,22 +28,25 @@ GEM
   remote: https://rubygems.org/
   specs:
     abstract_type (0.0.7)
-    activemodel (7.1.1)
-      activesupport (= 7.1.1)
-    activerecord (7.1.1)
-      activemodel (= 7.1.1)
-      activesupport (= 7.1.1)
+    activemodel (8.0.0)
+      activesupport (= 8.0.0)
+    activerecord (8.0.0)
+      activemodel (= 8.0.0)
+      activesupport (= 8.0.0)
       timeout (>= 0.4.0)
-    activesupport (7.1.1)
+    activesupport (8.0.0)
       base64
+      benchmark (>= 0.3)
       bigdecimal
-      concurrent-ruby (~> 1.0, >= 1.0.2)
+      concurrent-ruby (~> 1.0, >= 1.3.1)
       connection_pool (>= 2.2.5)
       drb
       i18n (>= 1.6, < 2)
+      logger (>= 1.4.2)
       minitest (>= 5.1)
-      mutex_m
-      tzinfo (~> 2.0)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
     adamantium (0.2.0)
       ice_nine (~> 0.11.0)
       memoizable (~> 0.4.0)
@@ -54,30 +57,31 @@ GEM
     ansi (1.5.0)
     ast (2.4.2)
     base64 (0.2.0)
-    bigdecimal (3.1.4)
-    builder (3.2.4)
+    benchmark (0.4.0)
+    bigdecimal (3.1.8)
+    builder (3.3.0)
     byebug (11.1.3)
     coderay (1.1.3)
     concord (0.1.6)
       adamantium (~> 0.2.0)
       equalizer (~> 0.0.9)
-    concurrent-ruby (1.2.2)
+    concurrent-ruby (1.3.4)
     connection_pool (2.4.1)
-    diff-lcs (1.5.0)
-    drb (2.2.0)
-      ruby2_keywords
+    diff-lcs (1.5.1)
+    drb (2.2.1)
     equalizer (0.0.11)
-    fabrication (2.29.0)
-    i18n (1.14.1)
+    fabrication (2.31.0)
+    i18n (1.14.6)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
+    logger (1.6.1)
     memoizable (0.4.2)
       thread_safe (~> 0.3, >= 0.3.1)
-    method_source (1.0.0)
-    minitest (5.16.2)
-    minitest-hooks (1.5.0)
+    method_source (1.1.0)
+    minitest (5.25.1)
+    minitest-hooks (1.5.2)
       minitest (> 5.3)
-    minitest-reporters (1.5.0)
+    minitest-reporters (1.7.1)
       ansi
       builder
       minitest (>= 5.0)
@@ -89,26 +93,25 @@ GEM
       equalizer (~> 0.0.9)
       ice_nine (~> 0.11.1)
       procto (~> 0.0.2)
-    mutex_m (0.2.0)
     parser (2.7.2.0)
       ast (~> 2.4.1)
     procto (0.0.3)
-    pry (0.14.1)
+    pry (0.14.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
-    pry-byebug (3.8.0)
+    pry-byebug (3.10.1)
       byebug (~> 11.0)
-      pry (~> 0.10)
-    racc (1.6.0)
-    rake (13.0.6)
-    rouge (3.29.0)
-    ruby-progressbar (1.11.0)
-    ruby2_keywords (0.0.5)
+      pry (>= 0.13, < 0.15)
+    racc (1.8.1)
+    rake (13.2.1)
+    rouge (4.4.0)
+    ruby-progressbar (1.13.0)
+    securerandom (0.3.1)
     sql-parser (0.0.2)
       racc
-    sqlite3 (1.4.4)
+    sqlite3 (2.2.0-arm64-darwin)
     thread_safe (0.3.6)
-    timeout (0.4.1)
+    timeout (0.4.2)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unparser (0.5.5)
@@ -121,6 +124,8 @@ GEM
       mprelude (~> 0.1.0)
       parser (>= 2.6.5)
       procto (~> 0.0.2)
+    uri (1.0.1)
+    warning (1.4.0)
 
 PLATFORMS
   arm64-darwin-21
@@ -138,6 +143,7 @@ DEPENDENCIES
   rake (~> 13.0)
   rbsyn!
   rdl!
+  warning (~> 1.4)
 
 BUNDLED WITH
-   2.2.28
+   2.4.22
